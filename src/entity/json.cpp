@@ -6,23 +6,66 @@ using namespace std;
 
 namespace ent
 {
+	// String escape, ignores the forward slash (only relevant when
+	// dealing with html). Does not handle unicode properly.
 	string escape(string item)
 	{
-		// TODO: Replace quotes with \" and whitespace with the appropriate \t,\r,\n
-		return item;
+		string result;
+		result.reserve(item.length());
+
+		for (auto &c : item)
+		{
+			switch (c)
+			{
+				case '"':	result.append("\\\"");	break;
+				case '\\':	result.append("\\\\");	break;
+				case '\t':	result.append("\\t");	break;
+				case '\n':	result.append("\\n");	break;
+				case '\r':	result.append("\\r");	break;
+				case '\b':	result.append("\\b");	break;
+				case '\f':	result.append("\\f");	break;
+				default:	result.append(1, c);	break;
+			}
+		}
+
+		return result;
 	}
 
+
+	// String unescape, restores escaped characters to their
+	// former glory.
 	string unescape(string item)
 	{
-		// TODO:
-		return item;
+		bool special = false;
+		string result;
+		result.reserve(item.length());
+
+		for (auto &c : item)
+		{
+			if (special) switch (c)
+			{
+				case '"':	result.append("\"");	break;
+				case '\\':	result.append("\\");	break;
+				case 't':	result.append("\t");	break;
+				case 'n':	result.append("\n");	break;
+				case 'r':	result.append("\r");	break;
+				case 'b':	result.append("\b");	break;
+				case 'f':	result.append("\f");	break;
+			}
+			else if (c != '\\') result.append(1, c);
+
+			special = c == '\\';			
+		}
+
+		return result;
 	}
 
 
 	const char quote		= '"';
 	bool whitespace[256]	= { false };
 
-	
+
+	// Generate json string from an entity tree
 	string json::to(entity &item, bool pretty, int depth)
 	{
 		stringstream result;
@@ -46,6 +89,7 @@ namespace ent
 	}
 
 
+	// Stringify a property value
 	string json::property(value &item, bool pretty, int depth)
 	{
 		stringstream result;
@@ -80,13 +124,16 @@ namespace ent
 	}
 
 
+	// Generate an entity tree from a json string
 	entity json::from(string &text)
 	{
 		if (!whitespace[' '])
 		{
+			// Initialise the whitespace lookup if it hasn't been already
 			whitespace[' '] = whitespace['\t'] = whitespace['\r'] = whitespace['\n'] = whitespace[','] = true;
 		}
 
+		// Check that this looks like valid json
 		validate(text);
 
 		int i=0;
@@ -105,9 +152,9 @@ namespace ent
 		int length				= text.length();
 		bool quotes				= false;
 		bool ignore				= false;
-		static string types[]	= { "object", "array" }; //, 	"key",	"string" };
-		static char symbols[]	= { '}', ']' }; //,		'"',	'"' };
-
+		static string types[]	= { "object", "array" };
+		static char symbols[]	= { '}', ']' };
+		
 		for (int i=0; i<length; i++)
 		{
 			c = text[i];
@@ -118,77 +165,95 @@ namespace ent
 				{
 					if (c == symbols[j])
 					{
+						// If the terminator symbol does not match the type at the top of
+						// the stack then there is an error in the json. Otherwise pop that
+						// level off of the stack
 						if (levels.top().first != j)
 						{
-							throw runtime_error(
-								"Error parsing json (unterminated " + types[levels.top().first] + 
-								") around here: \n" + text.substr(max(levels.top().second-10, 0), 50)
-							);
+							error("unterminated " + types[levels.top().first], text, levels.top().second);
 						}
 						else levels.pop();
 					}
 				}
 
+				// Each time a new object or array is started push the type and
+				// position in the string onto a stack.
 				switch (c)
 				{
 					case '"':	if (!ignore) quotes = !quotes;				break;
 					case '{':	if (!quotes) levels.push(make_pair(0, i));	break;
 					case '[':	if (!quotes) levels.push(make_pair(1, i));	break;
-					//case ':':
 				}
 
+				// If a backslash is found within a string then ignore the next
+				// character in case it is a quote.
 				ignore = quotes && c == '\\';
 			}
 		}
 
-		if (!levels.empty())
-		{
-			throw runtime_error(
-				"Error parsing json (unterminated " + types[levels.top().first] +
-				") around here: \n" + text.substr(max(levels.top().second-10, 0), 50)
-			);
-		}
+		// If there are any levels left in the stack at the end then there was a problem
+		// with the json.
+		if (!levels.empty()) error("unterminated " + types[levels.top().first], text, levels.top().second);
 	}
 
 
+	// Parse a json object
 	entity json::parse(string &text, int &i)
 	{
 		entity result;
 		int length = text.length();
 
+		// Swallow whitespace
 		for (; i<length && whitespace[(byte)text[i]]; i++);
 
+		// An object should always start with an opening brace
 		if (i<length && text[i] == '{')
 		{
 			while (i<length)
 			{
+				// Swallow any whitespace
 				for (i++; i<length && whitespace[(byte)text[i]]; i++);
 
 				if (i < length)
 				{
+					// If the end of this object has been found then stop
+					// parsing at this level of recursion.
 					if (text[i] == '}') break;
+
+					// An object should always have a quoted string as a
+					// property key.
 					if (text[i] == '"')
 					{
+						// Extract the property key
 						string name = parse_key(text, i);
-						for (i++; i<length && text[i] != ':'; i++);
+
+						// Look for the key/value separator
+						for (i++; i<length && text[i] != ':'; i++)
+						{
+							if (!whitespace[(byte)text[i]]) error("missing key/value separator", text, i);
+						}
+
+						// Swallow any whitespace
 						for (i++; i<length && whitespace[(byte)text[i]]; i++);
 
 						if (i<length)
 						{
-							if (text[i] == '{')			result.set(name, parse(text, i));
-							else if (text[i] == '[')	result.set(name, parse_array(text, i));
-							else if (text[i] == '"')	result.set(name, unescape(parse_string(text, i)));
+							// Parse the property value based on the next character
+							if (text[i] == '{')			result.set(name, parse(text, i));					// Object
+							else if (text[i] == '[')	result.set(name, parse_array(text, i));				// Array
+							else if (text[i] == '"')	result.set(name, unescape(parse_string(text, i)));	// String
 							else
 							{
 								string item = parse_item(text, i);
 
-								if (item == "true") 		result.set(name, true);
-								else if (item == "false")	result.set(name, false);
-								else if (item == "null")	result.properties[name] = value();
-								else 						result.set(name, stod(item));
+								if (item == "true") 		result.set(name, true);				// Boolean
+								else if (item == "false")	result.set(name, false);			// Boolean
+								else if (item == "null")	result.properties[name] = value();	// Null
+								else 						result.set(name, stod(item));		// Number
 							}
 						}
 					}
+					else error("missing object key", text, i);
 				}
 			}
 		}
@@ -196,6 +261,8 @@ namespace ent
 		return result;
 	}
 
+
+	// Extract the key, should be a simple string within quotes
 	string json::parse_key(string &text, int &i)
 	{
 		int start = ++i;
@@ -206,6 +273,7 @@ namespace ent
 	}
 
 
+	// Extract a string value ignoring any escape characters
 	string json::parse_string(string &text, int &i)
 	{
 		int start	= ++i;
@@ -221,15 +289,18 @@ namespace ent
 	}
 
 
+	// Extract a numeric/boolean/null value, should always end
+	// with a whitespace character, comma or }.
 	string json::parse_item(string &text, int &i)
 	{
 		int start = i;
-		for (i++; i<text.length() && !whitespace[(byte)text[i]]; i++);
+		for (i++; i<text.length() && !whitespace[(byte)text[i]] && text[i] != '}'; i++);
 
 		return text.substr(start, i-start);
 	}
 
 
+	// Parse an array, contained within square brackets
 	value json::parse_array(string &text, int &i)
 	{
 		value result(vtype::Array);
@@ -241,23 +312,44 @@ namespace ent
 
 			if (i < length)
 			{
+				// If the end of this array has been found then stop
+				// parsing at this level of recursion.
 				if (text[i] == ']') 		break;
-				if (text[i] == '{')			result.array.emplace_back(make_shared<entity>(parse(text, i)));
-				else if (text[i] == '[')	result.array.emplace_back(parse_array(text, i));
-				else if (text[i] == '"')	result.array.emplace_back(parse_string(text, i));
+				if (text[i] == '{')			result.array.emplace_back(make_shared<entity>(parse(text, i)));	// Object
+				else if (text[i] == '[')	result.array.emplace_back(parse_array(text, i));				// Array
+				else if (text[i] == '"')	result.array.emplace_back(parse_string(text, i));				// String
 				else
 				{
 					string item = parse_item(text, i);
 
-					if (item == "true") 		result.array.emplace_back(true);
-					else if (item == "false")	result.array.emplace_back(false);
-					else if (item == "null")	result.array.emplace_back();
-					else 						result.array.emplace_back(stod(item));
+					if (item == "true") 		result.array.emplace_back(true);		// Boolean
+					else if (item == "false")	result.array.emplace_back(false);		// Boolean
+					else if (item == "null")	result.array.emplace_back();			// Null
+					else 						result.array.emplace_back(stod(item));	// Number
 				}
 			}
 		}
 		
 		return result;
+	}
+
+
+	// Throw an error which shows the whereabouts of a problem in the json string.
+	void json::error(string message, string json, int i)
+	{
+		int tabs	= 0;
+		auto prev 	= json.rfind('\n', i);
+		auto next 	= json.find('\n', i);
+		int start 	= max(i-20, (int)prev + 1);
+		int length	= next == string::npos ? 50 : next - prev - 1;
+		
+		for (int j=start; j<i; j++) tabs += json[j] == '\t';
+
+		throw runtime_error(
+			"Error parsing json (" + message +
+			") here: \n" + json.substr(start, length) +
+			"\n" + string(i-start-tabs + tabs*8, '-') + '^'
+		);
 	}
 }
 

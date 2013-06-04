@@ -28,4 +28,7 @@ namespace ent
 	template <> bool value::is<int>()			{ return this->type == vtype::Number; }
 	template <> bool value::is<long>()			{ return this->type == vtype::Number; }
 	template <> bool value::is<bool>()			{ return this->type == vtype::Boolean; }
+
+
+	
 }

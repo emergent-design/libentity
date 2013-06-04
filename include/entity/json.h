@@ -19,5 +19,6 @@ namespace ent
 			static std::string parse_string(std::string &text, int &i);
 			static std::string parse_item(std::string &text, int &i);
 			static value parse_array(std::string &text, int &i);
+			static void error(std::string message, std::string json, int i);
 	};
 }

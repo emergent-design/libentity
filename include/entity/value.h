@@ -26,6 +26,11 @@ namespace ent
 		Null
 	};
 
+	template <class T> struct vmap
+	{
+		std::string name;
+		T *reference;
+	};
 
 	struct value
 	{
@@ -68,4 +73,19 @@ namespace ent
 	template <> bool value::is<int>();
 	template <> bool value::is<long>();
 	template <> bool value::is<bool>();
+
+	//std::ostream &operator << (std::ostream &output, const value &v);
+	inline std::ostream &operator << (std::ostream &output, const value &v)
+	{
+		switch (v.type)
+		{
+			case vtype::String:		return output << '"' << v.string << '"';
+			case vtype::Number:		return output << v.number;
+			case vtype::Boolean:	return output << (v.boolean ? "true" : "false");
+			case vtype::Null:		return output << "null";
+			case vtype::Object:		return output << "object";
+			case vtype::Array:		return output << "array";
+			default:				return output;
+		}
+	}
 }

@@ -48,7 +48,7 @@ namespace ent
 
 	vector<byte> decode64(const string &value)
 	{
-		if (value.length() % 4) throw std::runtime_error("Invalid string for decoding as base64");
+		if (value.length() % 4) throw runtime_error("Invalid string for decoding as base64");
 
 		int i, j;
 		long block	= 0;
