@@ -94,8 +94,7 @@ namespace ent
 
 			entity &set(const std::string name, const std::vector<entity> &items)
 			{
-				value result;
-				result.type = vtype::Array;
+				value result(vtype::Array);
 				result.array.resize(items.size());
 
 				std::transform(items.begin(), items.end(), result.array.begin(), [](const entity &v) {
@@ -110,8 +109,7 @@ namespace ent
 
 			template <class T> entity &set(std::string name, const std::vector<T> &items)
 			{
-				value result;
-				result.type = vtype::Array;
+				value result(vtype::Array);
 				result.array.resize(items.size());
 
 				std::transform(items.begin(), items.end(), result.array.begin(), [](const T &v) {

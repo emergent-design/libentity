@@ -13,10 +13,11 @@ namespace ent
 		private:
 			static std::string property(value &item, bool pretty, int depth);
 
+			static void validate(std::string &text);
 			static entity parse(std::string &text, int &i);
 			static std::string parse_key(std::string &text, int &i);
 			static std::string parse_string(std::string &text, int &i);
 			static std::string parse_item(std::string &text, int &i);
-			static std::string parse_array(std::string &text, int &i);
+			static value parse_array(std::string &text, int &i);
 	};
 }

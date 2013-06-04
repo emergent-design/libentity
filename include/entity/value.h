@@ -1,32 +1,24 @@
 #pragma once
 
 #include <map>
-#include <string>
-#include <vector>
 #include <memory>
 #include <iostream>
 #include <algorithm>
-#include <stdexcept>
+
 #include <initializer_list>
 
-#ifndef byte
-	typedef unsigned char byte;
-#endif
+#include "entity/utilities.h"
+
 
 
 namespace ent
 {
 	class entity;
 
-	std::string encode64(const std::vector<byte> &value);
-	std::vector<byte> decode64(const std::string &value);
-
 	
 	enum class vtype
 	{
 		String,
-		//Float,
-		//Integer,
 		Number,
 		Boolean,
 		Array,
@@ -39,20 +31,15 @@ namespace ent
 	{
 		vtype type;
 		std::string string;
-		//double floating;
-		//long integer;
 		double number;
 		bool boolean;
 		std::vector<value> array;
 		std::shared_ptr<entity> object;
 
 		value()									: type(vtype::Null) {}
+		value(vtype type)						: type(type)		{}
 		value(const char *value)				: type(vtype::String),	string(value)	{}
 		value(std::string value) 				: type(vtype::String),	string(value)	{}
-		//value(float value) 						: type(vtype::Float),	floating(value)	{}
-		//value(double value) 					: type(vtype::Float),	floating(value)	{}
-		//value(int value)						: type(vtype::Integer),	integer(value)	{}
-		//value(long value)						: type(vtype::Integer),	integer(value)	{}
 		value(float value) 						: type(vtype::Number),	number(value)	{}
 		value(double value) 					: type(vtype::Number),	number(value)	{}
 		value(int value)						: type(vtype::Number),	number(value)	{}
@@ -74,4 +61,11 @@ namespace ent
 
 		template <class T> bool is() { return false; }
 	};
+
+	template <> bool value::is<std::string>();
+	template <> bool value::is<float>();
+	template <> bool value::is<double>();
+	template <> bool value::is<int>();
+	template <> bool value::is<long>();
+	template <> bool value::is<bool>();
 }

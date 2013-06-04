@@ -29,10 +29,21 @@ int main(int argc, char *argv[])
 			  "a": "another child value"
 			}
 		  ],
+		  "j": [ 1.5, 5, 10.8, 5e2 ],
+		  "k": [ 1, "string", { "a": "array child" }, [ "arrayarray" ], true, null ]
 		}
 	)json";
 
-	auto tree = entity::from<json>(js);
+	string test = u8R"json(
+		{
+			"a": [
+				{ "b" : "something" },
+			]
+		}
+	)json";
+
+	auto tree = entity::from<json>(test);
+	//auto tree = entity::from<json>(js);
 	//auto tree = entity::from<json>(jsc);
 	/*auto tree = entity()
 		.set("a", "a value")
@@ -64,13 +75,18 @@ int main(int argc, char *argv[])
 
 	cout << "objects: ";
 	for (auto &i : tree.array("e")) cout << i.get<string>("a") << ", ";
-	cout << endl << endl;
+	cout << endl;
 
-	//cout << tree.to<json>() << endl << endl;
-	//cout << tree.to<json>(true) << endl;
+	cout << "numbers: ";
+	for (auto &i : tree.array<double>("j")) cout << i << ", ";
+	cout << endl;
+
+	cout << "allsorts: ";
+	for (auto &i : tree.properties["k"].array) cout << (int)i.type << ", ";
+	cout << endl;
 
 
-	
-
+	//cout << endl << tree.to<json>() << endl;
+	//cout << endl << tree.to<json>(true) << endl;
 	return 0;
 }

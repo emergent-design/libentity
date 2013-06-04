@@ -1,6 +1,6 @@
 #include "entity/json.h"
 #include <sstream>
-
+#include <stack>
 
 using namespace std;
 
@@ -69,8 +69,6 @@ namespace ent
 		else switch (item.type)
 		{
 			case vtype::String:		result << quote << escape(item.string) << quote;	break;
-			//case vtype::Float:		result << item.floating;							break;
-			//case vtype::Integer:	result << item.integer;								break;
 			case vtype::Number:		result << item.number;								break;
 			case vtype::Boolean:	result << (item.boolean ? "true" : "false");		break;
 			case vtype::Null:		result << "null";									break;
@@ -84,11 +82,72 @@ namespace ent
 
 	entity json::from(string &text)
 	{
-		int i=0;
+		if (!whitespace[' '])
+		{
+			whitespace[' '] = whitespace['\t'] = whitespace['\r'] = whitespace['\n'] = whitespace[','] = true;
+		}
 
-		if (!whitespace[' ']) whitespace[' '] = whitespace['\t'] = whitespace['\r'] = whitespace['\n'] = whitespace[','] = true;
-		
+		validate(text);
+
+		int i=0;
 		return parse(text, i);
+	}
+
+
+	// Very basic iterative validation. It ensures that all objects and arrays are
+	// terminated so that the recursive parsing functions don't fall over.
+	void json::validate(string &text)
+	{
+		int j;
+		char c;
+		stack<pair<int,int>> levels;
+
+		int length				= text.length();
+		bool quotes				= false;
+		bool ignore				= false;
+		static string types[]	= { "object", "array" }; //, 	"key",	"string" };
+		static char symbols[]	= { '}', ']' }; //,		'"',	'"' };
+
+		for (int i=0; i<length; i++)
+		{
+			c = text[i];
+
+			if (!whitespace[(byte)c])
+			{
+				for (j=0; !quotes && j<2; j++)
+				{
+					if (c == symbols[j])
+					{
+						if (levels.top().first != j)
+						{
+							throw runtime_error(
+								"Error parsing json (unterminated " + types[levels.top().first] + 
+								") around here: \n" + text.substr(max(levels.top().second-10, 0), 50)
+							);
+						}
+						else levels.pop();
+					}
+				}
+
+				switch (c)
+				{
+					case '"':	if (!ignore) quotes = !quotes;				break;
+					case '{':	if (!quotes) levels.push(make_pair(0, i));	break;
+					case '[':	if (!quotes) levels.push(make_pair(1, i));	break;
+					//case ':':
+				}
+
+				ignore = quotes && c == '\\';
+			}
+		}
+
+		if (!levels.empty())
+		{
+			throw runtime_error(
+				"Error parsing json (unterminated " + types[levels.top().first] +
+				") around here: \n" + text.substr(max(levels.top().second-10, 0), 50)
+			);
+		}
 	}
 
 
@@ -114,22 +173,11 @@ namespace ent
 						for (i++; i<length && text[i] != ':'; i++);
 						for (i++; i<length && whitespace[(byte)text[i]]; i++);
 
-						cout << "Name = " << name << endl;
-
 						if (i<length)
 						{
-							if (text[i] == '{')
-							{
-								result.set(name, parse(text, i));
-							}
-							else if (text[i] == '[')
-							{
-
-							}
-							else if (text[i] == '"')
-							{
-								result.set(name, unescape(parse_string(text, i)));
-							}
+							if (text[i] == '{')			result.set(name, parse(text, i));
+							else if (text[i] == '[')	result.set(name, parse_array(text, i));
+							else if (text[i] == '"')	result.set(name, unescape(parse_string(text, i)));
 							else
 							{
 								string item = parse_item(text, i);
@@ -161,15 +209,13 @@ namespace ent
 	string json::parse_string(string &text, int &i)
 	{
 		int start	= ++i;
-		bool ignore = false;
+		bool ignore = false;	// Flag to ensure escaped quotes within the string are ignored
 
 		for (; i<text.length(); i++)
 		{
 			if (text[i] == '"' && !ignore) break;
 			ignore = text[i] == '\\';
 		}
-
-		cout << "String = " << text.substr(start, i-start) << endl;
 
 		return text.substr(start, i-start);
 	}
@@ -180,15 +226,38 @@ namespace ent
 		int start = i;
 		for (i++; i<text.length() && !whitespace[(byte)text[i]]; i++);
 
-		cout << "Item = " << text.substr(start, i-start) << endl;
-
 		return text.substr(start, i-start);
 	}
 
 
-	string json::parse_array(string &text, int &i)
+	value json::parse_array(string &text, int &i)
 	{
-		return "";
+		value result(vtype::Array);
+		int length = text.length();
+
+		while (i<length)
+		{
+			for (i++; i<length && whitespace[(byte)text[i]]; i++);
+
+			if (i < length)
+			{
+				if (text[i] == ']') 		break;
+				if (text[i] == '{')			result.array.emplace_back(make_shared<entity>(parse(text, i)));
+				else if (text[i] == '[')	result.array.emplace_back(parse_array(text, i));
+				else if (text[i] == '"')	result.array.emplace_back(parse_string(text, i));
+				else
+				{
+					string item = parse_item(text, i);
+
+					if (item == "true") 		result.array.emplace_back(true);
+					else if (item == "false")	result.array.emplace_back(false);
+					else if (item == "null")	result.array.emplace_back();
+					else 						result.array.emplace_back(stod(item));
+				}
+			}
+		}
+		
+		return result;
 	}
 }
 
