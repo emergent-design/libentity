@@ -22,4 +22,5 @@ obj/
 .build-*/
 
 entity.workspace.dan
+compilation.db
 

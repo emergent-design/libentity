@@ -4,11 +4,9 @@
 #include <memory>
 #include <iostream>
 #include <algorithm>
-
 #include <initializer_list>
 
 #include "entity/utilities.h"
-
 
 
 namespace ent
@@ -26,11 +24,11 @@ namespace ent
 		Null
 	};
 
-	template <class T> struct vmap
+	/*template <class T> struct vmap
 	{
 		std::string name;
 		T *reference;
-	};
+	};*/
 
 	struct value
 	{
@@ -67,6 +65,7 @@ namespace ent
 		template <class T> bool is() { return false; }
 	};
 
+
 	template <> bool value::is<std::string>();
 	template <> bool value::is<float>();
 	template <> bool value::is<double>();
@@ -74,7 +73,7 @@ namespace ent
 	template <> bool value::is<long>();
 	template <> bool value::is<bool>();
 
-	//std::ostream &operator << (std::ostream &output, const value &v);
+
 	inline std::ostream &operator << (std::ostream &output, const value &v)
 	{
 		switch (v.type)

@@ -9,17 +9,15 @@ namespace ent
 	{
 		public:
 
-			entity get(const std::string name)
-			{
-				if (properties.count(name))
-				{
-					auto &p = this->properties[name];
+			entity get(const std::string name);
 
-					return p.type == vtype::Object ? *p.object : entity();
-				}
-				
-				return entity();
-			}
+			entity &set(const std::string name, const entity &item);
+
+			entity &set(const std::string name, const std::vector<byte> &item);
+
+			entity &set(const std::string name, const std::vector<entity> &items);
+
+			std::vector<entity> array(const std::string name);
 
 
 			template <class T> T get(const std::string name, T defaultValue = T())
@@ -28,24 +26,10 @@ namespace ent
 			}
 
 
-			std::vector<entity> array(const std::string name)
+			template <class T> entity &set(const std::string name, const T &item)
 			{
-				std::vector<entity> result;
-
-				if (this->properties.count(name))
-				{
-					auto &p = this->properties[name];
-
-					if (p.type == vtype::Array)
-					{
-						for (auto &v : p.array)
-						{
-							if (v.type == vtype::Object) result.push_back(*v.object);
-						}
-					}
-				}
-
-				return result;
+				this->properties[name] = value(item);
+				return *this;
 			}
 
 
@@ -67,43 +51,6 @@ namespace ent
 				}
 
 				return result;
-			}
-
-
-			entity &set(const std::string name, const entity &item)
-			{
-				this->properties[name] = value(std::make_shared<entity>(item));
-				return *this;
-			}
-
-
-			template <class T> entity &set(const std::string name, const T &item)
-			{
-				this->properties[name] = value(item);
-				return *this;
-			}
-
-
-			// Store a binary vector as an encoded string
-			entity &set(const std::string name, const std::vector<byte> &item)
-			{
-				this->properties[name] = value(encode64(item));
-				return *this;
-			}
-
-
-			entity &set(const std::string name, const std::vector<entity> &items)
-			{
-				value result(vtype::Array);
-				result.array.resize(items.size());
-
-				std::transform(items.begin(), items.end(), result.array.begin(), [](const entity &v) {
-					return value(std::make_shared<entity>(v));
-				});
-
-				this->properties[name] = result;
-
-				return *this;
 			}
 
 

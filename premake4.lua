@@ -1,25 +1,25 @@
 solution "entity"
 	language 		"C++"
-	targetdir		"bin"
+	targetdir		"lib"
 	flags 			"Symbols"
 	configurations	"default"
 	platforms		"native"
-	buildoptions	{ "-Wall", "-Wno-sign-compare",  "-std=c++11", "-O3" }
-	--links			{ "boost_system", "boost_filesystem", "boost_serialization", "freeimageplus" }
+	buildoptions	{ "-Wall", "-Wno-sign-compare",  "-std=c++11", "-O3", "-fPIC" }
 	includedirs		{ "include" }
+	libdirs 		{ "lib" }
 	excludes		{ "**.bak", "**~" }
 		
 	project "libentity"
 		kind 			"SharedLib"
 		targetname		"entity"
-		targetdir		"lib"
 		linkoptions		"-Wl,-soname,libentity.so.0"
 		includedirs		{ "include/entity" }
 		files 			{ "include/entity/**.h", "src/entity/**.cpp" }
 		postbuildcommands	{ "./strip lib/libentity.so" }
 
 	project "test"
-		kind 				"ConsoleApp"
-		links				{ "libentity" }
+		kind				"SharedLib"
+		defines				{ "__stdcall=" }
+		links				{ "libentity", "xUnit++" }
 		files				{ "include/test/**.h", "src/test/**.cpp" }
-		postbuildcommands	{ "./strip bin/test" }
+		postbuildcommands	{ "./runner" }
