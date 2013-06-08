@@ -39,7 +39,7 @@ SUITE("Value Tests")
 
 	FACT("Construction with entity reference is an object")
 	{
-		Assert.Equal(value(make_shared<entity>()).type, vtype::Object);
+		Assert.Equal(value(make_shared<tree>()).type, vtype::Object);
 	}
 
 

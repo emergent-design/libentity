@@ -1,4 +1,6 @@
 #include "entity/value.h"
+#include "entity/entity.h"
+
 
 using namespace std;
 

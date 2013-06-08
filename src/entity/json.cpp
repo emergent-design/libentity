@@ -66,7 +66,7 @@ namespace ent
 
 
 	// Generate json string from an entity tree
-	string json::to(entity &item, bool pretty, int depth)
+	string json::to(tree &item, bool pretty, int depth)
 	{
 		stringstream result;
 		string space 	= pretty ? " " : "";
@@ -125,7 +125,7 @@ namespace ent
 
 
 	// Generate an entity tree from a json string
-	entity json::from(string &text)
+	tree json::from(string &text)
 	{
 		if (!whitespace[' '])
 		{
@@ -198,9 +198,9 @@ namespace ent
 
 
 	// Parse a json object
-	entity json::parse(string &text, int &i)
+	tree json::parse(string &text, int &i)
 	{
-		entity result;
+		tree result;
 		int length = text.length();
 
 		// Swallow whitespace
@@ -315,7 +315,7 @@ namespace ent
 				// If the end of this array has been found then stop
 				// parsing at this level of recursion.
 				if (text[i] == ']') 		break;
-				if (text[i] == '{')			result.array.emplace_back(make_shared<entity>(parse(text, i)));	// Object
+				if (text[i] == '{')			result.array.emplace_back(make_shared<tree>(parse(text, i)));	// Object
 				else if (text[i] == '[')	result.array.emplace_back(parse_array(text, i));				// Array
 				else if (text[i] == '"')	result.array.emplace_back(parse_string(text, i));				// String
 				else

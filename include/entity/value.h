@@ -11,8 +11,7 @@
 
 namespace ent
 {
-	class entity;
-
+	class tree;
 	
 	enum class vtype
 	{
@@ -24,12 +23,7 @@ namespace ent
 		Null
 	};
 
-	/*template <class T> struct vmap
-	{
-		std::string name;
-		T *reference;
-	};*/
-
+	
 	struct value
 	{
 		vtype type;
@@ -37,7 +31,7 @@ namespace ent
 		double number;
 		bool boolean;
 		std::vector<value> array;
-		std::shared_ptr<entity> object;
+		std::shared_ptr<tree> object;
 
 		value()									: type(vtype::Null) {}
 		value(vtype type)						: type(type)		{}
@@ -49,7 +43,7 @@ namespace ent
 		value(long value)						: type(vtype::Number),	number(value)	{}
 		value(bool value) 						: type(vtype::Boolean),	boolean(value)	{}
 		value(std::vector<value> &value)		: type(vtype::Array),	array(value)	{}
-		value(std::shared_ptr<entity> value)	: type(vtype::Object),	object(value)	{}
+		value(std::shared_ptr<tree> value)	: type(vtype::Object),	object(value)	{}
 
 		bool null();
 
@@ -64,7 +58,7 @@ namespace ent
 
 		template <class T> bool is() { return false; }
 	};
-
+	
 
 	template <> bool value::is<std::string>();
 	template <> bool value::is<float>();

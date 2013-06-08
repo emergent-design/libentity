@@ -7,14 +7,14 @@ namespace ent
 	class json
 	{
 		public:
-			static std::string to(entity &item, bool pretty, int depth = 0);
-			static entity from(std::string &text);
+			static std::string to(tree &item, bool pretty, int depth = 0);
+			static tree from(std::string &text);
 			
 		private:
 			static std::string property(value &item, bool pretty, int depth);
 
 			static void validate(std::string &text);
-			static entity parse(std::string &text, int &i);
+			static tree parse(std::string &text, int &i);
 			static std::string parse_key(std::string &text, int &i);
 			static std::string parse_string(std::string &text, int &i);
 			static std::string parse_item(std::string &text, int &i);

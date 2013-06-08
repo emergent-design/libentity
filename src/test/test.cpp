@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 	} //*/
 
 	//auto tree = entity::from<json>(test);
-	auto tree = entity::from<json>(js);
+	auto tree = tree::from<json>(js);
 	//auto tree = entity::from<json>(jsc);
 	/*auto tree = entity()
 		.set("a", "a value")
