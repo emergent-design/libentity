@@ -9,8 +9,8 @@ namespace ent
 	{
 		public:
 
-			template <class T> std::string to(bool pretty = false) 	{ return this->to_tree().to<T>(pretty); }
-			template <class T> void from(std::string value)			{ tree t = T::from(value); this->from_tree(t); }
+			template <class T> std::string to(bool pretty = false) 	{ return to_tree().to<T>(pretty); }
+			template <class T> void from(std::string value)			{ tree t = T::from(value); from_tree(t); }
 
 			tree to_tree();
 			void from_tree(tree &tree);
@@ -31,5 +31,8 @@ namespace ent
 		private:
 			std::map<std::string, std::shared_ptr<vmapbase>> mapping;
 	};
+
+
+	template <> void entity::map(std::string name, std::vector<byte> &reference);
 
 }

@@ -49,7 +49,7 @@ class TestClass : public entity
 
 string js = u8R"json(
 {
-	"binary": [ 0, 1, 2, 136, 255 ],
+	"binary": "AAECiP8=",
 	"floating": 1.2,
 	"integer": 42,
 	"integers": [ 1, 1, 2, 3, 5, 8 ],
@@ -108,6 +108,7 @@ SUITE("Entity Tests")
 		for (auto &i : tc.strings)	cout << i << ", ";		cout << endl;
 		for (auto &i : tc.integers) cout << i << ", ";		cout << endl;
 		for (auto &i : tc.objects)	cout << i.name << ", "; cout << endl;
+		for (auto &i : tc.binary)	cout << (int)i << ", ";	cout << endl; //*/
 	}
 }
 

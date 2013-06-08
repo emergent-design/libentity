@@ -49,19 +49,34 @@ namespace ent
 
 		virtual void from(value &value)
 		{
+			if (array)
+			{
+				this->array->clear();
 
+				if (value.type == vtype::Array)
+				{
+					for (auto &v : value.array)
+					{
+						if (v.type == vtype::Object)
+						{
+							T item;
+							item.from_tree(*v.object);
+							
+							this->array->push_back(item);
+						}
+					}
+				}
+			}
+			else if (value.type == vtype::Object) reference->from_tree(*value.object);
 		}
 
 
-		T *reference = nullptr;
-		std::vector<T> *array = nullptr;
+		T *reference			= nullptr;
+		std::vector<T> *array	= nullptr;
 	};
 
 
-
-	// Need to get binary special case working:
-
-	/*template <> struct vmap<std::vector<byte>, typename std::enable_if<true>::type> : public vmapb
+	template <> struct vmap<std::vector<byte>> : public vmapbase
 	{
 		vmap(std::vector<byte> &reference) : reference(&reference) {}
 
@@ -72,11 +87,11 @@ namespace ent
 
 		virtual void from(value &value)
 		{
-
+			*reference = value.get(std::vector<byte> {});
 		}
 
-		std::vector<byte> *reference = nullptr;
-	};*/
+		std::vector<byte> *reference;
+	};
 
 
 	template <class T> struct vmap<T, typename std::enable_if<std::is_arithmetic<T>::value || std::is_same<std::string, T>::value>::type> : public vmapbase
@@ -119,7 +134,7 @@ namespace ent
 		}
 
 
-		T *reference = nullptr;
-		std::vector<T> *array = nullptr;
+		T *reference			= nullptr;
+		std::vector<T> *array	= nullptr;
 	};
 }

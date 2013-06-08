@@ -25,4 +25,10 @@ namespace ent
 			m.second->from(tree.properties[m.first]);
 		}
 	}
+
+
+	template <> void entity::map(std::string name, std::vector<byte> &reference)
+	{
+		this->mapping[name] = std::make_shared<vmap<vector<byte>>>(reference);
+	}
 }
