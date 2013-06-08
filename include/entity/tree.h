@@ -26,7 +26,7 @@ namespace ent
 			}
 
 
-			template <class T> tree &set(const std::string name, const T &item)
+			template <class T> tree &set(const std::string name, const T&item)
 			{
 				this->properties[name] = value(item);
 				return *this;
@@ -69,7 +69,40 @@ namespace ent
 			}
 
 
-			template <class T> std::string to(bool pretty = false) 		{ return T::to(*this, pretty); }
+			template <class T> std::map<std::string, T> map(const std::string name)
+			{
+				std::map<std::string, T> result;
+
+				if (this->properties.count(name))
+				{
+					auto &p = this->properties[name];
+
+					if (p.type == vtype::Object)
+					{
+						for (auto &v : p.object->properties)
+						{
+							if (v.second.is<T>()) result[v.first] = v.second.get(T());
+						}
+					}
+				}
+
+				return result;
+			}
+
+
+			template <class T> tree &set(std::string name, const std::map<std::string, T> &items)
+			{
+				tree result;
+
+				for (auto &i : items) result.set(i.first, i.second);
+
+				this->properties[name] = value(std::make_shared<tree>(result));
+
+				return *this;
+			}
+
+
+			template <class T> std::string to(bool pretty = false) 	{ return T::to(*this, pretty); }
 			template <class T> static tree from(std::string &value)	{ return T::from(value); }
 
 			std::map<std::string, value> properties;

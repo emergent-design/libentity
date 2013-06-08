@@ -33,16 +33,16 @@ namespace ent
 		std::vector<value> array;
 		std::shared_ptr<tree> object;
 
-		value()									: type(vtype::Null) {}
-		value(vtype type)						: type(type)		{}
-		value(const char *value)				: type(vtype::String),	string(value)	{}
-		value(std::string value) 				: type(vtype::String),	string(value)	{}
-		value(float value) 						: type(vtype::Number),	number(value)	{}
-		value(double value) 					: type(vtype::Number),	number(value)	{}
-		value(int value)						: type(vtype::Number),	number(value)	{}
-		value(long value)						: type(vtype::Number),	number(value)	{}
-		value(bool value) 						: type(vtype::Boolean),	boolean(value)	{}
-		value(std::vector<value> &value)		: type(vtype::Array),	array(value)	{}
+		value()								: type(vtype::Null) {}
+		value(vtype type)					: type(type)		{}
+		value(const char *value)			: type(vtype::String),	string(value)	{}
+		value(std::string value) 			: type(vtype::String),	string(value)	{}
+		value(float value) 					: type(vtype::Number),	number(value)	{}
+		value(double value) 				: type(vtype::Number),	number(value)	{}
+		value(int value)					: type(vtype::Number),	number(value)	{}
+		value(long value)					: type(vtype::Number),	number(value)	{}
+		value(bool value) 					: type(vtype::Boolean),	boolean(value)	{}
+		value(std::vector<value> &value)	: type(vtype::Array),	array(value)	{}
 		value(std::shared_ptr<tree> value)	: type(vtype::Object),	object(value)	{}
 
 		bool null();
@@ -53,6 +53,7 @@ namespace ent
 		int get(int defaultValue);
 		long get(long defaultValue);
 		bool get(bool defaultValue);
+		tree get(tree defaultValue);
 
 		std::vector<byte> get(std::vector<byte> defaultValue);
 
@@ -66,6 +67,7 @@ namespace ent
 	template <> bool value::is<int>();
 	template <> bool value::is<long>();
 	template <> bool value::is<bool>();
+	template <> bool value::is<tree>();
 
 
 	inline std::ostream &operator << (std::ostream &output, const value &v)

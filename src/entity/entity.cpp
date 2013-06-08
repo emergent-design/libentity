@@ -8,6 +8,7 @@ namespace ent
 	tree entity::to_tree()
 	{
 		tree result;
+		this->create_map();
 
 		for (auto &m : this->mapping)
 		{
@@ -20,6 +21,8 @@ namespace ent
 
 	void entity::from_tree(tree &tree)
 	{
+		this->create_map();
+		
 		for (auto &m : this->mapping)
 		{
 			m.second->from(tree.properties[m.first]);

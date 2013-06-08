@@ -16,6 +16,7 @@ namespace ent
 	int value::get(int defaultValue)					{ return this->type == vtype::Number	? lrint(this->number) : defaultValue; }
 	long value::get(long defaultValue)					{ return this->type == vtype::Number	? lrint(this->number) : defaultValue; }
 	bool value::get(bool defaultValue)					{ return this->type == vtype::Boolean	? this->boolean : defaultValue; }
+	tree value::get(tree defaultValue)					{ return this->type == vtype::Object	? *this->object : defaultValue; }
 
 
 	std::vector<byte> value::get(std::vector<byte> defaultValue)
@@ -30,4 +31,5 @@ namespace ent
 	template <> bool value::is<int>()			{ return this->type == vtype::Number; }
 	template <> bool value::is<long>()			{ return this->type == vtype::Number; }
 	template <> bool value::is<bool>()			{ return this->type == vtype::Boolean; }
+	template <> bool value::is<tree>()			{ return this->type == vtype::Object; }
 }

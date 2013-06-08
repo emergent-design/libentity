@@ -1,12 +1,7 @@
 #pragma once
 
-//#include <map>
-//#include <memory>
-//#include <iostream>
-//#include <algorithm>
-//#include <initializer_list>
-
 #include "entity/value.h"
+#include "entity/tree.h"
 
 
 namespace ent
@@ -26,8 +21,9 @@ namespace ent
 
 	template<class T> struct vmap<T, typename std::enable_if<std::is_base_of<entity, T>::value>::type> : public vmapbase
 	{
-		vmap(std::vector<T> &array) : array(&array) {}
 		vmap(T &reference) : reference(&reference) {}
+		vmap(std::vector<T> &array) : array(&array) {}
+		vmap(std::map<std::string, T> &map) : map(&map) {}
 
 
 		virtual value to()
@@ -43,7 +39,17 @@ namespace ent
 
 				return result;
 			}
-			return value(std::make_shared<tree>(reference->to_tree()));
+			else if (map)
+			{
+				auto result = std::make_shared<tree>();
+
+				for (auto &i : *map) result->set(i.first, i.second.to_tree());
+
+				return value(result);
+			}
+			else if (reference) return value(std::make_shared<tree>(reference->to_tree()));
+
+			return value();
 		}
 
 
@@ -59,10 +65,23 @@ namespace ent
 					{
 						if (v.type == vtype::Object)
 						{
-							T item;
-							item.from_tree(*v.object);
-							
-							this->array->push_back(item);
+							this->array->push_back(T());
+							this->array->back().from_tree(*v.object);
+						}
+					}
+				}
+			}
+			else if (map)
+			{
+				this->map->clear();
+
+				if (value.type == vtype::Object)
+				{
+					for (auto &i : value.object->properties)
+					{
+						if (i.second.type == vtype::Object)
+						{
+							(*this->map)[i.first].from_tree(*i.second.object);
 						}
 					}
 				}
@@ -71,8 +90,9 @@ namespace ent
 		}
 
 
-		T *reference			= nullptr;
-		std::vector<T> *array	= nullptr;
+		T *reference					= nullptr;
+		std::vector<T> *array			= nullptr;
+		std::map<std::string, T> *map	= nullptr;
 	};
 
 
@@ -80,15 +100,9 @@ namespace ent
 	{
 		vmap(std::vector<byte> &reference) : reference(&reference) {}
 
-		virtual value to()
-		{
-			return value(encode64(*reference));
-		}
+		virtual value to() { return value(encode64(*reference)); }
 
-		virtual void from(value &value)
-		{
-			*reference = value.get(std::vector<byte> {});
-		}
+		virtual void from(value &value) { *reference = value.get(std::vector<byte> {}); }
 
 		std::vector<byte> *reference;
 	};
@@ -96,8 +110,10 @@ namespace ent
 
 	template <class T> struct vmap<T, typename std::enable_if<std::is_arithmetic<T>::value || std::is_same<std::string, T>::value>::type> : public vmapbase
 	{
-		vmap(std::vector<T> &array) : array(&array) {}
 		vmap(T &reference) : reference(&reference) {}
+		vmap(std::vector<T> &array) : array(&array) {}
+		vmap(std::map<std::string, T> &map) : map(&map) {}
+
 
 		virtual value to()
 		{
@@ -112,7 +128,17 @@ namespace ent
 
 				return result;
 			}
-			return value(*reference);
+			else if (map)
+			{
+				auto result = std::make_shared<tree>();
+
+				for (auto &i : *map) result->set(i.first, i.second);
+
+				return value(result);
+			}
+			else if (reference)	return value(*reference);
+
+			return value();
 		}
 
 
@@ -130,11 +156,24 @@ namespace ent
 					}
 				}
 			}
-			else *reference = value.get(T());
+			else if (map)
+			{
+				this->map->clear();
+
+				if (value.type == vtype::Object)
+				{
+					for (auto &i : value.object->properties)
+					{
+						if (i.second.is<T>()) (*this->map)[i.first] = i.second.get(T());
+					}
+				}
+			}
+			else if (reference) *reference = value.get(T());
 		}
 
 
-		T *reference			= nullptr;
-		std::vector<T> *array	= nullptr;
+		T *reference					= nullptr;
+		std::vector<T> *array			= nullptr;
+		std::map<std::string, T> *map	= nullptr;
 	};
 }

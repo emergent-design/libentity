@@ -240,7 +240,7 @@ namespace ent
 						{
 							// Parse the property value based on the next character
 							if (text[i] == '{')			result.set(name, parse(text, i));					// Object
-							else if (text[i] == '[')	result.set(name, parse_array(text, i));				// Array
+							else if (text[i] == '[')	result.properties[name] = parse_array(text, i); 	//result.set(name, parse_array(text, i));				// Array
 							else if (text[i] == '"')	result.set(name, unescape(parse_string(text, i)));	// String
 							else
 							{
