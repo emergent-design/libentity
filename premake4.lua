@@ -17,9 +17,17 @@ solution "entity"
 		files 			{ "include/entity/**.h", "src/entity/**.cpp" }
 		postbuildcommands	{ "./strip lib/libentity.so" }
 
-	project "test"
+	project "libtest"
 		kind				"SharedLib"
+		targetname			"test"
 		defines				{ "__stdcall=" }
 		links				{ "libentity", "xUnit++" }
 		files				{ "include/test/**.h", "src/test/**.cpp" }
 		postbuildcommands	{ "./runner" }
+		
+	project "test"
+		kind				"ConsoleApp"
+		targetdir			"bin"
+		links				{ "libentity" }
+		files				{ "src/test/test.cpp" }
+

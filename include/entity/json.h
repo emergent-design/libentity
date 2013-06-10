@@ -1,6 +1,7 @@
 #pragma once
 
-#include "entity/entity.h"
+#include <entity/entity.h>
+
 
 namespace ent
 {
@@ -21,4 +22,10 @@ namespace ent
 			static value parse_array(std::string &text, int &i);
 			static void error(std::string message, std::string json, int i);
 	};
+
+	
+	inline std::ostream &operator << (std::ostream &output, entity &e)
+	{
+		return output << e.to<json>(true);
+	}
 }

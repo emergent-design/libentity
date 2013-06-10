@@ -56,36 +56,27 @@ struct TestClass : entity
 
 string js = u8R"json(
 {
-	"binary": "AAECiP8=",
-	"dictionary": { "first": "1", "second": "2"	},
-	"floating": 1.2,
-	"integer": 42,
-	"integers": [ 1, 1, 2, 3, 5, 8 ],
-	"name": "hello",
+	"name":			"hello",
+	"binary":		"AAECiP8=",
+	"floating":		1.2,
+	"integer":		42,
+	"integers":		[ 1, 1, 2, 3, 5, 8 ],
+	"strings": 		[ "array", "of", "strings" ],
+	"dictionary":	{ "first": "1", "second": "2"	},
+
 	"objectMap": {
-		"first": {
-			"flag": true,
-			"name": "sub hello"
-		},
-		"second": {
-			"flag": true,
-			"name": "sub hello"
-		}
+		"first":	{ "flag": true, "name": "map item 1" },
+		"second":	{ "flag": false, "name": "map item 2" }
 	},
+
 	"objects": [
-		{
-			"flag": true,
-			"name": "sub hello"
-		},
-		{
-			"flag": true,
-			"name": "sub hello"
-		}
+		{ "flag": false, "name": "array item 1" },
+		{ "flag": true, "name": "array item 2" }
 	],
-	"strings": [ "array", "of", "strings" ],
+
 	"sub": {
-		"flag": true,
-		"name": "sub hello"
+		"flag":	true,
+		"name":	"sub hello"
 	}
 }
 ")json";
@@ -97,7 +88,7 @@ typedef duration<int, std::milli> ms;
 
 SUITE("Entity Tests")
 {
-	FACT("Mapping might work")
+	FACT("Mapping does work")
 	{
 		/*tree t = tree()
 			.set("a", map<string, string> {{ "a", "1" }, { "b", "2" }})
@@ -131,20 +122,21 @@ SUITE("Entity Tests")
 
 		tc.from<json>(js);
 
+		cout << endl << "Scalar" << endl;
 		cout << tc.name << endl;
 		cout << tc.integer << endl;
 		cout << tc.floating << endl;
-		cout << tc.sub.name << endl;
-		cout << tc.sub.flag << endl;
+		cout << tc.sub.to<json>() << endl;
 
+		cout << endl << "Arrays" << endl;
 		for (auto &i : tc.strings)	cout << i << ", ";		cout << endl;
 		for (auto &i : tc.integers) cout << i << ", ";		cout << endl;
 		for (auto &i : tc.objects)	cout << i.to<json>() << ", "; cout << endl;
 		for (auto &i : tc.binary)	cout << (int)i << ", ";	cout << endl;
 
+		cout << endl << "Maps" << endl;
 		for (auto &i : tc.dictionary) 	cout << i.first << "=" << i.second << ", ";				cout << endl;
 		for (auto &i : tc.objectMap)	cout << i.first << "=" << i.second.to<json>() << ", ";	cout << endl;
-
 
 		/*
 		 * Test to make sure mappings are refreshed when an entity is copy constructed

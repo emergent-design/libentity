@@ -10,6 +10,7 @@ namespace ent
 	bool value::null() { return this->type == vtype::Null; }
 
 
+	vector<byte> value::get(vector<byte> defaultValue)	{ return this->type == vtype::String	? decode64(this->string) : defaultValue; }
 	std::string value::get(std::string defaultValue)	{ return this->type == vtype::String	? this->string : defaultValue; }
 	float value::get(float defaultValue)				{ return this->type == vtype::Number	? this->number : defaultValue; }
 	double value::get(double defaultValue)				{ return this->type == vtype::Number	? this->number : defaultValue; }
@@ -18,12 +19,6 @@ namespace ent
 	bool value::get(bool defaultValue)					{ return this->type == vtype::Boolean	? this->boolean : defaultValue; }
 	tree value::get(tree defaultValue)					{ return this->type == vtype::Object	? *this->object : defaultValue; }
 
-
-	std::vector<byte> value::get(std::vector<byte> defaultValue)
-	{
-		return this->type == vtype::String ? decode64(this->string) : defaultValue;
-	}
-	
 
 	template <> bool value::is<std::string>()	{ return this->type == vtype::String; }
 	template <> bool value::is<float>()			{ return this->type == vtype::Number; }

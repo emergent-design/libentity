@@ -8,6 +8,11 @@ namespace ent
 	tree entity::to_tree()
 	{
 		tree result;
+
+		// Refresh the mappings every time since we can't rely on doing it in
+		// the entity constructor since a copy construct would actually copy
+		// the mappings as well thereby using references to another object
+		// instance (that potentially no longer exists).
 		this->create_map();
 
 		for (auto &m : this->mapping)
@@ -21,6 +26,7 @@ namespace ent
 
 	void entity::from_tree(tree &tree)
 	{
+		// Refresh the mappings (see above)
 		this->create_map();
 		
 		for (auto &m : this->mapping)
@@ -34,4 +40,5 @@ namespace ent
 	{
 		this->mapping[name] = std::make_shared<vmap<vector<byte>>>(reference);
 	}
+
 }

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "entity/value.h"
-#include "entity/tree.h"
+#include <entity/value.h>
+#include <entity/tree.h>
 
 
 namespace ent
