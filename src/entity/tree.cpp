@@ -46,8 +46,6 @@ namespace ent
 	}
 
 
-
-	// Store a binary vector as an encoded string
 	tree &tree::set(const string name, const vector<byte> &item)
 	{
 		this->properties[name] = value(encode64(item));

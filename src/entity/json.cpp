@@ -6,8 +6,8 @@ using namespace std;
 
 namespace ent
 {
-	// String escape, ignores the forward slash (only relevant when
-	// dealing with html). Does not handle unicode properly.
+	// String escape, ignores the forward slash (only relevant when dealing with
+	// html). Does not handle unicode properly.
 	string escape(string item)
 	{
 		string result;
@@ -32,8 +32,7 @@ namespace ent
 	}
 
 
-	// String unescape, restores escaped characters to their
-	// former glory.
+	// String unescape, restores escaped characters to their former glory.
 	string unescape(string item)
 	{
 		bool special = false;
@@ -62,10 +61,9 @@ namespace ent
 
 
 	const char quote		= '"';
-	bool whitespace[256]	= { false };
+	bool whitespace[256]	= { false };	// Whitespace lookup table
 
 
-	// Generate json string from an entity tree
 	string json::to(tree &item, bool pretty, int depth)
 	{
 		stringstream result;
@@ -89,7 +87,7 @@ namespace ent
 	}
 
 
-	// Stringify a property value
+
 	string json::property(value &item, bool pretty, int depth)
 	{
 		stringstream result;
@@ -124,7 +122,6 @@ namespace ent
 	}
 
 
-	// Generate an entity tree from a json string
 	tree json::from(string &text)
 	{
 		if (!whitespace[' '])
@@ -141,8 +138,6 @@ namespace ent
 	}
 
 
-	// Very basic iterative validation. It ensures that all objects and arrays are
-	// terminated so that the recursive parsing functions don't fall over.
 	void json::validate(string &text)
 	{
 		int j;
@@ -197,7 +192,6 @@ namespace ent
 	}
 
 
-	// Parse a json object
 	tree json::parse(string &text, int &i)
 	{
 		tree result;
@@ -262,7 +256,6 @@ namespace ent
 	}
 
 
-	// Extract the key, should be a simple string within quotes
 	string json::parse_key(string &text, int &i)
 	{
 		int start = ++i;
@@ -273,7 +266,6 @@ namespace ent
 	}
 
 
-	// Extract a string value ignoring any escape characters
 	string json::parse_string(string &text, int &i)
 	{
 		int start	= ++i;
@@ -288,9 +280,7 @@ namespace ent
 		return text.substr(start, i-start);
 	}
 
-
-	// Extract a numeric/boolean/null value, should always end
-	// with a whitespace character, comma or }.
+	
 	string json::parse_item(string &text, int &i)
 	{
 		int start = i;
@@ -300,7 +290,6 @@ namespace ent
 	}
 
 
-	// Parse an array, contained within square brackets
 	value json::parse_array(string &text, int &i)
 	{
 		value result(vtype::Array);
@@ -334,7 +323,6 @@ namespace ent
 	}
 
 
-	// Throw an error which shows the whereabouts of a problem in the json string.
 	void json::error(string message, string json, int i)
 	{
 		int tabs	= 0;

@@ -62,7 +62,7 @@ namespace ent
 			}
 
 
-	private:
+		private:
 
 			// This holds the map that links object property names to
 			// actual instance members.

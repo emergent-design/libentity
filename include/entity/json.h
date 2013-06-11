@@ -5,25 +5,56 @@
 
 namespace ent
 {
+	// A JSON serialiser which converts a tree representing an object to and from
+	// a string. All serialisers must contain two static functions:
+	// 1. The 'to' function takes a tree and returns a string.
+	// 2. The 'from' function takes a string and returns a tree.
 	class json
 	{
 		public:
+
+			// Serialise from a tree to a JSON string
 			static std::string to(tree &item, bool pretty, int depth = 0);
+
+			// Deserialise from a JSON string to a tree
 			static tree from(std::string &text);
-			
+
+
 		private:
+
+			// Stringify a property value
 			static std::string property(value &item, bool pretty, int depth);
 
+			// Very basic iterative validation. It ensures that all objects and
+			// arrays are terminated so that the recursive parsing functions
+			// don't fall over.
 			static void validate(std::string &text);
+
+			// In each of the following 'i' is the current position index within
+			// the JSON string.
+
+			// Parse a JSON string into an object tree
 			static tree parse(std::string &text, int &i);
+
+			// Extract the key, should be a simple string within quotes
 			static std::string parse_key(std::string &text, int &i);
+
+			// Extract a string value ignoring any escape characters
 			static std::string parse_string(std::string &text, int &i);
+
+			// Extract a numeric/boolean/null value, should always end with a
+			// whitespace character, comma or '}'.
 			static std::string parse_item(std::string &text, int &i);
+
+			// Parse an array, contained within square brackets
 			static value parse_array(std::string &text, int &i);
+
+			// Throw an error which shows the whereabouts of a problem in the JSON string.
 			static void error(std::string message, std::string json, int i);
 	};
 
-	
+
+	// Utility function that lets you cout any entities.
 	inline std::ostream &operator << (std::ostream &output, entity &e)
 	{
 		return output << e.to<json>(true);
