@@ -122,7 +122,7 @@ SUITE("Entity Tests")
 
 		tc.from<json>(js);
 
-		cout << endl << "Scalar" << endl;
+		/*cout << endl << "Scalar" << endl;
 		cout << tc.name << endl;
 		cout << tc.integer << endl;
 		cout << tc.floating << endl;
@@ -136,7 +136,7 @@ SUITE("Entity Tests")
 
 		cout << endl << "Maps" << endl;
 		for (auto &i : tc.dictionary) 	cout << i.first << "=" << i.second << ", ";				cout << endl;
-		for (auto &i : tc.objectMap)	cout << i.first << "=" << i.second.to<json>() << ", ";	cout << endl;
+		for (auto &i : tc.objectMap)	cout << i.first << "=" << i.second.to<json>() << ", ";	cout << endl;//*/
 
 		/*
 		 * Test to make sure mappings are refreshed when an entity is copy constructed

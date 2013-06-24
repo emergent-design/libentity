@@ -1,5 +1,7 @@
 #include <entity/entity.h>
 #include <entity/json.h>
+#include <entity/xml.h>
+
 
 using namespace std;
 using namespace ent;
@@ -113,15 +115,75 @@ string test_js = u8R"json(
 ")json";
 
 
+string test_xml = u8R"xml(
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<entity>
+	<name>hello &lt;this&gt; needs &amp; unescaping &apos; &quot;properly&quot;</name>
+	<binary>AAECiP8=</binary>
+	<floating value="1.2" />
+	<integer value="42" />
+
+	<integers>
+		<i_ value="1" />
+		<i_ value="1" />
+		<i_ value="2" />
+		<i_ value="3" />
+		<i_ value="5" />
+		<i_ value="8" />
+	</integers>
+	
+	<strings>
+		<i_>array</i_>
+		<i_>of</i_>
+		<i_>strings</i_>
+	</strings>
+
+	<dictionary>
+		<first>1</first>
+		<second>2</second>
+	</dictionary>
+
+	<objectMap>
+		<first>
+			<flag value="true" />
+			<name>map item 1</name>
+		</first>
+		<second>
+			<flag value="false" />
+			<name>map item 2</name>
+		</second>
+	</objectMap>
+
+	<objects>
+		<i_>
+			<flag value="false" />
+			<name>array item 1</name>
+		</i_>
+		<i_>
+			<flag value="true" />
+			<name>array item 2</name>
+		</i_>
+	</objects>
+
+	<sub>
+		<flag value="true" />
+		<name>sub hello</name>
+	</sub>
+</entity>
+)xml";
+
+
 int main(int argc, char *argv[])
 {
 	auto start = steady_clock::now();
 
-	//std::chrono::nanoseconds
-
 	TestClass tc;
 
-	for (int i=0; i<1000; i++) tc.from<json>(test_js);
+	//for (int i=0; i<1000; i++)
+		//tc.from<json>(test_js);
+		tc.from<xml>(test_xml);
+
+	//cout << tc.to<xml>(true) << endl;
 
 	cout << endl << "Scalar" << endl;
 	cout << tc.name << endl;
@@ -137,7 +199,7 @@ int main(int argc, char *argv[])
 
 	cout << endl << "Maps" << endl;
 	for (auto &i : tc.dictionary) 	cout << i.first << "=" << i.second << ", ";				cout << endl;
-	for (auto &i : tc.objectMap)	cout << i.first << "=" << i.second.to<json>() << ", ";	cout << endl;
+	for (auto &i : tc.objectMap)	cout << i.first << "=" << i.second.to<json>() << ", ";	cout << endl; //*/
 
 	cout << "Time = " << duration_cast<us>(steady_clock::now() - start).count() << "us" << endl;
 

@@ -22,6 +22,13 @@ namespace ent
 
 		private:
 
+			// String escape, ignores the forward slash (only relevant when dealing with
+			// html). Does not handle unicode properly.
+			static std::string escape(std::string item);
+
+			// String unescape, restores escaped characters to their former glory.
+			static std::string unescape(std::string item);
+
 			// Stringify a property value
 			static std::string property(value &item, bool pretty, int depth);
 
@@ -51,6 +58,9 @@ namespace ent
 
 			// Throw an error which shows the whereabouts of a problem in the JSON string.
 			static void error(std::string message, std::string json, int i);
+
+			// Whitespace lookup table
+			static bool whitespace[256];
 	};
 
 

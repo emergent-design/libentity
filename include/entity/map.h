@@ -36,7 +36,7 @@ namespace ent
 	// if they require mapping and serialising.
 	template<class T> struct vmap<T, typename std::enable_if<std::is_base_of<entity, T>::value>::type> : public vmapbase
 	{
-		// Constructors to handle scalar, array and dictionary scenarios
+		// Constructors to handle scalar, array and dictionary based values
 		vmap(T &reference) : reference(&reference) {}
 		vmap(std::vector<T> &array) : array(&array) {}
 		vmap(std::map<std::string, T> &map) : map(&map) {}
@@ -150,7 +150,7 @@ namespace ent
 	// A value map for any of the simple types (string, number, boolean)
 	template <class T> struct vmap<T, typename std::enable_if<std::is_arithmetic<T>::value || std::is_same<std::string, T>::value>::type> : public vmapbase
 	{
-		// Constructors to handle scalar, array and dictionary scenarios
+		// Constructors to handle scalar, array and dictionary based values
 		vmap(T &reference) : reference(&reference) {}
 		vmap(std::vector<T> &array) : array(&array) {}
 		vmap(std::map<std::string, T> &map) : map(&map) {}

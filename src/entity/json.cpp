@@ -6,9 +6,8 @@ using namespace std;
 
 namespace ent
 {
-	// String escape, ignores the forward slash (only relevant when dealing with
-	// html). Does not handle unicode properly.
-	string escape(string item)
+	
+	string json::escape(string item)
 	{
 		string result;
 		result.reserve(item.length());
@@ -32,8 +31,8 @@ namespace ent
 	}
 
 
-	// String unescape, restores escaped characters to their former glory.
-	string unescape(string item)
+
+	string json::unescape(string item)
 	{
 		bool special = false;
 		string result;
@@ -60,8 +59,9 @@ namespace ent
 	}
 
 
-	const char quote		= '"';
-	bool whitespace[256]	= { false };	// Whitespace lookup table
+
+	const char quote			= '"';
+	bool json::whitespace[256]	= { false };
 
 
 	string json::to(tree &item, bool pretty, int depth)
@@ -93,6 +93,7 @@ namespace ent
 		stringstream result;
 		string line		= pretty ? "\n" : "";
 		string indent	= pretty ? string(2 * (depth + 1), ' ') : "";
+		string extra 	= pretty ? string(2, ' ') : "";
 
 		if (item.type == vtype::Array)
 		{
@@ -102,7 +103,7 @@ namespace ent
 
 			for (auto &i : item.array)
 			{
-				result	<< indent << string(2, ' ') << property(i, pretty, depth+1) 
+				result	<< indent << extra << property(i, pretty, depth+1) 
 						<< (j-- ? "," : "") << line;
 			}
 
@@ -133,7 +134,7 @@ namespace ent
 		// Check that this looks like valid json
 		validate(text);
 
-		int i=0;
+		int i = 0;
 		return parse(text, i);
 	}
 
@@ -306,7 +307,7 @@ namespace ent
 				if (text[i] == ']') 		break;
 				if (text[i] == '{')			result.array.emplace_back(make_shared<tree>(parse(text, i)));	// Object
 				else if (text[i] == '[')	result.array.emplace_back(parse_array(text, i));				// Array
-				else if (text[i] == '"')	result.array.emplace_back(parse_string(text, i));				// String
+				else if (text[i] == '"')	result.array.emplace_back(unescape(parse_string(text, i)));		// String
 				else
 				{
 					string item = parse_item(text, i);

@@ -13,7 +13,7 @@ namespace ent
 	{
 		public:
 
-			// Get property by name where the value is an objectand therefore
+			// Get property by name where the value is an object and therefore
 			// represented by another tree.
 			tree get(const std::string name);
 

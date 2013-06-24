@@ -14,14 +14,14 @@ namespace ent
 		public:
 
 			// Convenience function that invokes the appropriate
-			// functions to serialise this instance.
+			// methods to serialise this instance.
 			template <class T> std::string to(bool pretty = false)
 			{
 				return this->to_tree().to<T>(pretty);
 			}
 
 			// Convenience function that invokes the appropriate
-			// functions to deserialise this instance.
+			// methods to deserialise this instance.
 			template <class T> void from(std::string &value)
 			{
 				tree t = T::from(value);
@@ -35,10 +35,6 @@ namespace ent
 			// Uses the mapping to pull the relevant values
 			// out of a tree and into this object instance.
 			void from_tree(tree &tree);
-
-			// Abstract function that must be implemented by
-			// any objects to be serialised/deserialised.
-			virtual void create_map() = 0;
 
 			
 		protected:
@@ -60,6 +56,10 @@ namespace ent
 			{
 				this->mapping[name] = std::make_shared<vmap<T>>(reference);
 			}
+
+			// Abstract function that must be implemented by
+			// any objects to be serialised/deserialised.
+			virtual void create_map() = 0;
 
 
 		private:
