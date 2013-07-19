@@ -22,7 +22,7 @@ namespace ent
 
 			// Convenience function that invokes the appropriate
 			// methods to deserialise this instance.
-			template <class T> void from(std::string &value)
+			template <class T> void from(const std::string &value)
 			{
 				tree t = T::from(value);
 				this->from_tree(t); 

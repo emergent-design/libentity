@@ -7,7 +7,7 @@ using namespace std;
 namespace ent
 {
 	
-	string json::escape(string item)
+	string json::escape(const string item)
 	{
 		string result;
 		result.reserve(item.length());
@@ -32,7 +32,7 @@ namespace ent
 
 
 
-	string json::unescape(string item)
+	string json::unescape(const string item)
 	{
 		bool special = false;
 		string result;
@@ -123,7 +123,7 @@ namespace ent
 	}
 
 
-	tree json::from(string &text)
+	tree json::from(const string &text)
 	{
 		if (!whitespace[' '])
 		{
@@ -139,7 +139,7 @@ namespace ent
 	}
 
 
-	void json::validate(string &text)
+	void json::validate(const string &text)
 	{
 		int j;
 		char c;
@@ -193,7 +193,7 @@ namespace ent
 	}
 
 
-	tree json::parse(string &text, int &i)
+	tree json::parse(const string &text, int &i)
 	{
 		tree result;
 		int length = text.length();
@@ -257,7 +257,7 @@ namespace ent
 	}
 
 
-	string json::parse_key(string &text, int &i)
+	string json::parse_key(const string &text, int &i)
 	{
 		int start = ++i;
 
@@ -267,7 +267,7 @@ namespace ent
 	}
 
 
-	string json::parse_string(string &text, int &i)
+	string json::parse_string(const string &text, int &i)
 	{
 		int start	= ++i;
 		bool ignore = false;	// Flag to ensure escaped quotes within the string are ignored
@@ -282,7 +282,7 @@ namespace ent
 	}
 
 	
-	string json::parse_item(string &text, int &i)
+	string json::parse_item(const string &text, int &i)
 	{
 		int start = i;
 		for (i++; i<text.length() && !whitespace[(byte)text[i]] && text[i] != '}'; i++);
@@ -291,7 +291,7 @@ namespace ent
 	}
 
 
-	value json::parse_array(string &text, int &i)
+	value json::parse_array(const string &text, int &i)
 	{
 		value result(vtype::Array);
 		int length = text.length();
@@ -324,7 +324,7 @@ namespace ent
 	}
 
 
-	void json::error(string message, string json, int i)
+	void json::error(const string message, const string json, int i)
 	{
 		int tabs	= 0;
 		auto prev 	= json.rfind('\n', i);

@@ -6,147 +6,182 @@ using namespace std;
 using namespace ent;
 
 
-struct SubClass : entity
+
+struct SimpleEntity : entity
 {
-	string name	= "default";
-	bool flag	= false;
-
-
-	void create_map()
-	{
-		map("name", this->name);
-		map("flag", this->flag);
-	}
-};
-
-struct TestClass : entity
-{
-	string name;
-	int integer;
-	double floating;
-	SubClass sub;
-
-	vector<string> strings;
-	vector<int> integers;
-	vector<SubClass> objects;
-	vector<byte> binary;
-	//vector<vector<int>> complex;
-
-	std::map<string, string> dictionary;
-	std::map<string, SubClass> objectMap;
-
+	string name = "simple";
+	bool flag	= true;
+	int integer	= 42;
 	
 	void create_map()
 	{
 		map("name", this->name);
+		map("flag", this->flag);
 		map("integer", this->integer);
-		map("floating", this->floating);
-		map("sub", this->sub);
-		map("strings", this->strings);
-		map("integers", this->integers);
-		map("objects", this->objects);
-		map("binary", this->binary);
-		//map("complex", this->complex);
-
-		map("dictionary", this->dictionary);
-		map("objectMap", this->objectMap);
 	}
 };
 
 
-string js = u8R"json(
+
+struct CollectionEntity : entity
 {
-	"name":			"hello",
-	"binary":		"AAECiP8=",
-	"floating":		1.2,
-	"integer":		42,
-	"integers":		[ 1, 1, 2, 3, 5, 8 ],
-	"strings": 		[ "array", "of", "strings" ],
-	"dictionary":	{ "first": "1", "second": "2"	},
+	std::vector<string> strings	 			= { "one", "two", "three" };
+	std::vector<double> doubles				= { 0.11, 0.22, 0.33 };
+	std::vector<byte> binary				= { 0x00, 0x01, 0x02, 0x88, 0xff };
+	std::map<string, string> dictionary		= { { "first", "item" }, { "second", "item" } };
 
-	"objectMap": {
-		"first":	{ "flag": true, "name": "map item 1" },
-		"second":	{ "flag": false, "name": "map item 2" }
-	},
-
-	"objects": [
-		{ "flag": false, "name": "array item 1" },
-		{ "flag": true, "name": "array item 2" }
-	],
-
-	"sub": {
-		"flag":	true,
-		"name":	"sub hello"
+	void create_map()
+	{
+		map("strings", this->strings);
+		map("doubles", this->doubles);
+		map("binary", this->binary);
+		map("dictionary", this->dictionary);
 	}
-}
-")json";
+};
 
 
-#include <chrono>
-using namespace chrono;
-typedef duration<int, std::milli> ms;
+
+struct ComplexEntity : entity
+{
+	string name 						= "complex";
+	std::vector<SimpleEntity> entities	= { SimpleEntity(), SimpleEntity() };
+	CollectionEntity collection;
+	SimpleEntity simple;
+
+	void create_map()
+	{
+		map("name", this->name);
+		map("entities", this->entities);
+		map("collection", this->collection);
+		map("simple", this->simple);
+	}
+};
+
+
 
 SUITE("Entity Tests")
 {
-	FACT("Mapping does work")
+	FACT("A simple entity can be mapped to a tree")
 	{
-		/*tree t = tree()
-			.set("a", map<string, string> {{ "a", "1" }, { "b", "2" }})
-			.set("b", map<string, tree> {{ "a", tree().set("a", "1") }, { "b", tree().set("b", "2") }});
+		tree t = SimpleEntity().to_tree();
 
-		cout << t.to<json>(true) << endl;
+		Assert.Equal("simple",	t.get<string>("name"));
+		Assert.Equal(42,		t.get<int>("integer"));
+		Assert.True(			t.get<bool>("flag"));
+	}
 
-		for (auto &i : t.map<string>("a")) cout << i.first << "=" << i.second << ", ";
-		cout << endl;
 
-		for (auto &i : t.map<tree>("b")) cout << i.first << "=" << i.second.properties.size() << ", ";
-		cout << endl;//*/
+	FACT("A simple entity can be mapped from a tree")
+	{
+		SimpleEntity e;
+		e.from_tree(tree()
+			.set("name", "changed")
+			.set("integer", 1)
+			.set("flag", false)
+		);
 
-		TestClass tc;
+		Assert.Equal("changed", e.name);
+		Assert.Equal(1,			e.integer);
+		Assert.False(			e.flag);
+	}
 
-		/*tc.name = "hello";
-		tc.integer = 42;
-		tc.floating = 1.2;
-		tc.sub.name = "sub hello";
-		tc.sub.flag = true;
 
-		tc.strings = { "array", "of", "strings" };
-		tc.integers = { 1, 1, 2, 3, 5, 8 };
-		tc.objects = { tc.sub, tc.sub };
-		tc.binary = { 0x00, 0x01, 0x02, 0x88, 0xff };
+	FACT("An entity with collections can be mapped to a tree")
+	{
+		tree t = CollectionEntity().to_tree();
 
-		tc.dictionary = { { "first", "1" }, { "second", "2" }};
-		tc.objectMap = { { "first", tc.sub }, { "second", tc.sub }};
+		Assert.Equal(vector<string> { "one", "two", "three" },							t.array<string>("strings"));
+		Assert.Equal(vector<double> { 0.11, 0.22, 0.33 },								t.array<double>("doubles"));
+		Assert.Equal(vector<byte> { 0x00, 0x01, 0x02, 0x88, 0xff },						t.get<vector<byte>>("binary"));
+		Assert.Equal(map<string, string> { { "first", "item" }, { "second", "item" } },	t.map<string>("dictionary"));
+	}
 
-		cout << tc.to<json>(true) << endl; //*/
 
-		tc.from<json>(js);
+	FACT("An entity with collections can be mapped from a tree")
+	{
+		CollectionEntity e;
+		e.from_tree(tree()
+			.set("strings", vector<string> { "four", "five" })
+			.set("doubles", vector<double> { 5.0, 3.0, 1.0, 0.0 })
+			.set("binary", vector<byte> { 0xff, 0x00 })
+			.set("dictionary", map<string, string> { { "first", "changed" }})
+		);
 
-		/*cout << endl << "Scalar" << endl;
-		cout << tc.name << endl;
-		cout << tc.integer << endl;
-		cout << tc.floating << endl;
-		cout << tc.sub.to<json>() << endl;
+		Assert.Equal(vector<string> { "four", "five" },				e.strings);
+		Assert.Equal(vector<double> { 5.0, 3.0, 1.0, 0.0 },			e.doubles);
+		Assert.Equal(vector<byte> { 0xff, 0x00 },					e.binary);
+		Assert.Equal(map<string, string> { { "first", "changed" }},	e.dictionary);
+	}
 
-		cout << endl << "Arrays" << endl;
-		for (auto &i : tc.strings)	cout << i << ", ";		cout << endl;
-		for (auto &i : tc.integers) cout << i << ", ";		cout << endl;
-		for (auto &i : tc.objects)	cout << i.to<json>() << ", "; cout << endl;
-		for (auto &i : tc.binary)	cout << (int)i << ", ";	cout << endl;
 
-		cout << endl << "Maps" << endl;
-		for (auto &i : tc.dictionary) 	cout << i.first << "=" << i.second << ", ";				cout << endl;
-		for (auto &i : tc.objectMap)	cout << i.first << "=" << i.second.to<json>() << ", ";	cout << endl;//*/
+	FACT("A complex entity can be mapped to a tree")
+	{
+		tree t = ComplexEntity().to_tree();
 
-		/*
-		 * Test to make sure mappings are refreshed when an entity is copy constructed
+		Assert.Equal("complex",									t.get<string>("name"));
+		Assert.Equal("simple", 									t.get("simple").get<string>("name"));
+		Assert.Equal(vector<string> { "one", "two", "three" },	t.get("collection").array<string>("strings"));
+		Assert.Equal(42,										t.array<tree>("entities")[0].get<int>("integer"));
+	}
 
-		TestClass a;
-		a.from<json>(js);
 
-		TestClass b = a;
-		a.name = "Another name";
-		cout << b.to<json>(true) << endl;*/
+	FACT("A complex entity can be mapped from a tree")
+	{
+		ComplexEntity e;
+		e.from_tree(tree()
+			.set("name", "changed")
+			.set("simple", tree().set("integer", 1024))
+			.set("collection", tree().set("doubles", vector<double> { 42.42 }))
+			.set("entities", vector<tree> { tree().set("name", "item") })
+		);
+
+		Assert.Equal("changed", e.name);
+		Assert.Equal(1024,		e.simple.integer);
+		Assert.Equal(1,			e.collection.doubles.size());
+		Assert.Equal(42.42,		e.collection.doubles[0]);
+		Assert.Equal(1,			e.entities.size());
+		Assert.Equal("item",	e.entities[0].name);
+	}
+
+
+	FACT("An entity can be serialised")
+	{
+		Assert.Equal(u8R"json({"flag":true,"integer":42,"name":"simple"})json", SimpleEntity().to<json>());
+	}
+
+
+	FACT("An entity can be deserialised")
+	{
+		ComplexEntity e;
+
+		e.from<json>(u8R"json({
+			"name":	"parsed complex",
+			"simple": {
+				"name":		"parsed simple",
+				"flag":		false,
+				"integer":	1234
+			},
+			"collection": {
+				"strings":		[ "a", "b", "c", "d" ],
+				"doubles":		[ 9, 8, 7, 6 ],
+				"binary":		"AAECiP8=",
+				"dictionary":	{ "a": "1", "b": "2" }
+			},
+			"entities": [
+				{ "name": "simple 1", "integer": 1 },
+				{ "name": "simple 2", "integer": 2 },
+			]
+		})json");
+
+		Assert.Equal("parsed complex",	e.name);
+		Assert.Equal("parsed simple",	e.simple.name);
+		Assert.Equal(1234,				e.simple.integer);
+		Assert.Equal("b",				e.collection.strings[1]);
+		Assert.Equal(7,					e.collection.doubles[2]);
+		Assert.Equal(0x88,				e.collection.binary[3]);
+		Assert.Equal("2",				e.collection.dictionary["b"]);
+		Assert.Equal("simple 1",		e.entities[0].name);
+		Assert.Equal(2,					e.entities[1].integer);
 	}
 }
 

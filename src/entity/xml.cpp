@@ -1,13 +1,12 @@
 #include "entity/xml.h"
 #include <sstream>
-//#include <stack>
 
 using namespace std;
 
 
 namespace ent
 {
-	string xml::escape(string item)
+	string xml::escape(const string item)
 	{
 		string result;
 		result.reserve(item.length());
@@ -30,7 +29,7 @@ namespace ent
 
 
 	// String unescape, restores escaped characters to their former glory.
-	string xml::unescape(string item)
+	string xml::unescape(const string item)
 	{
 		string result;
 		int length = item.length();
@@ -49,6 +48,7 @@ namespace ent
 				else if (name == "lt")		result.append("<");
 				else if (name == "gt")		result.append(">");
 				else if (name == "amp")		result.append("&");
+				else error("unknown or unterminated escape entity in string", item, i - name.length());
 			}
 			else result.append(1, item[i]);
 		}
@@ -81,7 +81,7 @@ namespace ent
 
 
 
-	string xml::property(value &item, string name, bool pretty, int depth)
+	string xml::property(value &item, const string name, bool pretty, int depth)
 	{
 		stringstream result;
 		string line		= pretty ? "\n" : "";
@@ -95,7 +95,7 @@ namespace ent
 
 			for (auto &i : item.array)
 			{
-				result << indent << extra << "<i_" << property(i, "i_", pretty, depth+1) << line;
+				result << indent << extra << "<_" << property(i, "_", pretty, depth+1) << line;
 			}
 
 			result << indent << end;
@@ -114,7 +114,7 @@ namespace ent
 	}
 
 	
-	tree xml::from(string &text)
+	tree xml::from(const string &text)
 	{
 		if (!whitespace[' '])
 		{
@@ -143,7 +143,7 @@ namespace ent
 	}
 
 
-	tree xml::parse(string &text, string tag, int &i)
+	tree xml::parse(const string &text, const string tag, int &i)
 	{
 		tree result;
 		int length = text.length();
@@ -170,9 +170,9 @@ namespace ent
 					{
 						for (i++; i<length && whitespace[(byte)text[i]]; i++);
 
-						if (text.substr(i, 3) == "<i_") 	result.properties[name] = parse_array(text, name, i);
-						else if (text[i] == '<')			result.set(name, parse(text, name, i));
-						else								result.set(name, unescape(parse_string(text, name, i)));
+						if (text.substr(i, 2) == "<_") 	result.properties[name] = parse_array(text, name, i);
+						else if (text[i] == '<')		result.set(name, parse(text, name, i));
+						else							result.set(name, unescape(parse_string(text, name, i)));
 					}
 					else if (text.substr(i, 5) == "value")
 					{
@@ -194,7 +194,7 @@ namespace ent
 	}
 
 
-	string xml::parse_tag(string &text, int &i)
+	string xml::parse_tag(const string &text, int &i)
 	{
 		int start = ++i;
 
@@ -205,7 +205,7 @@ namespace ent
 
 
 
-	string xml::parse_string(string &text, string tag, int &i)
+	string xml::parse_string(const string &text, const string tag, int &i)
 	{
 		int start = i;
 
@@ -224,7 +224,7 @@ namespace ent
 	}
 
 
-	value xml::parse_array(string &text, string tag, int &i)
+	value xml::parse_array(const string &text, const string tag, int &i)
 	{
 		value result(vtype::Array);
 		int length = text.length();
@@ -245,7 +245,7 @@ namespace ent
 				{
 					string name = parse_tag(text, i);
 
-					if (name == "i_")
+					if (name == "_")
 					{
 						for (; i<length && whitespace[(byte)text[i]]; i++);
 
@@ -253,9 +253,9 @@ namespace ent
 						{
 							for (i++; i<length && whitespace[(byte)text[i]]; i++);
 
-							if (text.substr(i, 3) == "<i_") 	result.array.emplace_back(parse_array(text, "i_", i));				// Array
-							else if (text[i] == '<')			result.array.emplace_back(make_shared<tree>(parse(text, "i_", i)));	// Object
-							else								result.array.emplace_back(unescape(parse_string(text, "i_", i)));	// String
+							if (text.substr(i, 2) == "<_") 	result.array.emplace_back(parse_array(text, "_", i));				// Array
+							else if (text[i] == '<')		result.array.emplace_back(make_shared<tree>(parse(text, "_", i)));	// Object
+							else							result.array.emplace_back(unescape(parse_string(text, "_", i)));	// String
 						}
 						else if (text.substr(i, 5) == "value")
 						{
@@ -278,7 +278,7 @@ namespace ent
 	}
 
 
-	string xml::parse_item(string &text, int &i)
+	string xml::parse_item(const string &text, int &i)
 	{
 		int length = text.length();
 		
@@ -311,7 +311,7 @@ namespace ent
 	}
 
 
-	void xml::error(string message, string text, int i)
+	void xml::error(const string message, const string text, int i)
 	{
 		int tabs	= 0;
 		auto prev 	= text.rfind('\n', i);

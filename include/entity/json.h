@@ -17,17 +17,17 @@ namespace ent
 			static std::string to(tree &item, bool pretty, int depth = 0);
 
 			// Deserialise from a JSON string to a tree
-			static tree from(std::string &text);
+			static tree from(const std::string &text);
 
 
 		private:
 
 			// String escape, ignores the forward slash (only relevant when dealing with
 			// html). Does not handle unicode properly.
-			static std::string escape(std::string item);
+			static std::string escape(const std::string item);
 
 			// String unescape, restores escaped characters to their former glory.
-			static std::string unescape(std::string item);
+			static std::string unescape(const std::string item);
 
 			// Stringify a property value
 			static std::string property(value &item, bool pretty, int depth);
@@ -35,29 +35,29 @@ namespace ent
 			// Very basic iterative validation. It ensures that all objects and
 			// arrays are terminated so that the recursive parsing functions
 			// don't fall over.
-			static void validate(std::string &text);
+			static void validate(const std::string &text);
 
 			// In each of the following 'i' is the current position index within
 			// the JSON string.
 
 			// Parse a JSON string into an object tree
-			static tree parse(std::string &text, int &i);
+			static tree parse(const std::string &text, int &i);
 
 			// Extract the key, should be a simple string within quotes
-			static std::string parse_key(std::string &text, int &i);
+			static std::string parse_key(const std::string &text, int &i);
 
 			// Extract a string value ignoring any escape characters
-			static std::string parse_string(std::string &text, int &i);
+			static std::string parse_string(const std::string &text, int &i);
 
 			// Extract a numeric/boolean/null value, should always end with a
 			// whitespace character, comma or '}'.
-			static std::string parse_item(std::string &text, int &i);
+			static std::string parse_item(const std::string &text, int &i);
 
 			// Parse an array, contained within square brackets
-			static value parse_array(std::string &text, int &i);
+			static value parse_array(const std::string &text, int &i);
 
 			// Throw an error which shows the whereabouts of a problem in the JSON string.
-			static void error(std::string message, std::string json, int i);
+			static void error(const std::string message, const std::string json, int i);
 
 			// Whitespace lookup table
 			static bool whitespace[256];

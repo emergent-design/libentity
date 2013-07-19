@@ -17,36 +17,36 @@ namespace ent
 			static std::string to(tree &item, bool pretty, int depth = 0);
 
 			// Deserialise from an XML string to a tree
-			static tree from(std::string &text);
+			static tree from(const std::string &text);
 
 
 		private:
 
-			static std::string escape(std::string item);
+			static std::string escape(const std::string item);
 
-			static std::string unescape(std::string item);
+			static std::string unescape(const std::string item);
 
 			// Stringify a property value
-			static std::string property(value &item, std::string name, bool pretty, int depth);
+			static std::string property(value &item, const std::string name, bool pretty, int depth);
 
 			// In each of the following 'i' is the current position index within
 			// the XML string.
 			
 			// Parse an XML string into an object tree
-			static tree parse(std::string &text, std::string tag, int &i);
+			static tree parse(const std::string &text, std::string tag, int &i);
 
-			static std::string parse_tag(std::string &text, int &i);
+			static std::string parse_tag(const std::string &text, int &i);
 
 			// Parse a string (text node)
-			static std::string parse_string(std::string &text, std::string tag, int &i);
+			static std::string parse_string(const std::string &text, const std::string tag, int &i);
 
 			// Parse an array
-			static value parse_array(std::string &text, std::string tag, int &i);
+			static value parse_array(const std::string &text, const std::string tag, int &i);
 
 			// Extract a numeric/boolean/null value.
-			static std::string parse_item(std::string &text, int &i);
+			static std::string parse_item(const std::string &text, int &i);
 
-			static void error(std::string message, std::string text, int i);
+			static void error(const std::string message, const std::string text, int i);
 			
 			// Whitespace lookup table
 			static bool whitespace[256];
