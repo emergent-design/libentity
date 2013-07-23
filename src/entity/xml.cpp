@@ -130,11 +130,15 @@ namespace ent
 		// Swallow whitespace
 		for (; i<length && whitespace[(byte)text[i]]; i++);
 
-		// Skip the XML header
-		if (text.substr(i, 5) == "<?xml") for (; i<length && text[i] != '>'; i++);
+		// Skip the XML header if there
+		if (text.substr(i, 5) == "<?xml")
+		{
+			for (; i<length && text[i] != '>'; i++);
+			i++;
+		}
 
 		// Swallow more whitespace
-		for (i++; i<length && whitespace[(byte)text[i]]; i++);
+		for (; i<length && whitespace[(byte)text[i]]; i++);
 
 		// Look for the object starting tag
 		if (text.substr(i, 8) != "<entity>") error("expecting 'entity' tag", text, i);

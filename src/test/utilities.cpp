@@ -33,4 +33,3 @@ SUITE("Utility Tests")
 		Assert.Equal(expected, decode64(value));
 	}
 }
-

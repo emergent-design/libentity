@@ -49,6 +49,7 @@ namespace ent
 				case 'r':	result.append("\r");	break;
 				case 'b':	result.append("\b");	break;
 				case 'f':	result.append("\f");	break;
+				case 'u':	result.append("\\u");	break;	// Unicode characters are just passed straight through
 			}
 			else if (c != '\\') result.append(1, c);
 
@@ -72,7 +73,7 @@ namespace ent
 		string indent	= pretty ? string(2 * (depth + 1), ' ') : "";
 		int i			= item.properties.size() - 1;
 
-		result << "{" << space << line;
+		result << "{" << line;
 
 		for (auto &p : item.properties)
 		{

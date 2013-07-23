@@ -4,7 +4,7 @@ solution "entity"
 	flags 			"Symbols"
 	configurations	"default"
 	platforms		"native"
-	buildoptions	{ "-Wall", "-Wno-sign-compare",  "-std=c++11", "-O3", "-fPIC" }
+	buildoptions	{ "-Wall", "-Wno-sign-compare", "-std=c++11", "-O3", "-fPIC" }
 	includedirs		{ "include" }
 	libdirs 		{ "lib" }
 	excludes		{ "**.bak", "**~" }
@@ -22,12 +22,5 @@ solution "entity"
 		targetname			"test"
 		defines				{ "__stdcall=" }
 		links				{ "libentity", "xUnit++" }
-		files				{ "include/test/**.h", "src/test/**.cpp" }
+		files				{ "src/test/**.cpp" }
 		postbuildcommands	{ "./runner" }
-		
-	project "test"
-		kind				"ConsoleApp"
-		targetdir			"bin"
-		links				{ "libentity" }
-		files				{ "src/test/test.cpp" }
-
