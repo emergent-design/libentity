@@ -1,3 +1,12 @@
 #!/bin/bash
 
-./bin/xunit lib/libtest.so 
+export LD_LIBRARY_PATH="$(pwd)/lib" 
+
+ln -s libentity.so lib/libentity.so.0
+
+./bin/xunit lib/libtest.so
+result=$?
+
+unlink lib/libentity.so.0
+
+exit $result
