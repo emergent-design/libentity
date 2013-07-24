@@ -1,0 +1,11 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: Entity
+Description: Object serialisation library for C++
+Version: 0.0.0
+Requires:
+Libs: -L${libdir} -lentity
+Cflags: -I${includedir}/entity
