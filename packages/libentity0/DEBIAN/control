@@ -1,0 +1,15 @@
+Package: libentity0
+Version: 0.0.0
+Section: libs
+Priority: optional
+Architecture: amd64
+Maintainer: Dan Parnham <dan@emergent-design.co.uk>
+Installed-Size: 2120
+Pre-Depends: multiarch-support
+Depends: libc6
+Description: Object serialisation library for C++
+ Provides a libray for serialising/deserialising objects 
+ using formats such as JSON. It provides a simple tree structure
+ but more importantly it supports a method to directly map a C++
+ class or structure to a tree which thereby allows direct 
+ serialisation/deserialisation.

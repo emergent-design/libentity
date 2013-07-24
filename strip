@@ -6,7 +6,7 @@ if [ $# -ne 1 ]; then
 fi
 
 if [ ! -e "$1" ]; then
-	echo "Binary to strip must exists"
+	echo "Binary to strip must exist"
 	exit 65
 fi
 

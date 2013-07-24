@@ -4,7 +4,7 @@ solution "entity"
 	flags 			"Symbols"
 	configurations	"default"
 	platforms		"native"
-	buildoptions	{ "-Wall", "-Wno-sign-compare", "-std=c++11", "-O3", "-fPIC" }
+	buildoptions	{ "-Wall", "-Wno-sign-compare", "-std=c++11", "-O3", "-fPIC", "-D_FORTIFY_SOURCE=2" }
 	includedirs		{ "include" }
 	libdirs 		{ "lib" }
 	excludes		{ "**.bak", "**~" }
