@@ -6,6 +6,7 @@ VERSION="$(cat version)"
 echo "Copying files ..."
 gzip -c9 debian/changelog > changelog.gz
 mkdir -p libentity0/usr/lib/x86_64-linux-gnu
+mkdir -p libentity-dev/usr/include
 cp changelog.gz libentity0/usr/share/doc/libentity0/
 cp changelog.gz libentity-dev/usr/share/doc/libentity-dev/
 cp ../lib/libentity.so libentity0/usr/lib/x86_64-linux-gnu/libentity.so.${VERSION}
