@@ -44,9 +44,11 @@ Mapped types
 	<tr><td>int</td><td>Number</td><td></td></tr>
 	<tr><td>long</td><td>Number</td><td></td></tr>
 	<tr><td>bool</td><td>Boolean</td><td></td></tr>
+	<tr><td>enum</td><td>Number</td><td>Uses the underlying integer value</td></tr>
 	<tr><td>entity</td><td>Object</td><td>Any structure/class derived from entity</td></tr>
 	<tr><td>std::vector&lt;T&gt;</td><td>Array</td><td>T must be a supported type listed here</td></tr>
 	<tr><td>std::map&lt;string,T&gt;</td><td>Object</td><td>The dictionary key must be a string</td></tr>
+	<tr><td>std::vector&lt;byte&gt;</td><td>String</td><td>Stored as a base64 string</td></tr>
 </table>
 
 
