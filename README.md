@@ -5,7 +5,7 @@ Entity is a C++11 library that provides object serialisation/deserialisation
 yet requires very little boilerplate code.
 
 A simple [tree](https://github.com/emergent-design/libentity/wiki/Tree) 
-structure lies at the heart of libentity which simplifies the implementation 
+structure lies at the heart of libentity which eases the implementation 
 of string-based emitters/parsers. This tree structure can be used directly but 
 the higher level [entity](https://github.com/emergent-design/libentity/wiki/Entity) 
 mapping will allow you to augment your classes and structs in a much cleaner way.
@@ -47,8 +47,6 @@ Mapped types
 	<tr><td>entity</td><td>Object</td><td>Any structure/class derived from entity</td></tr>
 	<tr><td>std::vector&lt;T&gt;</td><td>Array</td><td>T must be a supported type listed here</td></tr>
 	<tr><td>std::map&lt;string,T&gt;</td><td>Object</td><td>The dictionary key must be a string</td></tr>
-
-	<tr><td></td><td></td><td></td></tr>
 </table>
 
 

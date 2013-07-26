@@ -147,6 +147,80 @@ namespace ent
 	};
 
 
+	// A value map for enum value types
+	template <class T> struct vmap<T, typename std::enable_if<std::is_enum<T>::value>::type> : public vmapbase
+	{
+		// Constructors to handle scalar, array and dictionary based values
+		vmap(T &reference) : reference(&reference) {}
+		vmap(std::vector<T> &array) : array(&array) {}
+		vmap(std::map<std::string, T> &map) : map(&map) {}
+
+		// Convert the actual member value in an object instance to a value
+		// representation that can be stored in a tree.
+		virtual value to()
+		{
+			if (array)
+			{
+				value result(vtype::Array);
+				result.array.resize(array->size());
+
+				std::transform(array->begin(), array->end(), result.array.begin(), [](const T &v) {
+					return value((int)v);
+				});
+
+				return result;
+			}
+			else if (map)
+			{
+				auto result = std::make_shared<tree>();
+
+				for (auto &i : *map) result->set(i.first, (int)i.second);
+
+				return value(result);
+			}
+			else if (reference)	return value((int)*reference);
+
+			return value();
+		}
+
+
+		// Update the member value in an object with data from a tree value.
+		virtual void from(value &value)
+		{
+			if (array)
+			{
+				this->array->clear();
+
+				if (value.type == vtype::Array)
+				{
+					for (auto &v : value.array)
+					{
+						if (v.is<int>()) array->push_back((T)v.get(0));
+					}
+				}
+			}
+			else if (map)
+			{
+				this->map->clear();
+
+				if (value.type == vtype::Object)
+				{
+					for (auto &i : value.object->properties)
+					{
+						if (i.second.is<int>()) (*this->map)[i.first] = (T)i.second.get(0);
+					}
+				}
+			}
+			else if (reference) *reference = (T)value.get(0);
+		}
+
+
+		T *reference					= nullptr;	// Reference to a scalar property
+		std::vector<T> *array			= nullptr;	// Reference to an array property
+		std::map<std::string, T> *map	= nullptr;	// Reference to a dictionary property
+	};
+
+
 	// A value map for any of the simple types (string, number, boolean)
 	template <class T> struct vmap<T, typename std::enable_if<std::is_arithmetic<T>::value || std::is_same<std::string, T>::value>::type> : public vmapbase
 	{
