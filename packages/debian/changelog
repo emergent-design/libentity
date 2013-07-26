@@ -1,3 +1,9 @@
+libentity0 (0.0.1) unstable; urgency=low
+
+  * Added the ability to map enums. 
+
+ -- Dan Parnham <dan@emergent-design.co.uk>  Fri, 26 Jul 2013 13:20:12 +0100
+
 libentity0 (0.0.0) unstable; urgency=low
   
   * First release
