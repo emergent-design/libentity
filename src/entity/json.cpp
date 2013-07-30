@@ -96,13 +96,14 @@ namespace ent
 		string indent	= pretty ? string(2 * (depth + 1), ' ') : "";
 		string extra 	= pretty ? string(2, ' ') : "";
 
-		if (item.type == vtype::Array)
+		if (item.get_type() == value::Type::Array)
 		{
-			int j = item.array.size() - 1;
+			auto array	= item.array();
+			int j 		= array.size() - 1;
 
 			result << "[" << line;
 
-			for (auto &i : item.array)
+			for (auto &i : array)
 			{
 				result	<< indent << extra << property(i, pretty, depth+1) 
 						<< (j-- ? "," : "") << line;
@@ -110,14 +111,15 @@ namespace ent
 
 			result << indent << "]";
 		}
-		else switch (item.type)
+		else switch (item.get_type())
 		{
-			case vtype::String:		result << quote << escape(item.string) << quote;	break;
-			case vtype::Number:		result << item.number;								break;
-			case vtype::Boolean:	result << (item.boolean ? "true" : "false");		break;
-			case vtype::Null:		result << "null";									break;
-			case vtype::Object:		result << to(*item.object, pretty, depth+1);		break;
-			default:				break;	
+			case value::Type::String:	result << quote << escape(item.get(string())) << quote;			break;
+			case value::Type::Binary:	result << quote << encode64(item.get(vector<byte>())) << quote;	break;
+			case value::Type::Number:	result << item.get(0.0);										break;
+			case value::Type::Boolean:	result << (item.get(false) ? "true" : "false");					break;
+			case value::Type::Null:		result << "null";												break;
+			case value::Type::Object:	result << to(item.object(), pretty, depth+1);					break;
+			default:					break;	
 		}
 
 		return result.str();
@@ -294,7 +296,8 @@ namespace ent
 
 	value json::parse_array(const string &text, int &i)
 	{
-		value result(vtype::Array);
+		vector<value> result;
+		//value result(vtype::Array);
 		int length = text.length();
 
 		while (i<length)
@@ -306,22 +309,22 @@ namespace ent
 				// If the end of this array has been found then stop
 				// parsing at this level of recursion.
 				if (text[i] == ']') 		break;
-				if (text[i] == '{')			result.array.emplace_back(make_shared<tree>(parse(text, i)));	// Object
-				else if (text[i] == '[')	result.array.emplace_back(parse_array(text, i));				// Array
-				else if (text[i] == '"')	result.array.emplace_back(unescape(parse_string(text, i)));		// String
+				if (text[i] == '{')			result.emplace_back(make_shared<tree>(parse(text, i)));	// Object
+				else if (text[i] == '[')	result.emplace_back(parse_array(text, i));				// Array
+				else if (text[i] == '"')	result.emplace_back(unescape(parse_string(text, i)));	// String
 				else
 				{
 					string item = parse_item(text, i);
 
-					if (item == "true") 		result.array.emplace_back(true);		// Boolean
-					else if (item == "false")	result.array.emplace_back(false);		// Boolean
-					else if (item == "null")	result.array.emplace_back();			// Null
-					else 						result.array.emplace_back(stod(item));	// Number
+					if (item == "true") 		result.emplace_back(true);			// Boolean
+					else if (item == "false")	result.emplace_back(false);			// Boolean
+					else if (item == "null")	result.emplace_back();				// Null
+					else 						result.emplace_back(stod(item));	// Number
 				}
 			}
 		}
 		
-		return result;
+		return value(result);
 	}
 
 

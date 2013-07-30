@@ -81,11 +81,11 @@ SUITE("JSON Tests")
 			"nothing": null,
 		})json");
 
-		Assert.Equal(vtype::String,		t.properties["name"].type);
-		Assert.Equal(vtype::Number,		t.properties["integer"].type);
-		Assert.Equal(vtype::Number,		t.properties["double"].type);
-		Assert.Equal(vtype::Boolean,	t.properties["flag"].type);
-		Assert.Equal(vtype::Null,		t.properties["nothing"].type);
+		Assert.Equal(value::Type::String,	t.properties["name"].get_type());
+		Assert.Equal(value::Type::Number,	t.properties["integer"].get_type());
+		Assert.Equal(value::Type::Number,	t.properties["double"].get_type());
+		Assert.Equal(value::Type::Boolean,	t.properties["flag"].get_type());
+		Assert.Equal(value::Type::Null,		t.properties["nothing"].get_type());
 	}
 
 
@@ -95,8 +95,8 @@ SUITE("JSON Tests")
 			"array": [ 1, 2, 3, 4 ]
 		})json");
 
-		Assert.Equal(vtype::Array,	t.properties["array"].type);
-		Assert.Equal(4,				t.properties["array"].array.size());
+		Assert.Equal(value::Type::Array,	t.properties["array"].get_type());
+		Assert.Equal(4,						t.properties["array"].array().size());
 	}
 
 
@@ -108,8 +108,8 @@ SUITE("JSON Tests")
 			}
 		})json");
 
-		Assert.Equal(vtype::Object,	t.properties["object"].type);
-		Assert.Equal("complex",		t.properties["object"].object->get<string>("name"));
+		Assert.Equal(value::Type::Object,	t.properties["object"].get_type());
+		Assert.Equal("complex",				t.properties["object"].object().get<string>("name"));
 	}
 
 

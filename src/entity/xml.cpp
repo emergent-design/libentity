@@ -89,24 +89,25 @@ namespace ent
 		string extra 	= pretty ? string(2, ' ') : "";
 		string end		= "</" + name + ">";
 
-		if (item.type == vtype::Array)
+		if (item.get_type() == value::Type::Array)
 		{
 			result << ">" << line;
 
-			for (auto &i : item.array)
+			for (auto &i : item.array())
 			{
 				result << indent << extra << "<_" << property(i, "_", pretty, depth+1) << line;
 			}
 
 			result << indent << end;
 		}
-		else switch (item.type)
+		else switch (item.get_type())
 		{
-			case vtype::String:		result << ">" << escape(item.string) << end;									break;
-			case vtype::Number:		result << " value=\"" << item.number << "\" />";								break;
-			case vtype::Boolean:	result << " value=\"" << (item.boolean ? "true" : "false") << "\" />";			break;
-			case vtype::Null:		result << " value=\"null\" />";													break;
-			case vtype::Object:		result << ">" << line << to(*item.object, pretty, depth+1) << indent << end;	break;
+			case value::Type::String:	result << ">" << escape(item.get(string())) << end;								break;
+			case value::Type::Binary:	result << ">" << encode64(item.get(vector<byte>())) << end;						break;
+			case value::Type::Number:	result << " value=\"" << item.get(0.0) << "\" />";								break;
+			case value::Type::Boolean:	result << " value=\"" << (item.get(false) ? "true" : "false") << "\" />";		break;
+			case value::Type::Null:		result << " value=\"null\" />";													break;
+			case value::Type::Object:	result << ">" << line << to(item.object(), pretty, depth+1) << indent << end;	break;
 			default:				break;
 		}
 
@@ -230,7 +231,8 @@ namespace ent
 
 	value xml::parse_array(const string &text, const string tag, int &i)
 	{
-		value result(vtype::Array);
+		vector<value> result;
+		//value result(vtype::Array);
 		int length = text.length();
 
 		while (i<length)
@@ -257,18 +259,18 @@ namespace ent
 						{
 							for (i++; i<length && whitespace[(byte)text[i]]; i++);
 
-							if (text.substr(i, 2) == "<_") 	result.array.emplace_back(parse_array(text, "_", i));				// Array
-							else if (text[i] == '<')		result.array.emplace_back(make_shared<tree>(parse(text, "_", i)));	// Object
-							else							result.array.emplace_back(unescape(parse_string(text, "_", i)));	// String
+							if (text.substr(i, 2) == "<_") 	result.emplace_back(parse_array(text, "_", i));					// Array
+							else if (text[i] == '<')		result.emplace_back(make_shared<tree>(parse(text, "_", i)));	// Object
+							else							result.emplace_back(unescape(parse_string(text, "_", i)));		// String
 						}
 						else if (text.substr(i, 5) == "value")
 						{
 							string item = parse_item(text, (i+=5));
 
-							if (item == "true") 		result.array.emplace_back(true);		// Boolean
-							else if (item == "false")	result.array.emplace_back(false);		// Boolean
-							else if (item == "null")	result.array.emplace_back();			// Null
-							else 						result.array.emplace_back(stod(item));	// Number
+							if (item == "true") 		result.emplace_back(true);			// Boolean
+							else if (item == "false")	result.emplace_back(false);			// Boolean
+							else if (item == "null")	result.emplace_back();				// Null
+							else 						result.emplace_back(stod(item));	// Number
 						}
 						else error("unknown attribute", text, i);
 					}
@@ -278,7 +280,7 @@ namespace ent
 		}
 
 		i++;
-		return result;
+		return value(result);
 	}
 
 

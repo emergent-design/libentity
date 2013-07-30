@@ -58,7 +58,6 @@ struct ComplexEntity : entity
 };
 
 
-
 SUITE("Entity Tests")
 {
 	FACT("A simple entity can be mapped to a tree")
@@ -110,7 +109,7 @@ SUITE("Entity Tests")
 		Assert.Equal(vector<string> { "four", "five" },				e.strings);
 		Assert.Equal(vector<double> { 5.0, 3.0, 1.0, 0.0 },			e.doubles);
 		Assert.Equal(vector<byte> { 0xff, 0x00 },					e.binary);
-		Assert.Equal(map<string, string> { { "first", "changed" }},	e.dictionary);
+		Assert.Equal(map<string, string> {{ "first", "changed" }},	e.dictionary);
 	}
 
 
@@ -184,5 +183,4 @@ SUITE("Entity Tests")
 		Assert.Equal(2,					e.entities[1].integer);
 	}
 }
-
 

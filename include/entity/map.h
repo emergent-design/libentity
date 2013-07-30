@@ -50,14 +50,13 @@ namespace ent
 		{
 			if (array)
 			{
-				value result(vtype::Array);
-				result.array.resize(array->size());
+				std::vector<value> result(array->size());
 
-				std::transform(array->begin(), array->end(), result.array.begin(), [](T &v) {
+				std::transform(array->begin(), array->end(), result.begin(), [](T &v) {
 					return value(std::make_shared<tree>(v.to_tree()));
 				});
 
-				return result;
+				return value(result);
 			}
 			else if (map)
 			{
@@ -82,14 +81,14 @@ namespace ent
 			{
 				this->array->clear();
 
-				if (value.type == vtype::Array)
+				if (value.get_type() == value::Type::Array)
 				{
-					for (auto &v : value.array)
+					for (auto &v : value.array())
 					{
-						if (v.type == vtype::Object)
+						if (v.get_type() == value::Type::Object)
 						{
 							this->array->push_back(T());
-							this->array->back().from_tree(*v.object);
+							this->array->back().from_tree(v.object());
 						}
 					}
 				}
@@ -98,18 +97,18 @@ namespace ent
 			{
 				this->map->clear();
 
-				if (value.type == vtype::Object)
+				if (value.get_type() == value::Type::Object)
 				{
-					for (auto &i : value.object->properties)
+					for (auto &i : value.object().properties)
 					{
-						if (i.second.type == vtype::Object)
+						if (i.second.get_type() == value::Type::Object)
 						{
-							(*this->map)[i.first].from_tree(*i.second.object);
+							(*this->map)[i.first].from_tree(i.second.object());
 						}
 					}
 				}
 			}
-			else if (value.type == vtype::Object) reference->from_tree(*value.object);
+			else if (value.get_type() == value::Type::Object) reference->from_tree(value.object());
 		}
 
 
@@ -121,7 +120,7 @@ namespace ent
 
 	// Specialised case when the type of interest is a vector<byte> since this is a
 	// simple way of storing binary data. Instead of representing as a numeric array
-	// it is instead converted to/from base64. It is stored as a string inside value.
+	// it can instead be converted to/from base64 when serialising to a text format.
 	template <> struct vmap<std::vector<byte>> : public vmapbase
 	{
 		vmap(std::vector<byte> &reference) : reference(&reference) {}
@@ -131,7 +130,7 @@ namespace ent
 		// as base64 in a string.
 		virtual value to()
 		{
-			return value(encode64(*reference));
+			return value(*reference);
 		}
 
 
@@ -161,14 +160,13 @@ namespace ent
 		{
 			if (array)
 			{
-				value result(vtype::Array);
-				result.array.resize(array->size());
+				std::vector<value> result(array->size());
 
-				std::transform(array->begin(), array->end(), result.array.begin(), [](const T &v) {
+				std::transform(array->begin(), array->end(), result.begin(), [](const T &v) {
 					return value((int)v);
 				});
 
-				return result;
+				return value(result);
 			}
 			else if (map)
 			{
@@ -191,9 +189,9 @@ namespace ent
 			{
 				this->array->clear();
 
-				if (value.type == vtype::Array)
+				if (value.get_type() == value::Type::Array)
 				{
-					for (auto &v : value.array)
+					for (auto &v : value.array())
 					{
 						if (v.is<int>()) array->push_back((T)v.get(0));
 					}
@@ -203,9 +201,9 @@ namespace ent
 			{
 				this->map->clear();
 
-				if (value.type == vtype::Object)
+				if (value.get_type() == value::Type::Object)
 				{
-					for (auto &i : value.object->properties)
+					for (auto &i : value.object().properties)
 					{
 						if (i.second.is<int>()) (*this->map)[i.first] = (T)i.second.get(0);
 					}
@@ -236,14 +234,13 @@ namespace ent
 		{
 			if (array)
 			{
-				value result(vtype::Array);
-				result.array.resize(array->size());
+				std::vector<value> result(array->size());
 
-				std::transform(array->begin(), array->end(), result.array.begin(), [](const T &v) {
+				std::transform(array->begin(), array->end(), result.begin(), [](const T &v) {
 					return value(v);
 				});
 
-				return result;
+				return value(result);
 			}
 			else if (map)
 			{
@@ -266,9 +263,9 @@ namespace ent
 			{
 				this->array->clear();
 
-				if (value.type == vtype::Array)
+				if (value.get_type() == value::Type::Array)
 				{
-					for (auto &v : value.array)
+					for (auto &v : value.array())
 					{
 						if (v.is<T>()) array->push_back(v.get(T()));
 					}
@@ -278,9 +275,9 @@ namespace ent
 			{
 				this->map->clear();
 
-				if (value.type == vtype::Object)
+				if (value.get_type() == value::Type::Object)
 				{
-					for (auto &i : value.object->properties)
+					for (auto &i : value.object().properties)
 					{
 						if (i.second.is<T>()) (*this->map)[i.first] = i.second.get(T());
 					}

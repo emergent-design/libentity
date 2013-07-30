@@ -13,71 +13,120 @@ namespace ent
 {
 	class tree;
 
-
-	// The fundamental types that can be stored in the tree structure. These
-	// mirror those that are supported by JSON.
-	enum class vtype
+	class value
 	{
-		String,
-		Number,
-		Boolean,
-		Array,
-		Object,
-		Null
+		public:
+			// The fundamental types that can be stored in the tree structure. These
+			// mirror those that are supported by JSON with an additional special
+			// case for binary data.
+			enum class Type : byte
+			{
+				String, Number, Boolean, Array, Object, Null, Binary
+			};
+
+
+			// Indicates whether the underlying number type is integer or floating-point
+			enum class Number : byte
+			{
+				Integer, Floating
+			};
+
+
+			// Constructors, default is Type::Null, the rest depend on the type of value they are initialised with
+			value() {}
+			value(const value &v)					: type(v.type), number(v.number),	content(v.content ? v.content->clone() : nullptr) {}
+			value(const bool v) 					: type(Type::Boolean),				content(new container<bool>(v))	{}
+			value(const char *v)					: type(Type::String),				content(new container<std::string>(std::string(v))) {}
+			value(const std::string &v)				: type(Type::String),				content(new container<std::string>(v)) {}
+			value(const std::vector<value> &v)		: type(Type::Array),				content(new container<std::vector<value>>(v)) {}
+			value(const std::shared_ptr<tree> &v)	: type(Type::Object),				content(new container<std::shared_ptr<tree>>(v)) {}
+			value(const std::vector<byte> &v)		: type(Type::Binary),				content(new container<std::vector<byte>>(v)) {}
+
+			template <class T, class = typename std::enable_if<std::is_arithmetic<T>::value>::type>
+				value(const T &v) :
+					type(Type::Number),
+					number(std::is_integral<T>::value ? Number::Integer : Number::Floating),
+					content(new container<typename std::conditional<std::is_integral<T>::value, long, double>::type>(v)) {}
+
+
+			// Assignment override
+			value &operator=(const value &v);
+
+			~value() { delete this->content; }
+
+
+			bool null();
+			Type get_type();
+			Number get_numtype();
+
+
+			// Standard getters that return the stored value if the type matches the
+			// requested type, otherwise the default value is returned instead.
+			std::string get(const std::string &defaultValue);
+			bool get(const bool &defaultValue);
+			tree get(const tree &defaultValue);
+			std::vector<byte> get(const std::vector<byte> &defaultValue);
+
+			std::vector<value> &array() const;
+			tree &object() const;
+
+			// Numbers are stored as integer or double, so if an integer is requested
+			// but the underlying type is a double it will be rounded.
+			template <class T> typename std::enable_if<std::is_integral<T>::value, T>::type get(const T &defaultValue)
+			{
+				return this->type == Type::Number
+					? this->number == Number::Integer
+						? static_cast<container<long> *>(this->content)->data
+						: lrint(static_cast<container<double> *>(this->content)->data)
+					: defaultValue;
+			}
+
+			template <class T> typename std::enable_if<std::is_floating_point<T>::value, T>::type get(const T &defaultValue)
+			{
+				return this->type == Type::Number
+					? this->number == Number::Integer
+						? static_cast<container<long> *>(this->content)->data
+						: static_cast<container<double> *>(this->content)->data
+					: defaultValue;
+			}
+
+
+			// Confirms whether or not this value is of the given type.
+			template <class T> bool is()
+			{
+				if (std::is_arithmetic<T>::value)
+				{
+					return std::is_same<T, bool>::value ? this->type == Type::Boolean : this->type == Type::Number;
+				}
+				else if (std::is_same<T, std::string>::value)	return this->type == Type::String;
+				else if (std::is_same<T, tree>::value)			return this->type == Type::Object;
+
+				return false;
+			}
+
+
+		private:
+
+			// Container to hold any type of value (similar to boost::any)
+			struct base
+			{
+				virtual ~base() {}
+				virtual base *clone() = 0;
+			};
+
+			template <class T> struct container : base
+			{
+				container(const T &value) : data(value) {}
+				base *clone() { return new container<T>(this->data); }
+
+				T data;
+			};
+
+
+			// Type information is not public since modification will
+			// cause bad things when trying to get values from content.
+			Type type		= Type::Null;
+			Number number	= Number::Integer;
+			base *content	= nullptr;			
 	};
-
-
-	// Storage for a single property in the tree structure.
-	// Each member is named for the type of value it holds.
-	struct value
-	{
-		vtype type;
-		std::string string;
-		double number;
-		bool boolean;
-		std::vector<value> array;
-		std::shared_ptr<tree> object;
-
-		// Constructors for each scenario, not exhaustive with the numeric types
-		// but covers the commonly used ones.
-		value()								: type(vtype::Null) {}
-		value(vtype type)					: type(type)		{}
-		value(const char *value)			: type(vtype::String),	string(value)	{}
-		value(std::string value) 			: type(vtype::String),	string(value)	{}
-		value(float value) 					: type(vtype::Number),	number(value)	{}
-		value(double value) 				: type(vtype::Number),	number(value)	{}
-		value(int value)					: type(vtype::Number),	number(value)	{}
-		value(long value)					: type(vtype::Number),	number(value)	{}
-		value(bool value) 					: type(vtype::Boolean),	boolean(value)	{}
-		value(std::vector<value> &value)	: type(vtype::Array),	array(value)	{}
-		value(std::shared_ptr<tree> value)	: type(vtype::Object),	object(value)	{}
-
-		// Standard getters that return the stored value if the type matches the
-		// requested type, otherwise the default value is returned instead.
-		// Since number types are always stored as a double, when the value is
-		// requested as an integer type it is rounded appropriately.
-		std::vector<byte> get(std::vector<byte> defaultValue);
-		std::string get(std::string defaultValue);
-		float get(float defaultValue);
-		double get(double defaultValue);
-		int get(int defaultValue);
-		long get(long defaultValue);
-		bool get(bool defaultValue);
-		tree get(tree defaultValue);
-
-		// Confirms whether or not this value is of the given type.
-		template <class T> bool is() { return false; }
-
-		// Simply returns true if this is a null type
-		bool null();
-	};
-	
-
-	template <> bool value::is<std::string>();
-	template <> bool value::is<float>();
-	template <> bool value::is<double>();
-	template <> bool value::is<int>();
-	template <> bool value::is<long>();
-	template <> bool value::is<bool>();
-	template <> bool value::is<tree>();
 }

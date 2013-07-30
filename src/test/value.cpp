@@ -7,12 +7,6 @@ using namespace ent;
 
 SUITE("Value Tests")
 {
-	FACT("Default value is null")
-	{
-		Assert.True(value().null());
-	}
-
-
 	FACT("Construction with string literal is a string")
 	{
 		Assert.True(value("test").is<string>());
@@ -22,24 +16,39 @@ SUITE("Value Tests")
 
 	FACT("Construction with different number types is a number")
 	{
-		Assert.Equal(vtype::Number,		value(42).type);
-		Assert.Equal(vtype::Number,		value(42l).type);
-		Assert.Equal(vtype::Number,		value(42.0f).type);
-		Assert.Equal(vtype::Number,		value(42.0).type);
-		Assert.NotEqual(vtype::Number,	value("test").type);
+		Assert.Equal(value::Type::Number,		value(42).get_type());
+		Assert.Equal(value::Type::Number,		value(42l).get_type());
+		Assert.Equal(value::Type::Number,		value(42.0f).get_type());
+		Assert.Equal(value::Type::Number,		value(42.0).get_type());
+		Assert.NotEqual(value::Type::Number,	value("test").get_type());
+	}
+
+
+	FACT("Construction with different number types kept as integral or floating point accordingly")
+	{
+		Assert.Equal(value::Number::Integer,	value(42).get_numtype());
+		Assert.Equal(value::Number::Integer,	value(byte(42)).get_numtype());
+		Assert.Equal(value::Number::Floating,	value(42.0).get_numtype());
+		Assert.Equal(value::Number::Floating,	value(42.0f).get_numtype());
+	}
+
+
+	FACT("Construction with binary blob is supported")
+	{
+		Assert.Equal(value::Type::Binary, value(vector<byte> { 0x00, 0x01, 0x02 }).get_type());
 	}
 
 
 	FACT("Construction with value vector is an array")
 	{
 		vector<value> values = { value(), value() };
-		Assert.Equal(vtype::Array, value(values).type);
+		Assert.Equal(value::Type::Array, value(values).get_type());
 	}
 
 
 	FACT("Construction with entity reference is an object")
 	{
-		Assert.Equal(vtype::Object, value(make_shared<tree>()).type);
+		Assert.Equal(value::Type::Object, value(make_shared<tree>()).get_type());
 	}
 
 
@@ -53,7 +62,7 @@ SUITE("Value Tests")
 
 	FACT("Boolean value is boolean type")
 	{
-		Assert.Equal(vtype::Boolean, value(true).type);
+		Assert.Equal(value::Type::Boolean, value(true).get_type());
 		Assert.True(value(true).get(false));
 	}
 
@@ -70,7 +79,7 @@ SUITE("Value Tests")
 		value b = a;
 
 		Assert.Equal(42, a.get(0));
-		Assert.Equal(vtype::Number, b.type);
+		Assert.Equal(value::Type::Number, b.get_type());
 		Assert.Equal(42, b.get(0));
 	}
 }

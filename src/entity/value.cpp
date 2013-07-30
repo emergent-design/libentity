@@ -7,24 +7,61 @@ using namespace std;
 
 namespace ent
 {
-	bool value::null() { return this->type == vtype::Null; }
+	bool value::null() 					{ return this->type == Type::Null; }
+	value::Type value::get_type()		{ return this->type; }
+	value::Number value::get_numtype()	{ return this->number; }
 
 
-	vector<byte> value::get(vector<byte> defaultValue)	{ return this->type == vtype::String	? decode64(this->string) : defaultValue; }
-	std::string value::get(std::string defaultValue)	{ return this->type == vtype::String	? this->string : defaultValue; }
-	float value::get(float defaultValue)				{ return this->type == vtype::Number	? this->number : defaultValue; }
-	double value::get(double defaultValue)				{ return this->type == vtype::Number	? this->number : defaultValue; }
-	int value::get(int defaultValue)					{ return this->type == vtype::Number	? lrint(this->number) : defaultValue; }
-	long value::get(long defaultValue)					{ return this->type == vtype::Number	? lrint(this->number) : defaultValue; }
-	bool value::get(bool defaultValue)					{ return this->type == vtype::Boolean	? this->boolean : defaultValue; }
-	tree value::get(tree defaultValue)					{ return this->type == vtype::Object	? *this->object : defaultValue; }
+	value &value::operator=(const value &v)
+	{
+		delete this->content;
+		this->type 		= v.type;
+		this->number	= v.number;
+		this->content 	= v.content ? v.content->clone() : nullptr;
+		return *this;
+	}
 
 
-	template <> bool value::is<std::string>()	{ return this->type == vtype::String; }
-	template <> bool value::is<float>()			{ return this->type == vtype::Number; }
-	template <> bool value::is<double>()		{ return this->type == vtype::Number; }
-	template <> bool value::is<int>()			{ return this->type == vtype::Number; }
-	template <> bool value::is<long>()			{ return this->type == vtype::Number; }
-	template <> bool value::is<bool>()			{ return this->type == vtype::Boolean; }
-	template <> bool value::is<tree>()			{ return this->type == vtype::Object; }
+	std::string value::get(const std::string &defaultValue)
+	{
+		return this->type == Type::String ? static_cast<container<std::string> *>(this->content)->data : defaultValue;
+	}
+
+
+	bool value::get(const bool &defaultValue)
+	{
+		return this->type == Type::Boolean ? static_cast<container<bool> *>(this->content)->data : defaultValue;
+	}
+
+
+	tree value::get(const tree &defaultValue)
+	{
+		return this->type == Type::Object ? this->object() : defaultValue;
+	}
+
+
+	vector<value> &value::array() const
+	{
+		if (this->type != Type::Array) throw runtime_error("Attempting to access non-array type as array");
+
+		return static_cast<container<vector<value>> *>(this->content)->data;
+	}
+
+
+	tree &value::object() const
+	{
+		if (this->type != Type::Object) throw runtime_error("Attempting to access non-object type as object");
+
+		return *static_cast<container<shared_ptr<tree>> *>(this->content)->data;
+	}
+
+
+	vector<byte> value::get(const vector<byte> &defaultValue)
+	{
+		return this->type == Type::Binary
+			? static_cast<container<vector<byte>> *>(this->content)->data
+			: this->type == Type::String
+				? decode64(static_cast<container<std::string> *>(this->content)->data)
+				: defaultValue;
+	}
 }

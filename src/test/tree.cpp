@@ -43,8 +43,8 @@ SUITE("Tree Tests")
 	{
 		auto m = map<string, int> {{ "one", 1 }, { "two", 2 }};
 		
-		Assert.Equal(vtype::Object,	tree().set("map", m).properties["map"].type);
-		Assert.Equal(2,				tree().set("map", m).map<int>("map")["two"]);
+		Assert.Equal(value::Type::Object,	tree().set("map", m).properties["map"].get_type());
+		Assert.Equal(2,						tree().set("map", m).map<int>("map")["two"]);
 	}
 
 
@@ -54,10 +54,9 @@ SUITE("Tree Tests")
 	}
 
 
-	FACT("Binary data will be encoded as a base64 string")
+	FACT("Binary data can be set and retrieved as a vector<byte>")
 	{
-		Assert.Equal("AAECiP8=",	tree().set("binary", vector<byte> { 0x00, 0x01, 0x02, 0x88, 0xff }).get<string>("binary"));
-		Assert.Equal(0x88,			tree().set("binary", vector<byte> { 0x00, 0x01, 0x02, 0x88, 0xff }).get<vector<byte>>("binary")[3]);
+		Assert.Equal(0x88, tree().set("binary", vector<byte> { 0x00, 0x01, 0x02, 0x88, 0xff }).get<vector<byte>>("binary")[3]);
 	}
 
 

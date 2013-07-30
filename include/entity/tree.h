@@ -38,7 +38,7 @@ namespace ent
 
 
 			// Set the value of a property to a simple scalar (string, number, boolean, null)
-			template <class T> tree &set(const std::string name, const T&item)
+			template <class T> tree &set(const std::string name, const T &item)
 			{
 				this->properties[name] = value(item);
 				return *this;
@@ -54,9 +54,9 @@ namespace ent
 				{
 					auto &p = this->properties[name];
 
-					if (p.type == vtype::Array)
+					if (p.get_type() == value::Type::Array)
 					{
-						for (auto &v : p.array)
+						for (auto &v : p.array())
 						{
 							if (v.is<T>()) result.push_back(v.get(T()));
 						}
@@ -70,14 +70,15 @@ namespace ent
 			// Set the value of a property where the value is an array of simple scalar values
 			template <class T> tree &set(std::string name, const std::vector<T> &items)
 			{
-				value result(vtype::Array);
-				result.array.resize(items.size());
+				std::vector<value> result(items.size());
+				//value result(vtype::Array);
+				//result.array.resize(items.size());
 
-				std::transform(items.begin(), items.end(), result.array.begin(), [](const T &v) {
+				std::transform(items.begin(), items.end(), result.begin(), [](const T &v) {
 					return value(v);
 				});
 
-				this->properties[name] = result;
+				this->properties[name] = value(result);
 
 				return *this;
 			}
@@ -92,9 +93,9 @@ namespace ent
 				{
 					auto &p = this->properties[name];
 
-					if (p.type == vtype::Object)
+					if (p.get_type() == value::Type::Object)
 					{
-						for (auto &v : p.object->properties)
+						for (auto &v : p.object().properties)
 						{
 							if (v.second.is<T>()) result[v.first] = v.second.get(T());
 						}

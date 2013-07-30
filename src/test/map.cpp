@@ -23,8 +23,8 @@ SUITE("Map Tests")
 		auto imap		= vmap<int>(integer);
 		auto fmap		= vmap<double>(floating);
 
-		Assert.Equal(42,	imap.to().number);
-		Assert.Equal(3.14,	fmap.to().number);
+		Assert.Equal(42,	imap.to().get(0));
+		Assert.Equal(3.14,	fmap.to().get(0.0));
 
 		imap.from(newValue);
 		fmap.from(newValue);
@@ -40,7 +40,7 @@ SUITE("Map Tests")
 		value newValue	= "something else";
 		auto smap		= vmap<string>(text);
 
-		Assert.Equal("something", smap.to().string);
+		Assert.Equal("something", smap.to().get(string()));
 
 		smap.from(newValue);
 
@@ -54,7 +54,7 @@ SUITE("Map Tests")
 		value newValue	= false;
 		auto bmap		= vmap<bool>(flag);
 
-		Assert.True(bmap.to().boolean);
+		Assert.True(bmap.to().get(false));
 
 		bmap.from(newValue);
 
@@ -66,10 +66,9 @@ SUITE("Map Tests")
 	{
 		EnumTest e 		= EnumTest::One;
 		value newValue	= 2;
+		auto emap		= vmap<EnumTest>(e);
 
-		auto emap = vmap<EnumTest>(e);
-
-		Assert.Equal(1, emap.to().number);
+		Assert.Equal(1, emap.to().get(0));
 
 		emap.from(newValue);
 
@@ -96,7 +95,7 @@ SUITE("Map Tests")
 		auto amap				= vmap<int>(items);
 		value newValue			= newItems;
 
-		Assert.Equal(2, amap.to().array[2].number);
+		Assert.Equal(2, amap.to().array()[2].get(0));
 
 		amap.from(newValue);
 
@@ -112,7 +111,7 @@ SUITE("Map Tests")
 		auto mmap				= vmap<int>(items);
 		value newValue			= make_shared<tree>(newItems);
 
-		Assert.Equal(1, mmap.to().object->get<int>("one"));
+		Assert.Equal(1, mmap.to().object().get<int>("one"));
 
 		mmap.from(newValue);
 
@@ -128,7 +127,7 @@ SUITE("Map Tests")
 		auto amap				= vmap<EnumTest>(items);
 		value newValue			= newItems;
 
-		Assert.Equal(0, amap.to().array[1].number);
+		Assert.Equal(0, amap.to().array()[1].get(0));
 
 		amap.from(newValue);
 
@@ -143,7 +142,7 @@ SUITE("Map Tests")
 		auto mmap					= vmap<EnumTest>(items);
 		value newValue				= make_shared<tree>(newItems);
 
-		Assert.Equal(1, mmap.to().object->get<int>("one"));
+		Assert.Equal(1, mmap.to().object().get<int>("one"));
 
 		mmap.from(newValue);
 
@@ -155,10 +154,10 @@ SUITE("Map Tests")
 	FACT("Can create a map to a binary blob")
 	{
 		vector<byte> binary	= { 0x00, 0x01, 0x02, 0x88, 0xff };
-		value newValue		= "Zm9vYmFy";
+		value newValue		= vector<byte> { 0x66, 0x6f, 0x6f, 0x62, 0x61, 0x72 };
 		auto bmap			= vmap<vector<byte>>(binary);
 
-		Assert.Equal("AAECiP8=", bmap.to().string);
+		Assert.Equal(vector<byte> { 0x00, 0x01, 0x02, 0x88, 0xff }, bmap.to().get(vector<byte>()));
 
 		bmap.from(newValue);
 

@@ -85,30 +85,29 @@ namespace ent
 	{
 		stringstream result;
 
-		if (item.type == vtype::Array)
+		if (item.get_type() == value::Type::Array)
 		{
-			bool simple		= item.array.size() < 16;
+			auto array		= item.array();
 			string indent 	= string(2 * (depth + 1), ' ');
-
-			for (auto &i : item.array)
-			{
-				if (!simple) break;
-				if (i.type == vtype::String && i.string.length() > 32)	simple = false;
-				if (i.type == vtype::Object || i.type == vtype::Array)	simple = false;
-			}
+			bool simple 	= array.size() < 16 && !std::any_of(array.begin(), array.end(), [](value &i) {
+				return (i.get_type() == value::Type::String && i.get(string()).length() > 32)
+					|| i.get_type() == value::Type::Object
+					|| i.get_type() == value::Type::Array
+					|| i.get_type() == value::Type::Binary;
+			});
 
 			if (simple)
 			{
 				result << "[ ";
-				int j = item.array.size() - 1;
+				int j = array.size() - 1;
 
-				for (auto &i : item.array)
+				for (auto &i : array)
 				{
-					switch (i.type)
+					switch (i.get_type())
 					{
-						case vtype::String:		result << '"' << simple_escape(i.string) << '"';	break;
-						case vtype::Number:		result << i.number;									break;
-						case vtype::Boolean:	result << (i.boolean ? "true" : "false");			break;
+						case value::Type::String:	result << '"' << simple_escape(i.get(string())) << '"';	break;
+						case value::Type::Number:	result << i.get(0.0);									break;
+						case value::Type::Boolean:	result << (i.get(false) ? "true" : "false");			break;
 						default:				break;
 					}
 					result << (j-- ? ", " : "");
@@ -120,19 +119,20 @@ namespace ent
 			{
 				result << "\n";
 				
-				for (auto &i : item.array)
+				for (auto &i : array)
 				{
 					result << indent << "- " << property(i, depth+1);
 				}
 			}
 		}
-		else switch (item.type)
+		else switch (item.get_type())
 		{
-			case vtype::String:		result << escape(item.string, depth+1) << "\n";			break;
-			case vtype::Number:		result << item.number << "\n";							break;
-			case vtype::Boolean:	result << (item.boolean ? "true" : "false") << "\n";	break;
-			case vtype::Object:		result << "\n" << to(*item.object, false, depth+1);		break;
-			default:				result << "\n";											break;
+			case value::Type::String:	result << escape(item.get(string()), depth+1) << "\n";					break;
+			case value::Type::Number:	result << item.get(0.0) << "\n";										break;
+			case value::Type::Boolean:	result << (item.get(false) ? "true" : "false") << "\n";					break;
+			case value::Type::Object:	result << "\n" << to(item.object(), false, depth+1);					break;
+			case value::Type::Binary:	result << escape(encode64(item.get(vector<byte>())), depth+1) << "\n";	break;
+			default:					result << "\n";															break;
 		}
 
 		return result.str();

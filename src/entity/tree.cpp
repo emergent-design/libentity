@@ -9,9 +9,11 @@ namespace ent
 	{
 		if (properties.count(name))
 		{
-			auto &p = this->properties[name];
+			//auto &p = this->properties[name];
 
-			return p.type == vtype::Object ? *p.object : tree();
+			//return p.type == vtype::Object ? *p.object : tree();
+
+			return this->properties[name].object();
 		}
 
 		return tree();
@@ -26,11 +28,11 @@ namespace ent
 		{
 			auto &p = this->properties[name];
 
-			if (p.type == vtype::Array)
+			if (p.get_type() == value::Type::Array)
 			{
-				for (auto &v : p.array)
+				for (auto &v : p.array())
 				{
-					if (v.type == vtype::Object) result.push_back(*v.object);
+					if (v.get_type() == value::Type::Object) result.push_back(v.object());
 				}
 			}
 		}
@@ -48,21 +50,22 @@ namespace ent
 
 	tree &tree::set(const string name, const vector<byte> &item)
 	{
-		this->properties[name] = value(encode64(item));
+		this->properties[name] = value(item);
 		return *this;
 	}
 
 
 	tree &tree::set(const string name, const vector<tree> &items)
 	{
-		value result(vtype::Array);
-		result.array.resize(items.size());
+		vector<value> result(items.size());
+		//value result(vtype::Array);
+		//result.array.resize(items.size());
 
-		transform(items.begin(), items.end(), result.array.begin(), [](const tree &v) {
+		transform(items.begin(), items.end(), result.begin(), [](const tree &v) {
 			return value(make_shared<tree>(v));
 		});
 
-		this->properties[name] = result;
+		this->properties[name] = value(result);
 
 		return *this;
 	}
