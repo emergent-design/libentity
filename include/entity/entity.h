@@ -6,6 +6,11 @@
 
 namespace ent
 {
+	// Utility macro to invoke the map function using the name of
+	// the parameter as the mapping name.
+	#define automap(reference) map(#reference, reference)
+
+	
 	// The abstract base class for serialisable objects.
 	// Inherit from this, implement the create_map function correctly,
 	// and your class will become serialisable.
@@ -37,7 +42,7 @@ namespace ent
 			void from_tree(tree &tree);
 
 			
-		protected:
+	protected:
 
 			// Create a mapping instance for a singular value
 			template <class T> void map(std::string name, T &reference)
@@ -69,6 +74,6 @@ namespace ent
 			std::map<std::string, std::shared_ptr<vmapbase>> mapping;
 	};
 
-	// Special case, a vector of byte is converted to base64 and stored as a string
+	// Special case to bypass the vector<T> template
 	template <> void entity::map(std::string name, std::vector<byte> &reference);
 }

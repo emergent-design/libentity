@@ -40,7 +40,6 @@ struct CollectionEntity : entity
 };
 
 
-
 struct ComplexEntity : entity
 {
 	string name 						= "complex";
@@ -58,6 +57,21 @@ struct ComplexEntity : entity
 };
 
 
+struct AutoEntity : entity
+{
+	string name = "auto";
+	bool flag	= true;
+	int integer	= 42;
+
+	void create_map()
+	{
+		automap(name);
+		automap(flag);
+		automap(integer);
+	}
+};
+
+
 SUITE("Entity Tests")
 {
 	FACT("A simple entity can be mapped to a tree")
@@ -65,6 +79,16 @@ SUITE("Entity Tests")
 		tree t = SimpleEntity().to_tree();
 
 		Assert.Equal("simple",	t.get<string>("name"));
+		Assert.Equal(42,		t.get<int>("integer"));
+		Assert.True(			t.get<bool>("flag"));
+	}
+
+	
+	FACT("An entity can be auto-mapped using the member name")
+	{
+		tree t = AutoEntity().to_tree();
+
+		Assert.Equal("auto",	t.get<string>("name"));
 		Assert.Equal(42,		t.get<int>("integer"));
 		Assert.True(			t.get<bool>("flag"));
 	}

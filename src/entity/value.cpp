@@ -7,9 +7,9 @@ using namespace std;
 
 namespace ent
 {
-	bool value::null() 					{ return this->type == Type::Null; }
-	value::Type value::get_type()		{ return this->type; }
-	value::Number value::get_numtype()	{ return this->number; }
+	bool value::null() const					{ return this->type == Type::Null; }
+	value::Type value::get_type() const			{ return this->type; }
+	value::Number value::get_numtype() const	{ return this->number; }
 
 
 	value &value::operator=(const value &v)
@@ -22,19 +22,19 @@ namespace ent
 	}
 
 
-	std::string value::get(const std::string &defaultValue)
+	std::string value::get(const std::string &defaultValue) const
 	{
 		return this->type == Type::String ? static_cast<container<std::string> *>(this->content)->data : defaultValue;
 	}
 
 
-	bool value::get(const bool &defaultValue)
+	bool value::get(const bool &defaultValue) const
 	{
 		return this->type == Type::Boolean ? static_cast<container<bool> *>(this->content)->data : defaultValue;
 	}
 
 
-	tree value::get(const tree &defaultValue)
+	tree value::get(const tree &defaultValue) const
 	{
 		return this->type == Type::Object ? this->object() : defaultValue;
 	}
@@ -56,7 +56,7 @@ namespace ent
 	}
 
 
-	vector<byte> value::get(const vector<byte> &defaultValue)
+	vector<byte> value::get(const vector<byte> &defaultValue) const
 	{
 		return this->type == Type::Binary
 			? static_cast<container<vector<byte>> *>(this->content)->data

@@ -7,16 +7,7 @@ namespace ent
 {
 	tree tree::get(const string name)
 	{
-		if (properties.count(name))
-		{
-			//auto &p = this->properties[name];
-
-			//return p.type == vtype::Object ? *p.object : tree();
-
-			return this->properties[name].object();
-		}
-
-		return tree();
+		return properties.count(name) ? this->properties[name].object() : tree();
 	}
 
 
@@ -38,6 +29,13 @@ namespace ent
 		}
 
 		return result;
+	}
+
+
+	tree &tree::set(const std::string name)
+	{
+		this->properties[name] = value();
+		return *this;
 	}
 
 

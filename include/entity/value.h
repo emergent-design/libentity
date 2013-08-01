@@ -52,27 +52,35 @@ namespace ent
 			// Assignment override
 			value &operator=(const value &v);
 
+			// Comparison override
+			bool operator==(const value &v) const
+			{
+				return v.type == this->type
+					&& v.number == this->number
+					&& (this->type == Type::Null || this->content->compare(v.content));
+			}
+
 			~value() { delete this->content; }
 
 
-			bool null();
-			Type get_type();
-			Number get_numtype();
+			bool null() const;
+			Type get_type() const;
+			Number get_numtype() const;
 
 
 			// Standard getters that return the stored value if the type matches the
 			// requested type, otherwise the default value is returned instead.
-			std::string get(const std::string &defaultValue);
-			bool get(const bool &defaultValue);
-			tree get(const tree &defaultValue);
-			std::vector<byte> get(const std::vector<byte> &defaultValue);
+			std::string get(const std::string &defaultValue) const;
+			bool get(const bool &defaultValue) const;
+			tree get(const tree &defaultValue) const;
+			std::vector<byte> get(const std::vector<byte> &defaultValue) const;
 
 			std::vector<value> &array() const;
 			tree &object() const;
 
 			// Numbers are stored as integer or double, so if an integer is requested
 			// but the underlying type is a double it will be rounded.
-			template <class T> typename std::enable_if<std::is_integral<T>::value, T>::type get(const T &defaultValue)
+			template <class T> typename std::enable_if<std::is_integral<T>::value, T>::type get(const T &defaultValue) const
 			{
 				return this->type == Type::Number
 					? this->number == Number::Integer
@@ -81,7 +89,7 @@ namespace ent
 					: defaultValue;
 			}
 
-			template <class T> typename std::enable_if<std::is_floating_point<T>::value, T>::type get(const T &defaultValue)
+			template <class T> typename std::enable_if<std::is_floating_point<T>::value, T>::type get(const T &defaultValue) const
 			{
 				return this->type == Type::Number
 					? this->number == Number::Integer
@@ -92,7 +100,7 @@ namespace ent
 
 
 			// Confirms whether or not this value is of the given type.
-			template <class T> bool is()
+			template <class T> bool is() const
 			{
 				if (std::is_arithmetic<T>::value)
 				{
@@ -112,12 +120,15 @@ namespace ent
 			{
 				virtual ~base() {}
 				virtual base *clone() = 0;
+				virtual bool compare(const base *v) = 0;
 			};
 
 			template <class T> struct container : base
 			{
 				container(const T &value) : data(value) {}
 				base *clone() { return new container<T>(this->data); }
+
+				bool compare(const base *v) { return static_cast<const container<T> *>(v)->data == this->data; }
 
 				T data;
 			};

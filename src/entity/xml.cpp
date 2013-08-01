@@ -61,7 +61,7 @@ namespace ent
 	const string header			= u8R"xml(<?xml version="1.0" encoding="UTF-8" standalone="yes"?>)xml";
 	
 	
-	string xml::to(tree &item, bool pretty, int depth)
+	string xml::to(const tree &item, bool pretty, int depth)
 	{
 		stringstream result;
 		string line		= pretty ? "\n" : "";
@@ -81,7 +81,7 @@ namespace ent
 
 
 
-	string xml::property(value &item, const string name, bool pretty, int depth)
+	string xml::property(const value &item, const string name, bool pretty, int depth)
 	{
 		stringstream result;
 		string line		= pretty ? "\n" : "";

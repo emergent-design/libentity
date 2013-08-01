@@ -4,9 +4,13 @@
 
 using namespace std;
 
+
 namespace ent
 {
-	
+	const char quote			= '"';
+	bool json::whitespace[256]	= { false };
+
+
 	string json::escape(const string item)
 	{
 		string result;
@@ -29,7 +33,6 @@ namespace ent
 
 		return result;
 	}
-
 
 
 	string json::unescape(const string item)
@@ -60,12 +63,7 @@ namespace ent
 	}
 
 
-
-	const char quote			= '"';
-	bool json::whitespace[256]	= { false };
-
-
-	string json::to(tree &item, bool pretty, int depth)
+	string json::to(const tree &item, bool pretty, int depth)
 	{
 		stringstream result;
 		string space 	= pretty ? " " : "";
@@ -89,7 +87,7 @@ namespace ent
 
 
 
-	string json::property(value &item, bool pretty, int depth)
+	string json::property(const value &item, bool pretty, int depth)
 	{
 		stringstream result;
 		string line		= pretty ? "\n" : "";
@@ -105,8 +103,7 @@ namespace ent
 
 			for (auto &i : array)
 			{
-				result	<< indent << extra << property(i, pretty, depth+1) 
-						<< (j-- ? "," : "") << line;
+				result	<< indent << extra << property(i, pretty, depth+1) << (j-- ? "," : "") << line;
 			}
 
 			result << indent << "]";
@@ -124,6 +121,7 @@ namespace ent
 
 		return result.str();
 	}
+
 
 
 	tree json::from(const string &text)

@@ -82,5 +82,27 @@ SUITE("Value Tests")
 		Assert.Equal(value::Type::Number, b.get_type());
 		Assert.Equal(42, b.get(0));
 	}
+
+
+	vector<tuple<value, value, value, value>> value_comparison_vectors()
+	{
+		return {
+			make_tuple(value(42),							value(42),							value(10),							value("test")),	// Integer
+			make_tuple(value(3.14),							value(3.14),						value(1.01),						value(42)),		// Floating-point
+			make_tuple(value("test"),						value("test"),						value("wrong"),						value(3.4)),	// String
+			make_tuple(value(true),							value(true),						value(false),						value("test")),	// Boolean
+			make_tuple(value(), 							value(),							value("wrong"),						value(3.14)),	// Null
+			make_tuple(value(vector<byte> { 0x00, 0xff }),	value(vector<byte> { 0x00, 0xff }), value(vector<byte> { 0x00, 0xaa }), value("test")),	// Binary
+			make_tuple(value(vector<value> { value(42) }),	value(vector<value> { value(42) }), value(vector<value> { value(10) }), value("test")),	// Array
+		};
+	}
+
+
+	DATA_THEORY("Simple values can be compared", (value data, value same, value wrong, value different), value_comparison_vectors)
+	{
+		Assert.True(data == same);
+		Assert.False(data == wrong);
+		Assert.False(data == different);
+	}
 }
 

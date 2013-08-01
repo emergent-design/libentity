@@ -17,6 +17,9 @@ namespace ent
 			// represented by another tree.
 			tree get(const std::string name);
 
+			// Set the value of a property to null
+			tree &set(const std::string name);
+
 			// Set the value of a property to an object
 			tree &set(const std::string name, const tree &item);
 
@@ -128,3 +131,4 @@ namespace ent
 			std::map<std::string, value> properties;
 	};
 }
+

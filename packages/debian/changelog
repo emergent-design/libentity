@@ -1,3 +1,12 @@
+libentity0 (0.0.2) unstable; urgency=low
+
+  * Underlying value structure refactored with templating. Now faster and less overhead.
+  * Added "automap" macro to allow mapping using the parameter name.
+  * Implemented BSON emitter/serialiser. 
+  * The value structure can now be compared (== operator override).
+
+ -- Dan Parnham <dan@emergent-design.co.uk>  Thu, 01 Aug 2013 15:56:47 +0100
+
 libentity0 (0.0.1) unstable; urgency=low
 
   * Added the ability to map enums. 

@@ -14,7 +14,7 @@ namespace ent
 		public:
 
 			// Serialise from a tree to a JSON string
-			static std::string to(tree &item, bool pretty, int depth = 0);
+			static std::string to(const tree &item, bool pretty, int depth = 0);
 
 			// Deserialise from a JSON string to a tree
 			static tree from(const std::string &text);
@@ -30,7 +30,7 @@ namespace ent
 			static std::string unescape(const std::string item);
 
 			// Stringify a property value
-			static std::string property(value &item, bool pretty, int depth);
+			static std::string property(const value &item, bool pretty, int depth);
 
 			// Very basic iterative validation. It ensures that all objects and
 			// arrays are terminated so that the recursive parsing functions
