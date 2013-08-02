@@ -69,7 +69,7 @@ struct Simple : entity
 
 	mapping map()
 	{
-		return mapping() << ref(name) << ref(flag) << ref("int", integer);
+		return mapping() << eref(name) << eref(flag) << eref("int", integer);
 	}
 };
 
@@ -114,7 +114,7 @@ Any class or struct that descends from
 must implement the 
 [map](https://github.com/emergent-design/libentity/wiki/Entity#map) 
 function which allows the library to do its magic without the need for a 
-pre-compilation step. The macro ```ref``` simply expands to a 
+pre-compilation step. The macro ```eref``` simply expands to a 
 ```mapping::reference``` instance and if no name is provided it will
 automagically use the parameter name (so avoid using ```this->```).
 By allowing the name to be specified, as in the "int" example above, it can map a 

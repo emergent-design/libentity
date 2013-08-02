@@ -15,7 +15,7 @@ struct SimpleEntity : entity
 	
 	mapping map()
 	{
-		return mapping() << ref(name) << ref(flag) << ref(integer);
+		return mapping() << eref(name) << eref(flag) << eref(integer);
 	}
 };
 
@@ -29,7 +29,7 @@ struct CollectionEntity : entity
 
 	mapping map()
 	{
-		return mapping() << ref(strings) << ref(doubles) << ref(binary) << ref(dictionary);
+		return mapping() << eref(strings) << eref(doubles) << eref(binary) << eref(dictionary);
 	}
 };
 
@@ -43,7 +43,7 @@ struct ComplexEntity : entity
 
 	mapping map()
 	{
-		return mapping() << ref(name) << ref(entities) << ref(collection) << ref(simple);
+		return mapping() << eref(name) << eref(entities) << eref(collection) << eref(simple);
 	}
 };
 

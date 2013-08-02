@@ -11,12 +11,12 @@ namespace ent
 	// If two arguments are passed then the supplied name is used as the mapping key
 	#ifndef ent_ref
 		#define ent_get_ref(_1, _2, name, ...) name
-		#define ent_auto_ref(item) mapping::reference(#item, item)
-		#define ent_man_ref(name, item) mapping::reference(name, item)
+		#define ent_auto_ref(item) ent::mapping::reference(#item, item)
+		#define ent_man_ref(name, item) ent::mapping::reference(name, item)
 		#define ent_ref(...) ent_get_ref(__VA_ARGS__, ent_man_ref, ent_auto_ref)(__VA_ARGS__)
 
 		// Concise call to ent_ref, disable if it conflicts and use ent_ref instead
-		#define ref ent_ref
+		#define eref ent_ref
 	#endif
 
 
