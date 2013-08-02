@@ -15,9 +15,7 @@ Warning
 -------
 
 This library should be considered alpha and as such is not suitable for production 
-environments. However, the API for the 
-[entity](https://github.com/emergent-design/libentity/wiki/Entity) base class is 
-extremely simple and therefore unlikely to change.
+environments.
 
 
 Parsers
@@ -62,18 +60,16 @@ using namespace std;
 using namespace ent;
 
 
-// A structure with simple members that is derived from entity
+// A structure with simple members, derived from entity
 struct Simple : entity
 {
 	string name	= "default";
 	bool flag	= false;
 	int integer = 0;
 
-	void create_map()
+	mapping map()
 	{
-		automap(name);				// Uses parameter name (avoid "this->")
-		map("flag", this->flag);	// Uses explicit name ("this->" is safe)
-		map("int", this->integer);	// Uses an alternative name			
+		return mapping() << ref(name) << ref(flag) << ref("int", integer);
 	}
 };
 
@@ -116,12 +112,13 @@ g++ -std=c++11 simple.cpp -lentity
 Any class or struct that descends from 
 [entity](https://github.com/emergent-design/libentity/wiki/Entity) 
 must implement the 
-[create_map](https://github.com/emergent-design/libentity/wiki/Entity#create-map) 
+[map](https://github.com/emergent-design/libentity/wiki/Entity#map) 
 function which allows the library to do its magic without the need for a 
-pre-compilation step. The macro ```automap``` simply expands to call the 
-```map(name, reference)``` function where the name matches that of the parameter. 
-You can use the map function directly if the names must differ when 
-serialised or deserialised.
+pre-compilation step. The macro ```ref``` simply expands to a 
+```mapping::reference``` instance and if no name is provided it will
+automagically use the parameter name (so avoid using ```this->```).
+By allowing the name to be specified, as in the "int" example above, it can map a 
+value from a third-party system where the names may differ.
 
 
 Installation
@@ -137,4 +134,10 @@ and, with some tweaking of the build process, it should also be possible to
 compile for Windows/OSX since it has no dependencies other than a modern compiler 
 that supports C++11.
 
-[Changelog](https://github.com/emergent-design/libentity/blob/master/packages/debian/changelog)
+---
+
+<div style="text-align:center">
+	<a href="https://github.com/emergent-design/libentity/blob/master/packages/debian/changelog">
+		Changelog
+	</a>
+</div>

@@ -23,7 +23,7 @@ namespace ent
 	struct vmapbase
 	{
 		virtual value to() = 0;
-		virtual void from(value &value) = 0;
+		virtual void from(const value &value) = 0;
 	};
 
 
@@ -53,7 +53,7 @@ namespace ent
 				std::vector<value> result(array->size());
 
 				std::transform(array->begin(), array->end(), result.begin(), [](T &v) {
-					return value(std::make_shared<tree>(v.to_tree()));
+					return value(std::make_shared<tree>(v.to()));
 				});
 
 				return value(result);
@@ -62,11 +62,11 @@ namespace ent
 			{
 				auto result = std::make_shared<tree>();
 
-				for (auto &i : *map) result->set(i.first, i.second.to_tree());
+				for (auto &i : *map) result->set(i.first, i.second.to());
 
 				return value(result);
 			}
-			else if (reference) return value(std::make_shared<tree>(reference->to_tree()));
+			else if (reference) return value(std::make_shared<tree>(reference->to()));
 
 			return value();
 		}
@@ -75,7 +75,7 @@ namespace ent
 		// Update the member value in an object with data from a tree value.
 		// In this particular case the member is an object and so must be
 		// updated from a tree contained within the value.
-		virtual void from(value &value)
+		virtual void from(const value &value)
 		{
 			if (array)
 			{
@@ -88,7 +88,7 @@ namespace ent
 						if (v.get_type() == value::Type::Object)
 						{
 							this->array->push_back(T());
-							this->array->back().from_tree(v.object());
+							this->array->back().from(v.object());
 						}
 					}
 				}
@@ -103,12 +103,12 @@ namespace ent
 					{
 						if (i.second.get_type() == value::Type::Object)
 						{
-							(*this->map)[i.first].from_tree(i.second.object());
+							(*this->map)[i.first].from(i.second.object());
 						}
 					}
 				}
 			}
-			else if (value.get_type() == value::Type::Object) reference->from_tree(value.object());
+			else if (value.get_type() == value::Type::Object) reference->from(value.object());
 		}
 
 
@@ -136,7 +136,7 @@ namespace ent
 
 		// Update the member value in the object instance by treating the string value
 		// as base64.
-		virtual void from(value &value)
+		virtual void from(const value &value)
 		{
 			*reference = value.get(std::vector<byte> {});
 		}
@@ -183,7 +183,7 @@ namespace ent
 
 
 		// Update the member value in an object with data from a tree value.
-		virtual void from(value &value)
+		virtual void from(const value &value)
 		{
 			if (array)
 			{
@@ -257,7 +257,7 @@ namespace ent
 
 
 		// Update the member value in an object with data from a tree value.
-		virtual void from(value &value)
+		virtual void from(const value &value)
 		{
 			if (array)
 			{

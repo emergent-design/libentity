@@ -5,19 +5,19 @@ using namespace std;
 
 namespace ent
 {
-	tree tree::get(const string name)
+	tree tree::get(const string name) const
 	{
-		return properties.count(name) ? this->properties[name].object() : tree();
+		return properties.count(name) ? this->properties.at(name).object() : tree();
 	}
 
 
-	vector<tree> tree::array(const string name)
+	vector<tree> tree::array(const string name) const
 	{
 		vector<tree> result;
 
 		if (this->properties.count(name))
 		{
-			auto &p = this->properties[name];
+			auto &p = this->properties.at(name);
 
 			if (p.get_type() == value::Type::Array)
 			{
@@ -56,8 +56,6 @@ namespace ent
 	tree &tree::set(const string name, const vector<tree> &items)
 	{
 		vector<value> result(items.size());
-		//value result(vtype::Array);
-		//result.array.resize(items.size());
 
 		transform(items.begin(), items.end(), result.begin(), [](const tree &v) {
 			return value(make_shared<tree>(v));

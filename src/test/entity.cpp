@@ -13,14 +13,11 @@ struct SimpleEntity : entity
 	bool flag	= true;
 	int integer	= 42;
 	
-	void create_map()
+	mapping map()
 	{
-		map("name", this->name);
-		map("flag", this->flag);
-		map("integer", this->integer);
+		return mapping() << ref(name) << ref(flag) << ref(integer);
 	}
 };
-
 
 
 struct CollectionEntity : entity
@@ -30,12 +27,9 @@ struct CollectionEntity : entity
 	std::vector<byte> binary				= { 0x00, 0x01, 0x02, 0x88, 0xff };
 	std::map<string, string> dictionary		= { { "first", "item" }, { "second", "item" } };
 
-	void create_map()
+	mapping map()
 	{
-		map("strings", this->strings);
-		map("doubles", this->doubles);
-		map("binary", this->binary);
-		map("dictionary", this->dictionary);
+		return mapping() << ref(strings) << ref(doubles) << ref(binary) << ref(dictionary);
 	}
 };
 
@@ -47,48 +41,21 @@ struct ComplexEntity : entity
 	CollectionEntity collection;
 	SimpleEntity simple;
 
-	void create_map()
+	mapping map()
 	{
-		map("name", this->name);
-		map("entities", this->entities);
-		map("collection", this->collection);
-		map("simple", this->simple);
+		return mapping() << ref(name) << ref(entities) << ref(collection) << ref(simple);
 	}
 };
 
-
-struct AutoEntity : entity
-{
-	string name = "auto";
-	bool flag	= true;
-	int integer	= 42;
-
-	void create_map()
-	{
-		automap(name);
-		automap(flag);
-		automap(integer);
-	}
-};
 
 
 SUITE("Entity Tests")
 {
 	FACT("A simple entity can be mapped to a tree")
 	{
-		tree t = SimpleEntity().to_tree();
+		tree t = SimpleEntity().to();
 
 		Assert.Equal("simple",	t.get<string>("name"));
-		Assert.Equal(42,		t.get<int>("integer"));
-		Assert.True(			t.get<bool>("flag"));
-	}
-
-	
-	FACT("An entity can be auto-mapped using the member name")
-	{
-		tree t = AutoEntity().to_tree();
-
-		Assert.Equal("auto",	t.get<string>("name"));
 		Assert.Equal(42,		t.get<int>("integer"));
 		Assert.True(			t.get<bool>("flag"));
 	}
@@ -97,7 +64,7 @@ SUITE("Entity Tests")
 	FACT("A simple entity can be mapped from a tree")
 	{
 		SimpleEntity e;
-		e.from_tree(tree()
+		e.from(tree()
 			.set("name", "changed")
 			.set("integer", 1)
 			.set("flag", false)
@@ -111,7 +78,7 @@ SUITE("Entity Tests")
 
 	FACT("An entity with collections can be mapped to a tree")
 	{
-		tree t = CollectionEntity().to_tree();
+		tree t = CollectionEntity().to();
 
 		Assert.Equal(vector<string> { "one", "two", "three" },							t.array<string>("strings"));
 		Assert.Equal(vector<double> { 0.11, 0.22, 0.33 },								t.array<double>("doubles"));
@@ -123,7 +90,7 @@ SUITE("Entity Tests")
 	FACT("An entity with collections can be mapped from a tree")
 	{
 		CollectionEntity e;
-		e.from_tree(tree()
+		e.from(tree()
 			.set("strings", vector<string> { "four", "five" })
 			.set("doubles", vector<double> { 5.0, 3.0, 1.0, 0.0 })
 			.set("binary", vector<byte> { 0xff, 0x00 })
@@ -139,7 +106,7 @@ SUITE("Entity Tests")
 
 	FACT("A complex entity can be mapped to a tree")
 	{
-		tree t = ComplexEntity().to_tree();
+		tree t = ComplexEntity().to();
 
 		Assert.Equal("complex",									t.get<string>("name"));
 		Assert.Equal("simple", 									t.get("simple").get<string>("name"));
@@ -151,7 +118,7 @@ SUITE("Entity Tests")
 	FACT("A complex entity can be mapped from a tree")
 	{
 		ComplexEntity e;
-		e.from_tree(tree()
+		e.from(tree()
 			.set("name", "changed")
 			.set("simple", tree().set("integer", 1024))
 			.set("collection", tree().set("doubles", vector<double> { 42.42 }))

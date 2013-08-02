@@ -1,3 +1,11 @@
+libentity0 (0.0.3) unstable; urgency=low
+
+  * Refactored entity so that it does not increase the size of a structure that derives from it.
+  * Due to the changes the mapping function now differs and relies on a new mapping class.
+  * Included macros to simplify the new mapping method.
+
+ -- Dan Parnham <dan@emergent-design.co.uk>  Fri, 02 Aug 2013 17:29:12 +0100
+
 libentity0 (0.0.2) unstable; urgency=low
 
   * Underlying value structure refactored with templating. Now faster and less overhead.

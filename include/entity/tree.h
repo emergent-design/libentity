@@ -15,7 +15,7 @@ namespace ent
 
 			// Get property by name where the value is an object and therefore
 			// represented by another tree.
-			tree get(const std::string name);
+			tree get(const std::string name) const;
 
 			// Set the value of a property to null
 			tree &set(const std::string name);
@@ -30,13 +30,13 @@ namespace ent
 			tree &set(const std::string name, const std::vector<tree> &items);
 
 			// Get property by name where the value is an array of objects
-			std::vector<tree> array(const std::string name);
+			std::vector<tree> array(const std::string name) const;
 
 
 			// Get property by name where the value is a simple scalar (string, number, boolean, null)
-			template <class T> T get(const std::string name, T defaultValue = T())
+			template <class T> T get(const std::string name, T defaultValue = T()) const
 			{
-				return this->properties.count(name) ? this->properties[name].get(defaultValue) : defaultValue;
+				return this->properties.count(name) ? this->properties.at(name).get(defaultValue) : defaultValue;
 			}
 
 
@@ -49,13 +49,13 @@ namespace ent
 			
 
 			// Get property by name where the value is an array of simple scalar values
-			template <class T> std::vector<T> array(const std::string name)
+			template <class T> std::vector<T> array(const std::string name) const
 			{
 				std::vector<T> result;
 
 				if (this->properties.count(name))
 				{
-					auto &p = this->properties[name];
+					auto &p = this->properties.at(name);
 
 					if (p.get_type() == value::Type::Array)
 					{
@@ -74,8 +74,6 @@ namespace ent
 			template <class T> tree &set(std::string name, const std::vector<T> &items)
 			{
 				std::vector<value> result(items.size());
-				//value result(vtype::Array);
-				//result.array.resize(items.size());
 
 				std::transform(items.begin(), items.end(), result.begin(), [](const T &v) {
 					return value(v);
@@ -88,13 +86,13 @@ namespace ent
 
 
 			// Get property by name where the value is an object and return as a map
-			template <class T> std::map<std::string, T> map(const std::string name)
+			template <class T> std::map<std::string, T> map(const std::string name) const
 			{
 				std::map<std::string, T> result;
 
 				if (this->properties.count(name))
 				{
-					auto &p = this->properties[name];
+					auto &p = this->properties.at(name);
 
 					if (p.get_type() == value::Type::Object)
 					{
