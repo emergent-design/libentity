@@ -39,7 +39,7 @@ SUITE("Query Tests")
 
 		//vector<int> data = { 1, 1, 2, 3, 5 };
 
-		vector<int> data = { 6, 3, 8, 2, 1 };
+		vector<int> data = { 6, 3, 8, 2, 4 };
 		vector<int> one = { 42 };
 		vector<int> empty;
 
@@ -83,7 +83,27 @@ SUITE("Query Tests")
 		//for (auto &i : from(empty).take(2)) cout << i << endl;
 
 		//for (auto &i : from(data).skip(2)) cout << i << endl;
-		for (auto &i : from(data).skip_while([](const int &i) { return i > 2; })) cout << i << endl;
+		//for (auto &i : from(data).skip_while([](const int &i) { return i > 2; })) cout << i << endl;
+
+		//cout << from(data).select<int>([](const int &i) { return i * 2; }).min() << endl;
+
+		//cout << from(data).min() << endl;
+		//cout << from(data).min<double>([](const int &i) { return sqrt(i); }) << endl;
+
+		//cout << from(data).max() << endl;
+		//cout << from(data).max<double>([](const int &i) { return sqrt(i); }) << endl;
+
+		vector<string> strings = { "a", "b", "c" };
+
+		//cout << from(strings).min() << endl;
+		//cout << from(strings).average() << endl;
+		//cout << from(data).average() << endl;
+		//cout << from(data).average<double>([](const int &i) { return sqrt(i); }) << endl;
+
+
+		cout << from(strings).aggregate([](const string &accumulator, const string &i) { return accumulator + ", " + i; }) << endl;
+
+
 
 		//for (auto &i : from(data).where([](const int &i) { return i % 2; }).vector()) cout << i << endl;
 

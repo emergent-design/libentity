@@ -159,6 +159,24 @@ namespace ent
 			}
 
 
+			T aggregate(std::function<T(const T&, const T&)> accumulator)
+			{
+				return std::accumulate(++this->begin(), this->end(), *this->begin(), accumulator);
+			}
+
+
+			template <class U> U aggregate(U seed, std::function<U(const U&, const T&)> accumulator)
+			{
+				return std::accumulate(this->begin(), this->end(), seed, accumulator);
+			}
+
+
+			template <class U, class V> V aggregate(U seed, std::function<U(const U&, const T&)> accumulator, std::function<V(const U&)> selector)
+			{
+				return selector(std::accumulate(this->begin(), this->end(), seed, accumulator));
+			}
+
+
 			bool all(std::function<bool(const T&)> predicate)
 			{
 				for (T *i = start(this, true); i; i = next(this)) if (!predicate(*i)) return false;
@@ -212,9 +230,31 @@ namespace ent
 			T single(std::function<bool(const T&)> predicate)				{ return this->single(predicate, true); }
 			T single_or_default(std::function<bool(const T&)> predicate)	{ return this->single(predicate, false); }
 
+			T min()															{ return this->min_max<T>(nullptr, true); }
+			T max()															{ return this->min_max<T>(nullptr, false); }
+			double average()												{ return average<T>(nullptr); }
+			template <class U> U min(std::function<U(const T&)> selector)	{ return this->min_max<U>(selector, true); }
+			template <class U> U max(std::function<U(const T&)> selector)	{ return this->min_max<U>(selector, false); }
+
 			query<T> skip(int count)										{ return this->skip(count, nullptr); }
 			query<T> skip_while(std::function<bool(const T&)> predicate)	{ return this->skip(0, predicate); }
-			
+
+
+			template <class U> double average(std::function<U(const T&)> selector)
+			{
+				static_assert(std::is_arithmetic<U>::value, "query::average is only suitable for arithmetic types");
+
+				int count 	= 0;
+				double sum	= 0;
+
+				if (selector) 	for (T *i = start(this, true); i; i = next(this), count++) sum += (double)selector(*i);
+				else			for (T *i = start(this, true); i; i = next(this), count++) sum += (double)*i;
+
+				if (!count) throw std::runtime_error("query::average invalid since query result is empty");
+
+				return sum / (double)count;
+			}
+
 
 			std::vector<T> vector()
 			{
@@ -253,6 +293,7 @@ namespace ent
 				}
 
 				bool operator!=(iterator &i) 	{ return i.current != this->current; }
+				bool operator==(iterator &i)	{ return i.current == this->current; }
 				T &operator*()					{ return *this->current; }
 
 				private:
@@ -338,6 +379,20 @@ namespace ent
 			}
 
 
+			template <class U> U min_max(std::function<U(const T&)> selector, bool min)
+			{
+				T *i = start(this, true);
+				if (!i) throw std::runtime_error("query::min/max invalid since query result is empty");
+
+				U result = selector ? selector(*i) : *i;
+
+				if (min)	for (T *i = next(this); i; i = next(this)) result = std::min(result, selector ? selector(*i) : *i);
+				else		for (T *i = next(this); i; i = next(this)) result = std::max(result, selector ? selector(*i) : *i);
+
+				return result;
+			}
+
+
 			query<T> skip(int count, std::function<bool(const T&)> predicate)
 			{
 				return {
@@ -387,12 +442,12 @@ namespace ent
 
 
 /*
-aggregate(reducer)
-aggregate(seed, reducer)
-aggregate(seed, reducer, selector)
+-aggregate(reducer)
+-aggregate(seed, reducer)
+-aggregate(seed, reducer, selector)
 -all(predicate)
 -any(predicate)
-average()
+-average()
 concat(range)
 -contains(element)
 -count()
@@ -417,8 +472,8 @@ keys()
 -last(predicate, value)
 -last_or_default()
 -last_or_default(predicate)
-max()
-min()
+-max()
+-min()
 -order_by(selector)
 -order_by_descending(selector)
 -reverse()
@@ -427,8 +482,8 @@ select_many(selector)
 sequence_equal(range)
 -single()
 -single_or_default()
-skip(count)
-skip_while(predicate)
+-skip(count)
+-skip_while(predicate)
 sum()
 -take(count)
 -take_while(predicate)
