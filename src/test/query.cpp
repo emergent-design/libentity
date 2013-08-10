@@ -3,6 +3,7 @@
 #include <entity/query.h>
 #include <entity/json.h>
 
+#include <set>
 
 using namespace std;
 using namespace ent;
@@ -15,6 +16,12 @@ SUITE("Query Tests")
 	{
 		string name;
 		int number;
+		double another;
+
+		bool operator==(const QueryTest &a)
+		{
+			return this->name == a.name && this->number == a.number && this->another == a.another;
+		}
 	};
 
 	FACT("A fact")
@@ -39,14 +46,62 @@ SUITE("Query Tests")
 
 		//vector<int> data = { 1, 1, 2, 3, 5 };
 
-		vector<int> data = { 6, 3, 8, 2, 4 };
+		cout << "Size: " << sizeof(query<int>) << endl << endl;
+
+		vector<int> data = { 6, 3, 8, 2, 42, 4, 2, 6, 7 };
+		vector<int> more = { 42, 100, 1 };
 		vector<int> one = { 42 };
 		vector<int> empty;
 
+		vector<QueryTest> objects = {
+			{ "a", 42, 	1.0 },
+			{ "b", 4,	1.0 },
+			{ "cc", 8 , 3.1 },
+			{ "ca", 8, 	1.0 },
+			{ "cc", 8, 1.0  },
+			{ "ca", 8, 	1.0 },
+			{ "d", 1, 1.0 },
+		};
 
-		/*for (auto &i : from(data).order_by<int>([](const int &i) { return i; }).vector()) cout << i << endl;
 
-		cout << endl;
+		for (auto &i : from(data).except(more)) cout << i << endl;
+
+
+		//for (auto &i : from(data).concat(more)) cout << i << endl;
+		//for (auto &i : from(data).concat(more).order_by<int>([](const int &i) { return i; })) cout << i << endl;
+		
+		//for (auto &i : from(data).concat(more)) 			cout << i << endl;
+		//cout << endl;
+		//for (auto &i : from(data).concat(more).reverse()) 	cout << i << endl;
+		//cout << endl;
+		//for (auto &i : from(data).concat(from(more))) 			cout << i << endl;
+
+		//for (auto &i : from(data).list()) cout << i << endl;
+
+		//for (auto &i : from(data).default_if_empty(10)) cout << i << endl;
+		//cout << endl;
+		//for (auto &i : from(empty).default_if_empty(10)) cout << i << endl;
+		//cout << endl;
+		//for (auto &i : from(empty).default_if_empty()) cout << i << endl;
+
+		//for (auto &i : from(data).order_by<int>([](const int &i) { return i; }, true)) cout << i << endl;
+
+		//auto items = from(objects)
+		//	.order_by<int>([](const QueryTest &i) { return i.number; })
+		//	.then_by<string>([](const QueryTest &i) { return i.name; })
+		//	.then_by<double>([](const QueryTest &i) { return i.another; });
+
+		//for (auto &i : items) cout << i.name << "," << i.number << endl;
+		//for (auto &i : items) cout << i.name << "," << i.number << "," << i.another << endl;
+
+		//cout << from(data).element_at(0) << endl;
+		//cout << from(data).element_at_or_default(-1) << endl;
+
+		//for (auto &i : from(data).distinct()) cout << i << endl;
+
+		//for (auto &i : from(objects).distinct()) cout << i.name << endl;
+
+		/*cout << endl;
 		for (auto &i : from(data).where([](const int &i) { return i > 3; }).vector()) cout << i << endl;
 
 		cout << endl;
@@ -93,7 +148,7 @@ SUITE("Query Tests")
 		//cout << from(data).max() << endl;
 		//cout << from(data).max<double>([](const int &i) { return sqrt(i); }) << endl;
 
-		vector<string> strings = { "a", "b", "c" };
+		//vector<string> strings = { "a", "b", "c" };
 
 		//cout << from(strings).min() << endl;
 		//cout << from(strings).average() << endl;
@@ -101,7 +156,20 @@ SUITE("Query Tests")
 		//cout << from(data).average<double>([](const int &i) { return sqrt(i); }) << endl;
 
 
-		cout << from(strings).aggregate([](const string &accumulator, const string &i) { return accumulator + ", " + i; }) << endl;
+		//cout << from(strings).aggregate([](const string &accumulator, const string &i) { return accumulator + ", " + i; }) << endl;
+
+		//cout << from(data).sum() << endl;
+		//cout << from(data).sum<double>([](const int &i) { return sqrt(i); }) << endl;
+
+
+		//int more[] = { 6, 3, 8 };
+
+		//for (int &i : more) cout << i << endl;
+		//cout << from(more).count() << endl;
+
+		//wrapper<int> test(more, 3);
+
+		//for (auto &i : from(more, 3)) cout << i << endl;
 
 
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <list>
+
 
 namespace ent
 {
@@ -21,11 +23,13 @@ namespace ent
 			// Force the default copy constructor (to avoid getting caught by the templated one below)
 			query(const query<T> &copy) = default;
 
+
 			// Construct from initialiser list
 			query(std::initializer_list<T> data) : buffer(std::make_shared<std::vector<T>>(data))
 			{
 				this->setup(*this->buffer);
 			}
+
 
 			// Construct from any container type
 			template <class U, class = typename std::enable_if<std::is_same<T, typename U::value_type>::value>::type> query(U &data)
@@ -133,28 +137,183 @@ namespace ent
 			}
 
 
+			query<T> distinct()
+			{
+				return {
+					*this,
+					[](qbase *c, bool forward) {
+						auto t = static_cast<query<T>*>(c);
+						auto p = static_cast<query<T>*>(c->parent.get());
+
+						t->buffer = std::make_shared<std::vector<T>>();
+						for (T *i = p->start(p, forward); i; i = p->next(p))
+						{
+							if (std::find(t->buffer->begin(), t->buffer->end(), *i) == t->buffer->end())
+							{
+								t->buffer->emplace_back(*i);
+							}
+						}
+
+						t->it = std::make_shared<iterators<typename std::vector<T>::iterator>>(t->buffer->begin(), t->buffer->end());
+						return t->it->next();
+					},
+					[=](qbase *c) {
+						return static_cast<query<T>*>(c)->it->next();
+					}
+				};
+			}
+
+
 			template <class U> query<T> order_by(std::function<U(const T&)> selector, bool descending = false)
 			{
 				return {
 					*this,
 					[=](qbase *c, bool forward) {
-						auto t	= static_cast<query<U>*>(c);
-						auto p	= static_cast<query<T>*>(c->parent.get());
+						auto t = static_cast<query<T>*>(c);
+						auto p = static_cast<query<T>*>(c->parent.get());
 
-						t->buffer->clear();
-						for (T *i = p->start(p, true); i; i = p->next(p)) t->buffer->push_back(*i);
+						t->buffer = std::make_shared<std::vector<T>>();
+						for (T *i = p->start(p, true); i; i = p->next(p)) t->buffer->emplace_back(*i);
 
-						std::sort(t->buffer->begin(), t->buffer->end(), [&](const T &a, const T &b) { return selector(a) < selector(b); });
+						std::function<bool(const T&, const T&)> comparator = nullptr;
 
-						if (forward == !descending) static_cast<query<T>*>(c)->it = std::make_shared<iterators<typename std::vector<T>::iterator>>(t->buffer->begin(), t->buffer->end());
-						else						static_cast<query<T>*>(c)->it = std::make_shared<iterators<typename std::vector<T>::reverse_iterator>>(t->buffer->rbegin(), t->buffer->rend());
+						if (t->comparator)
+						{
+							if (descending) comparator = [&](const T &a, const T &b) { return selector(a) == selector(b) ? t->comparator(a, b) : selector(a) > selector(b); };
+							else			comparator = [&](const T &a, const T &b) { return selector(a) == selector(b) ? t->comparator(a, b) : selector(a) < selector(b); };
+						}
+						else
+						{
+							if (descending) comparator = [&](const T &a, const T &b) { return selector(a) > selector(b); };
+							else			comparator = [&](const T &a, const T &b) { return selector(a) < selector(b); };
+						}
+
+						std::stable_sort(t->buffer->begin(), t->buffer->end(), comparator);
+
+						if (forward)	t->it = std::make_shared<iterators<typename std::vector<T>::iterator>>(t->buffer->begin(), t->buffer->end());
+						else			t->it = std::make_shared<iterators<typename std::vector<T>::reverse_iterator>>(t->buffer->rbegin(), t->buffer->rend());
 
 						return t->it->next();
 					},
 					[=](qbase *c) {
 						return static_cast<query<T>*>(c)->it->next();
 					},
-					std::make_shared<std::vector<T>>()
+				};
+			}
+
+
+			// This uses comparator passing and is therefore safe to call on any query instance, however it will
+			// have no effect on the query unless it follows an order_by/then_by chain.
+			template <class U> query<T> then_by(std::function<U(const T&)> selector, bool descending = false)
+			{
+				return {
+					*this,
+					[=](qbase *c, bool forward) {
+						auto t = static_cast<query<T>*>(c);
+						auto p = static_cast<query<T>*>(c->parent.get());
+
+						if (t->comparator)
+						{
+							if (descending)	p->comparator = [=](const T &a, const T &b) { return selector(a) == selector(b) ? t->comparator(a, b) : selector(a) > selector(b); };
+							else			p->comparator = [=](const T &a, const T &b) { return selector(a) == selector(b) ? t->comparator(a, b) : selector(a) < selector(b); };
+						}
+						else
+						{
+							if (descending)	p->comparator = [=](const T &a, const T &b) { return selector(a) > selector(b); };
+							else			p->comparator = [=](const T &a, const T &b) { return selector(a) < selector(b); };
+						}
+
+						return p->start(p, forward);
+					},
+					[](qbase *c) {
+						return static_cast<query<T>*>(c->parent.get())->next(c->parent.get());
+					}
+				};
+			}
+
+
+			query<T> concat(const query<T> &src)
+			{
+				return {
+					*this,
+					[=](qbase *c, bool forward) {
+						auto t		= static_cast<query<T>*>(c);
+						t->counter	= forward;
+
+						if (forward)	t->queries = { c->parent, std::make_shared<query<T>>(src) };
+						else			t->queries = { std::make_shared<query<T>>(src), c->parent };
+
+						T *i = static_cast<query<T>*>(t->queries.front().get())->start(t->queries.front().get(), forward);
+
+						if (!i)
+						{
+							t->queries.pop_front();
+							return static_cast<query<T>*>(t->queries.front().get())->start(t->queries.front().get(), forward);
+						}
+
+						return i;
+					},
+					[](qbase *c) -> T* {
+						auto t = static_cast<query<T>*>(c);
+
+						if (!t->queries.empty())
+						{
+							T *i = static_cast<query<T>*>(t->queries.front().get())->next(t->queries.front().get());
+
+							if (!i && t->queries.size() > 1)
+							{
+								t->queries.pop_front();
+								return static_cast<query<T>*>(t->queries.front().get())->start(t->queries.front().get(), t->counter);
+							}
+
+							return i;
+						}
+
+						return nullptr;
+					}
+				};
+			}
+
+
+			query<T> except(const query<T> &data)
+			{
+				return {
+					*this,
+					[=](qbase *c, bool forward) -> T* {
+						auto p = static_cast<query<T>*>(c->parent.get());
+
+						for (T *i = p->start(p, forward); i; i = p->next(p))
+						{
+							if (std::find(data.begin(), data.end(), *i) == data.end()) return i;
+						}
+
+						return nullptr;
+					},
+					[=](qbase *c) -> T* {
+						auto p = static_cast<query<T>*>(c->parent.get());
+
+						for (T *i = p->next(p); i; i = p->next(p))
+						{
+							if (std::find(data.begin(), data.end(), *i) == data.end()) return i;
+						}
+
+						return nullptr;
+					}
+				};
+			}
+
+
+			query<T> default_if_empty(const T &defaultValue = T())
+			{
+				return {
+					*this,
+					[=](qbase *c, bool forward) {
+						T *i = static_cast<query<T>*>(c->parent.get())->start(c->parent.get(), forward);
+						return i ? i : &(static_cast<query<T>*>(c)->item = defaultValue);
+					},
+					[](qbase *c) {
+						return static_cast<query<T>*>(c->parent.get())->next(c->parent.get());
+					}
 				};
 			}
 
@@ -215,6 +374,9 @@ namespace ent
 			}
 
 
+			T element_at(int index)											{ return this->element_at(index, true); }
+			T element_at_or_default(int index)								{ return this->element_at(index, false); }
+			
 			T first()														{ return this->first_last(nullptr, true, true); }
 			T first_or_default()											{ return this->first_last(nullptr, false, true); }
 			T first(std::function<bool(const T&)> predicate)				{ return this->first_last(predicate, true, true); }
@@ -232,6 +394,7 @@ namespace ent
 
 			T min()															{ return this->min_max<T>(nullptr, true); }
 			T max()															{ return this->min_max<T>(nullptr, false); }
+			T sum()															{ return sum<T>(nullptr); }
 			double average()												{ return average<T>(nullptr); }
 			template <class U> U min(std::function<U(const T&)> selector)	{ return this->min_max<U>(selector, true); }
 			template <class U> U max(std::function<U(const T&)> selector)	{ return this->min_max<U>(selector, false); }
@@ -256,9 +419,24 @@ namespace ent
 			}
 
 
-			std::vector<T> vector()
+			template <class U> U sum(std::function<U(const T&)> selector)
 			{
-				std::vector<T> result;
+				static_assert(std::is_arithmetic<U>::value, "query::sum is only suitable for arithmetic types");
+
+				U result = 0;
+
+				if (selector) 	for (T *i = start(this, true); i; i = next(this)) result += selector(*i);
+				else			for (T *i = start(this, true); i; i = next(this)) result += *i;
+
+				return result;
+			}
+
+
+			// Will return a new container of items but only where the given container type
+			// supports emplace_back.
+			template <class U, class = typename std::enable_if<std::is_same<T, typename U::value_type>::value>::type> U to()
+			{
+				U result;
 
 				for (T *i = start(this, true); i; i = next(this)) result.emplace_back(*i);
 
@@ -276,7 +454,12 @@ namespace ent
 			}
 
 
-			
+			std::vector<T> vector()	{ return to<std::vector<T>>(); }
+			std::list<T> list()		{ return to<std::list<T>>(); }
+
+
+			// Basic iterator that allows query to be used in a for( : ) each loop without
+			// needing to first convert to a vector (avoids unnecessary memory allocation).
 			struct iterator : std::iterator<std::input_iterator_tag, T>
 			{
 				iterator() {}
@@ -286,25 +469,33 @@ namespace ent
 					this->current = this->q.start(&this->q, forward);
 				}
 
+				iterator operator++(int)
+				{
+					iterator result = *this;
+					this->current = this->q.next(&this->q);
+					return result;
+				}
+
 				iterator &operator++()
 				{
 					this->current = this->q.next(&this->q);
 					return *this;
 				}
 
-				bool operator!=(iterator &i) 	{ return i.current != this->current; }
-				bool operator==(iterator &i)	{ return i.current == this->current; }
-				T &operator*()					{ return *this->current; }
+				bool operator!=(const iterator &i) 	{ return i.current != this->current; }
+				bool operator==(const iterator &i)	{ return i.current == this->current; }
+				T &operator*()						{ return *this->current; }
 
 				private:
 					query<T> q;
 					T *current = nullptr;
 			};
 
-			iterator begin()	{ return iterator(*this, true); }
-			iterator end()		{ return iterator(); }
-			iterator rbegin()	{ return iterator(*this, false); }
-			iterator rend()		{ return iterator(); }
+
+			iterator begin() const	{ return iterator(*this, true); }
+			iterator end()	const	{ return iterator(); }
+			iterator rbegin() const	{ return iterator(*this, false); }
+			iterator rend()	const	{ return iterator(); }
 
 		private:
 	
@@ -325,12 +516,11 @@ namespace ent
 
 			query() {}
 
-			template <class U> query(query<U> &parent, std::function<T *(qbase *, bool)> start, std::function<T *(qbase *)> next, std::shared_ptr<std::vector<T>> buffer = nullptr)
+			template <class U> query(query<U> &parent, std::function<T *(qbase *, bool)> start, std::function<T *(qbase *)> next)
 			{
-				this->parent	= std::make_shared<query<U>>(parent);
-				this->start		= start;
-				this->next		= next;
-				this->buffer	= buffer;
+				this->parent		= std::make_shared<query<U>>(parent);
+				this->start			= start;
+				this->next			= next;
 			}
 
 
@@ -348,6 +538,22 @@ namespace ent
 				this->next = [](qbase *c) {
 					return static_cast<query<T>*>(c)->it->next();
 				};
+			}
+
+
+			T element_at(int index, bool except)
+			{
+				T *i = nullptr;
+
+				if (index >= 0)
+				{
+					int count = 0;
+					for (i = start(this, true); i && count < index; i = next(this), count++);
+				}
+
+				if (except && !i) throw std::runtime_error("query::element_at invalid since index is out of range");
+
+				return i ? *i : T();
 			}
 
 
@@ -415,11 +621,13 @@ namespace ent
 
 			std::function<T *(qbase *, bool)> start;	// Initialises this link in the query chain and returns the first item
 			std::function<T *(qbase *)> next;			// Gets the next item from the chain
-
-			std::shared_ptr<ibase> it;				// Iterator storage
-			std::shared_ptr<std::vector<T>> buffer;	// Buffer used for storing initializer_list data
-			T item;									// Temporary used to return a reference to a modified value
-			int counter;
+			std::shared_ptr<ibase> it;					// Iterator storage
+			std::shared_ptr<std::vector<T>> buffer;		// Buffer used for storing initializer_list data or temporary data (see order_by)
+			std::list<std::shared_ptr<qbase>> queries;	// Handle parent queries in the correct order (see concat)
+			int counter = 0;							// Counter used by operations such as take and skip
+			T item;										// Temporary used to return a reference to a modified value
+			
+			std::function<bool(const T&, const T&)> comparator = nullptr;
 
 			template <class U> friend class query;
 	};
@@ -436,28 +644,53 @@ namespace ent
 	};
 
 
+	/*template <class T> class wrapper
+	{
+		public:
+
+			typedef T value_type;
+			
+			wrapper(T *data, int size) : data(data), size(size) {}
+
+			T *begin()	{ return data; }
+			T *end()	{ return data + size; }
+			T *rbegin()	{ return data + size - 1; }	// Wrong - needs to decrement
+			T *rend()	{ return data - 1; }
+
+	private:
+
+			T *data;
+			int size;
+	};*/
+
+
 	template <class T, class = typename std::enable_if<is_container<T>::value>::type> query<typename T::value_type> from(T &data) { return query<typename T::value_type>(data); }
 	template <class T> query<T> from(std::initializer_list<T> data) { return query<T>(data); }
+	//template <class T> query<T> from(T *data, int size) { return query<T>(wrapper<T>(data, size)); }
+
+	//reinterpret_cast< std::array<int, 5>* >( &data )
+	//std::array<int, 5> &a = reinterpret_cast<std::array<int, 5>&>(data);
+	//template <class T, class = typename std::enable_if<is_container<T>::value>::type> query2<typename T::value_type> from2(T &data) { return q2_from<typename T::value_type, T>(data); }
 }
 
 
-/*
+/* 41/51
 -aggregate(reducer)
 -aggregate(seed, reducer)
 -aggregate(seed, reducer, selector)
 -all(predicate)
 -any(predicate)
 -average()
-concat(range)
+-concat(range)
 -contains(element)
 -count()
 -count(predicat)
-default_if_empty()
-default_if_empty(default_value)
-distinct()
-element_at(index)
-except(range)
-find(element)
+-default_if_empty()
+-default_if_empty(default_value)
+-distinct()
+-element_at(index)
+-element_at_or_default(index)
+-except(range)
 -first()
 -first(predicate, value)
 -first_or_default()
@@ -467,7 +700,6 @@ group_by(key_selector, element_selector)
 group_join(range, outer_key_selector, inner_key_selector, result_selector)
 intersect(range)
 join(range, outer_key_selector, inner_key_selector, result_selector)
-keys()
 -last()
 -last(predicate, value)
 -last_or_default()
@@ -484,14 +716,13 @@ sequence_equal(range)
 -single_or_default()
 -skip(count)
 -skip_while(predicate)
-sum()
+-sum()
 -take(count)
 -take_while(predicate)
-then_by(selector)
-then_by_descending(selector)
+-then_by(selector)
+-then_by_descending(selector)
 -to_container()
 union(range)
-values()
 -where(predicate)
 zip(range)
 zip(range, selector)

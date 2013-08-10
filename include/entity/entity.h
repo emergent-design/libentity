@@ -12,6 +12,8 @@ namespace ent
 	{
 		public:
 
+			virtual ~entity() {}
+
 			// Uses the mapping to convert this object instance
 			// into a tree structure for easier parsing.
 			tree to()
