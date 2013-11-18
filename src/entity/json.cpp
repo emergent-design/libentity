@@ -240,7 +240,7 @@ namespace ent
 							else if (text[i] == '"')	result.set(name, unescape(parse_string(text, i)));	// String
 							else
 							{
-								string item = parse_item(text, i);
+								string item = parse_item(text, '}', i);
 
 								if (item == "true") 		result.set(name, true);				// Boolean
 								else if (item == "false")	result.set(name, false);			// Boolean
@@ -283,12 +283,15 @@ namespace ent
 	}
 
 	
-	string json::parse_item(const string &text, int &i)
+	string json::parse_item(const string &text, const char end, int &i)
 	{
 		int start = i;
-		for (i++; i<text.length() && !whitespace[(byte)text[i]] && text[i] != '}'; i++);
+		for (i++; i<text.length() && !whitespace[(byte)text[i]] && text[i] != end; i++);
 
-		return text.substr(start, i-start);
+		// Jump back a character since the parse_array and parse methods expect
+		// to swallow whitespace or opening character next so allow it to find
+		// an end of array/object.
+		return text.substr(start, i-- - start);
 	}
 
 
@@ -312,7 +315,7 @@ namespace ent
 				else if (text[i] == '"')	result.emplace_back(unescape(parse_string(text, i)));	// String
 				else
 				{
-					string item = parse_item(text, i);
+					string item = parse_item(text, ']', i);
 
 					if (item == "true") 		result.emplace_back(true);			// Boolean
 					else if (item == "false")	result.emplace_back(false);			// Boolean

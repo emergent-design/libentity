@@ -50,8 +50,8 @@ namespace ent
 			static std::string parse_string(const std::string &text, int &i);
 
 			// Extract a numeric/boolean/null value, should always end with a
-			// whitespace character, comma or '}'.
-			static std::string parse_item(const std::string &text, int &i);
+			// whitespace character, comma, '}' or ']'.
+			static std::string parse_item(const std::string &text, const char end, int &i);
 
 			// Parse an array, contained within square brackets
 			static value parse_array(const std::string &text, int &i);

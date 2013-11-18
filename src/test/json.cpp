@@ -95,14 +95,19 @@ SUITE("JSON Tests")
 			"array": [ 1, 2, 3, 4 ]
 		})json");
 	
-		auto u = json::from(u8R"json({
+		Assert.Equal(value::Type::Array,	t.properties["array"].get_type());
+		Assert.Equal(4,						t.properties["array"].array().size());
+	}
+
+
+	FACT("Compact arrays can be parsed")
+	{
+		auto t = json::from(u8R"json({
 			"array": [1,2,3,4]
 		})json");
 
 		Assert.Equal(value::Type::Array,	t.properties["array"].get_type());
 		Assert.Equal(4,						t.properties["array"].array().size());
-		Assert.Equal(value::Type::Array,	u.properties["array"].get_type());
-		Assert.Equal(4,						u.properties["array"].array().size());
 	}
 
 
@@ -158,7 +163,10 @@ SUITE("JSON Tests")
 
 	FACT("Supports arrays of objects")
 	{
-		auto t = json::from(u8R"json({"coords":[{"x":0,"y":0 },{"x":1,"y":1 },{"x":2,"y":2 }]})json");
+		auto t = json::from(u8R"json({
+			"coords":[{"x":0,"y":0},{"x":1,"y":1},{"x":2,"y":2}]
+		})json");
+		
 		Assert.Equal(value::Type::Array,	t.properties["coords"].get_type());
 		Assert.Equal(0, t.array<tree>("coords")[0].get<double>("x"));
 		Assert.Equal(0, t.array<tree>("coords")[0].get<double>("y"));
