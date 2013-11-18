@@ -94,9 +94,15 @@ SUITE("JSON Tests")
 		auto t = json::from(u8R"json({
 			"array": [ 1, 2, 3, 4 ]
 		})json");
+	
+		auto u = json::from(u8R"json({
+			"array": [1,2,3,4]
+		})json");
 
 		Assert.Equal(value::Type::Array,	t.properties["array"].get_type());
 		Assert.Equal(4,						t.properties["array"].array().size());
+		Assert.Equal(value::Type::Array,	u.properties["array"].get_type());
+		Assert.Equal(4,						u.properties["array"].array().size());
 	}
 
 
@@ -148,6 +154,18 @@ SUITE("JSON Tests")
 	FACT("Will ignore unicode encodings")
 	{
 		Assert.Equal("\\u2000\\u20ff", json::from(u8R"json({ "text":"\u2000\u20ff" })json").get<string>("text"));
+	}
+
+	FACT("Supports arrays of objects")
+	{
+		auto t = json::from(u8R"json({"coords":[{"x":0,"y":0 },{"x":1,"y":1 },{"x":2,"y":2 }]})json");
+		Assert.Equal(value::Type::Array,	t.properties["coords"].get_type());
+		Assert.Equal(0, t.array<tree>("coords")[0].get<double>("x"));
+		Assert.Equal(0, t.array<tree>("coords")[0].get<double>("y"));
+		Assert.Equal(1, t.array<tree>("coords")[1].get<double>("x"));
+		Assert.Equal(1, t.array<tree>("coords")[1].get<double>("y"));
+		Assert.Equal(2, t.array<tree>("coords")[2].get<double>("x"));
+		Assert.Equal(2, t.array<tree>("coords")[2].get<double>("y"));
 	}
 
 
