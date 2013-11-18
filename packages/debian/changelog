@@ -1,3 +1,9 @@
+libentity0 (0.0.4) unstable; urgency=low
+
+  * Bug fix - error with JSON parser handling array/object end characters when compact JSON was used.
+
+ -- Dan Parnham <dan@emergent-design.co.uk>  Mon, 18 Nov 2013 18:22:20 +0000
+
 libentity0 (0.0.3) unstable; urgency=low
 
   * Refactored entity so that it does not increase the size of a structure that derives from it.
