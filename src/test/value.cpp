@@ -28,6 +28,7 @@ SUITE("Value Tests")
 	{
 		Assert.Equal(value::Number::Integer,	value(42).get_numtype());
 		Assert.Equal(value::Number::Integer,	value(byte(42)).get_numtype());
+		Assert.Equal(value::Number::Integer,	value((long)20349758).get_numtype());
 		Assert.Equal(value::Number::Floating,	value(42.0).get_numtype());
 		Assert.Equal(value::Number::Floating,	value(42.0f).get_numtype());
 	}

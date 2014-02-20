@@ -1,6 +1,7 @@
 #include <xUnit++/xUnit++.h>
 #include <entity/entity.h>
 #include <entity/json.h>
+#include <entity/xml.h>
 
 using namespace std;
 using namespace ent;
@@ -13,10 +14,12 @@ SUITE("Entity Tests")
 		string name = "simple";
 		bool flag	= true;
 		int integer	= 42;
+		long bignumber = 20349758;
+		double floating = 3.142;
 
 		mapping map()
 		{
-			return mapping() << eref(name) << eref(flag) << eref(integer);
+			return mapping() << eref(name) << eref(flag) << eref(integer) << eref(bignumber) << eref(floating);
 		}
 	};
 
@@ -54,8 +57,10 @@ SUITE("Entity Tests")
 		tree t = SimpleEntity().to();
 
 		Assert.Equal("simple",	t.get<string>("name"));
-		Assert.Equal(42,		t.get<int>("integer"));
-		Assert.True(			t.get<bool>("flag"));
+		Assert.Equal(42,			t.get<int>("integer"));
+		Assert.Equal(20349758,	t.get<long>("bignumber"));
+		Assert.Equal(3.142,	t.get<double>("floating"));
+		Assert.True(				t.get<bool>("flag"));
 	}
 
 
@@ -134,9 +139,10 @@ SUITE("Entity Tests")
 
 	FACT("An entity can be serialised")
 	{
-		Assert.Equal(u8R"json({"flag":true,"integer":42,"name":"simple"})json", SimpleEntity().to<json>());
+		Assert.Equal(u8R"json({"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"})json", SimpleEntity().to<json>());
+		Assert.Equal(u8R"xml(<?xml version="1.0" encoding="UTF-8" standalone="yes"?><entity><bignumber value="20349758" /><flag value="true" /><floating value="3.142" /><integer value="42" /><name>simple</name></entity>)xml", SimpleEntity().to<xml>());
 	}
-
+ 
 
 	FACT("An entity can be deserialised")
 	{

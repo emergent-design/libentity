@@ -45,8 +45,8 @@ namespace ent
 			template <class T, class = typename std::enable_if<std::is_arithmetic<T>::value>::type>
 				value(const T &v) :
 					type(Type::Number),
-					number(std::is_integral<T>::value ? Number::Integer : Number::Floating),
-					content(new container<typename std::conditional<std::is_integral<T>::value, long, double>::type>(v)) {}
+					number(std::is_floating_point<T>::value ? Number::Floating : Number::Integer),
+					content(new container<typename std::conditional<std::is_floating_point<T>::value, double, long>::type>(v)) {}
 
 
 			// Assignment override

@@ -128,7 +128,10 @@ namespace ent
 		else switch (item.get_type())
 		{
 			case value::Type::String:	result << escape(item.get(string()), depth+1) << "\n";					break;
-			case value::Type::Number:	result << item.get(0.0) << "\n";										break;
+			case value::Type::Number:	if (item.get_numtype() == value::Number::Floating) result << item.get(0.0);
+											else result << item.get(0.0);
+											result << "\n";										
+											break;
 			case value::Type::Boolean:	result << (item.get(false) ? "true" : "false") << "\n";					break;
 			case value::Type::Object:	result << "\n" << to(item.object(), false, depth+1);					break;
 			case value::Type::Binary:	result << escape(encode64(item.get(vector<byte>())), depth+1) << "\n";	break;
