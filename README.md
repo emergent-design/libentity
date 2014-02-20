@@ -11,11 +11,11 @@ the higher level [entity](https://github.com/emergent-design/libentity/wiki/Enti
 mapping will allow you to augment your classes and structs in a much cleaner way.
 
 
-Warning
--------
+Status
+------
 
-This library should be considered alpha and as such is not suitable for production 
-environments.
+This library has been used in a complex production system for some time now and despite
+the version number we consider it stable.
 
 
 Parsers

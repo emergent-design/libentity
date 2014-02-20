@@ -11,11 +11,11 @@ SUITE("Entity Tests")
 {
 	struct SimpleEntity : entity
 	{
-		string name = "simple";
-		bool flag	= true;
-		int integer	= 42;
-		long bignumber = 20349758;
-		double floating = 3.142;
+		string name		= "simple";
+		bool flag		= true;
+		int integer		= 42;
+		long bignumber	= 20349758;
+		double floating	= 3.142;
 
 		mapping map()
 		{
@@ -57,10 +57,10 @@ SUITE("Entity Tests")
 		tree t = SimpleEntity().to();
 
 		Assert.Equal("simple",	t.get<string>("name"));
-		Assert.Equal(42,			t.get<int>("integer"));
+		Assert.Equal(42,		t.get<int>("integer"));
 		Assert.Equal(20349758,	t.get<long>("bignumber"));
-		Assert.Equal(3.142,	t.get<double>("floating"));
-		Assert.True(				t.get<bool>("flag"));
+		Assert.Equal(3.142,		t.get<double>("floating"));
+		Assert.True(			t.get<bool>("flag"));
 	}
 
 

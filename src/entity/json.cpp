@@ -110,14 +110,12 @@ namespace ent
 		}
 		else switch (item.get_type())
 		{
-			case value::Type::String:	result << quote << escape(item.get(string())) << quote;				break;
-			case value::Type::Binary:	result << quote << encode64(item.get(vector<byte>())) << quote;	break;
-			case value::Type::Number:	if (item.get_numtype() == value::Number::Floating) result << item.get(0.0);
-											else result << item.get(0); 
-											break;
-			case value::Type::Boolean:	result << (item.get(false) ? "true" : "false");						break;
-			case value::Type::Null:		result << "null";															break;
-			case value::Type::Object:	result << to(item.object(), pretty, depth+1);							break;
+			case value::Type::String:	result << quote << escape(item.get(string())) << quote;							break;
+			case value::Type::Binary:	result << quote << encode64(item.get(vector<byte>())) << quote;					break;
+			case value::Type::Number:	if (item.is_floating()) result << item.get(0.0); else result << item.get(0);	break;
+			case value::Type::Boolean:	result << (item.get(false) ? "true" : "false");									break;
+			case value::Type::Null:		result << "null";																break;
+			case value::Type::Object:	result << to(item.object(), pretty, depth+1);									break;
 			default:					break;	
 		}
 

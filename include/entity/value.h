@@ -66,6 +66,7 @@ namespace ent
 			bool null() const;
 			Type get_type() const;
 			Number get_numtype() const;
+			bool is_floating() const;
 
 
 			// Standard getters that return the stored value if the type matches the

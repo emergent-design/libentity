@@ -10,6 +10,7 @@ namespace ent
 	bool value::null() const					{ return this->type == Type::Null; }
 	value::Type value::get_type() const			{ return this->type; }
 	value::Number value::get_numtype() const	{ return this->number; }
+	bool value::is_floating() const 			{ return this->type == Type::Number && this->number == Number::Floating; }
 
 
 	value &value::operator=(const value &v)

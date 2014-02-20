@@ -1,3 +1,9 @@
+libentity0 (0.0.5) unstable; urgency=low
+
+  * Bug fix - problem with long integers writing to the output stream as doubles.
+
+ -- Dan Parnham <dan@emergent-design.co.uk>  Thu, 20 Feb 2014 18:35:07 +0000
+
 libentity0 (0.0.4) unstable; urgency=low
 
   * Bug fix - error with JSON parser handling array/object end characters when compact JSON was used.

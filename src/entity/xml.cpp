@@ -105,10 +105,9 @@ namespace ent
 			case value::Type::String:	result << ">" << escape(item.get(string())) << end;								break;
 			case value::Type::Binary:	result << ">" << encode64(item.get(vector<byte>())) << end;						break;
 			case value::Type::Number:	result << " value=\"";
-											if (item.get_numtype() == value::Number::Floating) result << item.get(0.0);
-											else result << item.get(0); 
-											result << "\" />";
-											break;
+										if (item.is_floating()) result << item.get(0.0); else result << item.get(0);
+										result << "\" />";
+										break;
 			case value::Type::Boolean:	result << " value=\"" << (item.get(false) ? "true" : "false") << "\" />";		break;
 			case value::Type::Null:		result << " value=\"null\" />";													break;
 			case value::Type::Object:	result << ">" << line << to(item.object(), pretty, depth+1) << indent << end;	break;
