@@ -10,6 +10,7 @@
 *.project
 *.session
 *.tags
+*.sublime-workspace
 *~
 
 /*.txt

@@ -40,7 +40,17 @@ namespace ent
 				this->map().from(T::from(value));
 			}
 
-			
+			// Convenience function to construct an instance from serialised data
+			template <class T, class U> static T from(const std::string &value)
+			{
+				T result;
+
+				result.map().from(U::from(value));
+
+				return result;
+			}
+
+
 	protected:
 
 			// Abstract function that must be implemented by
