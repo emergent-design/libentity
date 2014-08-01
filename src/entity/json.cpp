@@ -56,7 +56,7 @@ namespace ent
 			}
 			else if (c != '\\') result.append(1, c);
 
-			special = c == '\\';			
+			special = c == '\\';
 		}
 
 		return result;
@@ -116,7 +116,7 @@ namespace ent
 			case value::Type::Boolean:	result << (item.get(false) ? "true" : "false");									break;
 			case value::Type::Null:		result << "null";																break;
 			case value::Type::Object:	result << to(item.object(), pretty, depth+1);									break;
-			default:					break;	
+			default:					break;
 		}
 
 		return result.str();
@@ -151,7 +151,7 @@ namespace ent
 		bool ignore				= false;
 		static string types[]	= { "object", "array" };
 		static char symbols[]	= { '}', ']' };
-		
+
 		for (int i=0; i<length; i++)
 		{
 			c = text[i];
@@ -162,14 +162,18 @@ namespace ent
 				{
 					if (c == symbols[j])
 					{
-						// If the terminator symbol does not match the type at the top of
-						// the stack then there is an error in the json. Otherwise pop that
-						// level off of the stack
-						if (levels.top().first != j)
+						if (levels.size())
 						{
-							error("unterminated " + types[levels.top().first], text, levels.top().second);
+							// If the terminator symbol does not match the type at the top of
+							// the stack then there is an error in the json. Otherwise pop that
+							// level off of the stack
+							if (levels.top().first != j)
+							{
+								error("unterminated " + types[levels.top().first], text, levels.top().second);
+							}
+							else levels.pop();
 						}
-						else levels.pop();
+						else error("missing opening brace", text, 0);
 					}
 				}
 
@@ -238,6 +242,7 @@ namespace ent
 							if (text[i] == '{')			result.set(name, parse(text, i));					// Object
 							else if (text[i] == '[')	result.properties[name] = parse_array(text, i); 	//result.set(name, parse_array(text, i));				// Array
 							else if (text[i] == '"')	result.set(name, unescape(parse_string(text, i)));	// String
+							else if (text[i] == '}')	error("missing object value", text, i);
 							else
 							{
 								string item = parse_item(text, '}', i);
@@ -245,7 +250,11 @@ namespace ent
 								if (item == "true") 		result.set(name, true);				// Boolean
 								else if (item == "false")	result.set(name, false);			// Boolean
 								else if (item == "null")	result.properties[name] = value();	// Null
-								else 						result.set(name, stod(item));		// Number
+								else try {					result.set(name, stod(item)); }		// Number
+								catch (...)
+								{
+									error("value '" + item + "' is not a valid number", text, i);
+								}
 							}
 						}
 					}
@@ -282,7 +291,7 @@ namespace ent
 		return text.substr(start, i-start);
 	}
 
-	
+
 	string json::parse_item(const string &text, const char end, int &i)
 	{
 		int start = i;
@@ -324,7 +333,7 @@ namespace ent
 				}
 			}
 		}
-		
+
 		return value(result);
 	}
 
@@ -336,7 +345,7 @@ namespace ent
 		auto next 	= json.find('\n', i);
 		int start 	= max(i-20, (int)prev + 1);
 		int length	= next == string::npos ? 50 : next - prev - 1;
-		
+
 		for (int j=start; j<i; j++) tabs += json[j] == '\t';
 
 		throw runtime_error(
