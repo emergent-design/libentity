@@ -24,13 +24,16 @@ namespace ent
 
 			// String escape, ignores the forward slash (only relevant when dealing with
 			// html). Does not handle unicode properly.
-			static std::string escape(const std::string item);
+			//static std::string escape(const std::string &item);
+			static void escape(const std::string &item, std::string &result);
 
 			// String unescape, restores escaped characters to their former glory.
-			static std::string unescape(const std::string item);
+			static std::string unescape(const std::string &item);
 
 			// Stringify a property value
-			static std::string property(const value &item, bool pretty, int depth);
+			static void property(std::string &result, const value &item, bool pretty, int depth);
+
+			//static void convert_number(std::string &result, const value &item);
 
 			// Very basic iterative validation. It ensures that all objects and
 			// arrays are terminated so that the recursive parsing functions

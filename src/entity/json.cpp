@@ -1,5 +1,5 @@
 #include "entity/json.h"
-#include <sstream>
+//#include <sstream>
 #include <stack>
 
 using namespace std;
@@ -7,14 +7,15 @@ using namespace std;
 
 namespace ent
 {
-	const char quote			= '"';
+	//const char quote			= '"';
+	const char *quote			= "\"";
 	bool json::whitespace[256]	= { false };
 
 
-	string json::escape(const string item)
+	void json::escape(const string &item, string &result)
 	{
-		string result;
-		result.reserve(item.length());
+		//string result;
+		//result.reserve(item.length());
 
 		for (auto &c : item)
 		{
@@ -31,11 +32,11 @@ namespace ent
 			}
 		}
 
-		return result;
+		//return result;
 	}
 
 
-	string json::unescape(const string item)
+	string json::unescape(const string &item)
 	{
 		bool special = false;
 		string result;
@@ -65,61 +66,61 @@ namespace ent
 
 	string json::to(const tree &item, bool pretty, int depth)
 	{
-		stringstream result;
+		string result;
 		string space 	= pretty ? " " : "";
 		string line		= pretty ? "\n" : "";
 		string indent	= pretty ? string(2 * (depth + 1), ' ') : "";
 		int i			= item.properties.size() - 1;
 
-		result << "{" << line;
+		result.append("{").append(line);
 
 		for (auto &p : item.properties)
 		{
-			result	<< indent << quote << p.first << quote << ":"
-					<< space << property(p.second, pretty, depth)
-					<< (i-- ? "," : "") << line;
+			result.append(indent).append(quote).append(p.first).append(quote).append(":").append(space);
+			property(result, p.second, pretty, depth);
+			if (i--) result.append(",");
+			result.append(line);
 		}
 
-		result << (pretty ? string(2 * depth, ' ') : "") << "}";
+		result.append(pretty ? string(2 * depth, ' ') : "").append("}");
 
-		return result.str();
+		return result;
 	}
 
-
-
-	string json::property(const value &item, bool pretty, int depth)
+	void json::property(string &result, const value &item, bool pretty, int depth)
 	{
-		stringstream result;
-		string line		= pretty ? "\n" : "";
-		string indent	= pretty ? string(2 * (depth + 1), ' ') : "";
-		string extra 	= pretty ? string(2, ' ') : "";
-
 		if (item.get_type() == value::Type::Array)
 		{
-			auto array	= item.array();
-			int j 		= array.size() - 1;
+			string line		= pretty ? "\n" : "";
+			string indent	= pretty ? string(2 * (depth + 1), ' ') : "";
+			string extra 	= pretty ? "  " : "";
+			auto array		= item.array();
+			int j 			= array.size() - 1;
 
-			result << "[" << line;
+			result.append("[").append(line);
 
 			for (auto &i : array)
 			{
-				result	<< indent << extra << property(i, pretty, depth+1) << (j-- ? "," : "") << line;
-			}
+				result.append(indent).append(extra);
+				property(result, i, pretty, depth+1);
 
-			result << indent << "]";
+				if (j--) result.append(",");
+				result.append(line);
+			}
+			result.append(indent).append("]");
 		}
 		else switch (item.get_type())
 		{
-			case value::Type::String:	result << quote << escape(item.get(string())) << quote;							break;
-			case value::Type::Binary:	result << quote << encode64(item.get(vector<byte>())) << quote;					break;
-			case value::Type::Number:	if (item.is_floating()) result << item.get(0.0); else result << item.get(0);	break;
-			case value::Type::Boolean:	result << (item.get(false) ? "true" : "false");									break;
-			case value::Type::Null:		result << "null";																break;
-			case value::Type::Object:	result << to(item.object(), pretty, depth+1);									break;
+			//case value::Type::String:	result.append(quote).append(escape(item.get(string()))).append(quote);					break;
+			case value::Type::String:	result.append(quote); escape(item.get(string()), result); result.append(quote);			break;
+			case value::Type::Binary:	result.append(quote).append(encode64(item.get(vector<byte>()))).append(quote);			break;
+			//case value::Type::Number:	convert_number(result, item);															break;
+			case value::Type::Number:	result.append(item.is_floating() ? to_string(item.get(0.0)) : to_string(item.get(0)));	break;
+			case value::Type::Boolean:	result.append(item.get(false) ? "true" : "false");										break;
+			case value::Type::Null:		result.append("null");																	break;
+			case value::Type::Object:	result.append(to(item.object(), pretty, depth+1));										break;
 			default:					break;
 		}
-
-		return result.str();
 	}
 
 
@@ -181,9 +182,9 @@ namespace ent
 				// position in the string onto a stack.
 				switch (c)
 				{
-					case '"':	if (!ignore) quotes = !quotes;				break;
-					case '{':	if (!quotes) levels.push(make_pair(0, i));	break;
-					case '[':	if (!quotes) levels.push(make_pair(1, i));	break;
+					case '"':	if (!ignore) quotes = !quotes;		break;
+					case '{':	if (!quotes) levels.emplace(0, i);	break;
+					case '[':	if (!quotes) levels.emplace(1, i);	break;
 				}
 
 				// If a backslash is found within a string then ignore the next
@@ -240,7 +241,7 @@ namespace ent
 						{
 							// Parse the property value based on the next character
 							if (text[i] == '{')			result.set(name, parse(text, i));					// Object
-							else if (text[i] == '[')	result.properties[name] = parse_array(text, i); 	//result.set(name, parse_array(text, i));				// Array
+							else if (text[i] == '[')	result.properties[name] = parse_array(text, i); 	// Array
 							else if (text[i] == '"')	result.set(name, unescape(parse_string(text, i)));	// String
 							else if (text[i] == '}')	error("missing object value", text, i);
 							else
@@ -307,7 +308,6 @@ namespace ent
 	value json::parse_array(const string &text, int &i)
 	{
 		vector<value> result;
-		//value result(vtype::Array);
 		int length = text.length();
 
 		while (i<length)

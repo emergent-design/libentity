@@ -139,7 +139,7 @@ SUITE("Entity Tests")
 
 	FACT("An entity can be serialised")
 	{
-		Assert.Equal(u8R"json({"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"})json", SimpleEntity().to<json>());
+		Assert.Equal(u8R"json({"bignumber":20349758,"flag":true,"floating":3.142000,"integer":42,"name":"simple"})json", SimpleEntity().to<json>());
 		Assert.Equal(u8R"xml(<?xml version="1.0" encoding="UTF-8" standalone="yes"?><entity><bignumber value="20349758" /><flag value="true" /><floating value="3.142" /><integer value="42" /><name>simple</name></entity>)xml", SimpleEntity().to<xml>());
 	}
 

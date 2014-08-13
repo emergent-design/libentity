@@ -1,7 +1,7 @@
 #include "entity/utilities.h"
 
 using namespace std;
-
+#include <iostream>
 
 namespace ent
 {
@@ -12,34 +12,34 @@ namespace ent
 	{
 		int i;
 		long block;
-		string result;
-
 		int size	= value.size();
 		int steps	= size / 3;
 		int remain	= size % 3;
-		auto *b		= value.data();
 
-		result.reserve((steps + remain > 0) * 4);
+		string result((steps + (remain > 0)) * 4, 0);
+
+		auto *b		= value.data();
+		auto *r		= &result.front();
 
 		for (i=0; i<steps; i++)
 		{
 			block  = *b++ << 16;
 			block += *b++ << 8;
 			block += *b++;
-			result.append(1, lookup[(block & 0xfc0000) >> 18]);
-			result.append(1, lookup[(block & 0x03f000) >> 12]);
-			result.append(1, lookup[(block & 0x000fc0) >> 6	]);
-			result.append(1, lookup[(block & 0x00003f)		]);
+			*r++ = lookup[(block & 0xfc0000) >> 18];
+			*r++ = lookup[(block & 0x03f000) >> 12];
+			*r++ = lookup[(block & 0x000fc0) >> 6];
+			*r++ = lookup[(block & 0x00003f)];
 		}
 
 		if (remain)
 		{
 			block  = *b++ << 16;
 			block += remain == 2 ? *b++ << 8 : 0;
-			result.append(1, lookup[(block & 0xfc0000) >> 18]);
-			result.append(1, lookup[(block & 0x03f000) >> 12]);
-			result.append(1, remain == 2 ? lookup[(block & 0x000fc0) >> 6 ] : pad);
-			result.append(1, pad);
+			*r++ = lookup[(block & 0xfc0000) >> 18];
+			*r++ = lookup[(block & 0x03f000) >> 12];
+			*r++ = remain == 2 ? lookup[(block & 0x000fc0) >> 6 ] : pad;
+			*r++ = pad;
 		}
 
 		return result;
@@ -55,10 +55,11 @@ namespace ent
 		int size	= value.length();
 		int steps	= size / 4;
 		int padding	= size ? (value[size-1] == pad) + (value[size-2] == pad) : 0;
-		auto *c		= value.data();
 
-		vector<byte> result;
-		result.reserve(steps * 3 - padding);
+		vector<byte> result(steps * 3 - padding);
+
+		auto *c = value.data();
+		auto *r = result.data();
 
 		for (i=0; i<steps; i++, block=0)
 		{
@@ -73,20 +74,20 @@ namespace ent
 				else if (*c == 0x2f)				block |= 0x3f;
 				else if (*c == pad) switch(padding)
 				{
-					case 1: result.push_back((block >> 16) & 0xff);
-							result.push_back((block >> 8) & 0xff);
+					case 1: *r++ = (block >> 16) & 0xff;
+							*r++ = (block >> 8) & 0xff;
 							return result;
 
-					case 2: result.push_back((block >> 10) & 0xff);
+					case 2: *r++ = (block >> 10) & 0xff;
 							return result;
 
 					default: throw runtime_error("Invalid padding in base64 string");
 				}
 			}
 
-			result.push_back((block >> 16) & 0xff);
-			result.push_back((block >> 8) & 0xff);
-			result.push_back(block & 0xff);
+			*r++ = (block >> 16) & 0xff;
+			*r++ = (block >> 8) & 0xff;
+			*r++ = block & 0xff;
 		}
 
 		return result;
