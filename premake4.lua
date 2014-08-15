@@ -8,7 +8,7 @@ solution "entity"
 	includedirs		{ "include" }
 	libdirs 		{ "lib" }
 	excludes		{ "**.bak", "**~" }
-		
+
 	project "libentity"
 		kind 			"SharedLib"
 		targetname		"entity"
@@ -24,3 +24,11 @@ solution "entity"
 		links				{ "libentity", "xUnit++" }
 		files				{ "src/test/**.cpp" }
 		postbuildcommands	{ "./runner" }
+
+	project "benchmark"
+		kind			"ConsoleApp"
+		targetname		"benchmark"
+		targetdir		"bin"
+		includedirs		{ "include/benchmark" }
+		links			{ "libentity" }
+		files			{ "src/benchmark/**.cpp" }

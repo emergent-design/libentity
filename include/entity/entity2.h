@@ -1,6 +1,6 @@
 #pragma once
 
-#include <entity/mapping.h>
+#include <entity/mapping2.h>
 
 
 namespace ent
@@ -8,17 +8,19 @@ namespace ent
 	// The abstract base class for serialisable objects.
 	// Inherit from this, implement the map function correctly,
 	// and your class will become serialisable.
-	class entity
+	class entity2
 	{
-		friend class parser;
+		//friend class parser;
+		//friend struct vref<entity2>;
+		template <class T, class U> friend struct vref;
 
 		public:
 
-			virtual ~entity() {}
+			virtual ~entity2() {}
 
 			// Uses the mapping to convert this object instance
 			// into a tree structure for easier parsing.
-			tree to()
+			/*tree to()
 			{
 				return this->map().to();
 			}
@@ -50,13 +52,21 @@ namespace ent
 				result.map().from(U::from(value));
 
 				return result;
-			}
+			}*/
 
+			template <class T> std::string to(bool pretty = false)
+			{
+				os result;
+
+				//vref<decltype(*this)>::encode(*this, result, pretty, 0);
+
+				return result.str();
+			}
 
 	protected:
 
 			// Abstract function that must be implemented by
 			// any objects to be serialised/deserialised.
-			virtual mapping map() = 0;
+			virtual mapping2 map() = 0;
 	};
 }

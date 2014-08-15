@@ -23,6 +23,8 @@ namespace ent
 	// Storage for the mapping lookup table
 	class mapping
 	{
+		friend class parser;
+
 		public:
 
 			// Reference to a mapped variable

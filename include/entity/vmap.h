@@ -2,10 +2,11 @@
 
 #include <entity/value.h>
 #include <entity/tree.h>
-
+//#include <entity/parser.h>
+//#include <iostream>
 
 // The vmap is what drives the mapping capabilities of entity. Every class/struct
-// that inherits from entity must implement the create_map function in which they
+// that inherits from entity must implement the map function in which they
 // declare the mappings. Each vmap is a link between a property name and a reference
 // pointer to the actual member in the object instance. This pointer is dereferenced
 // whenever a value is required to populate (or be updated from) a tree.
@@ -24,6 +25,8 @@ namespace ent
 	{
 		virtual value to() = 0;
 		virtual void from(const value &value) = 0;
+
+		//virtual void encode(parser &p, std::ostringstream &dst) {};
 	};
 
 
@@ -37,7 +40,7 @@ namespace ent
 	template<class T> struct vmap<T, typename std::enable_if<std::is_base_of<entity, T>::value>::type> : public vmapbase
 	{
 		// Constructors to handle scalar, array and dictionary based values
-		vmap(T &reference) : reference(&reference) {}
+		vmap(T &reference) : reference(&reference)  {}
 		vmap(std::vector<T> &array) : array(&array) {}
 		vmap(std::map<std::string, T> &map) : map(&map) {}
 
@@ -226,6 +229,12 @@ namespace ent
 		vmap(T &reference) : reference(&reference) {}
 		vmap(std::vector<T> &array) : array(&array) {}
 		vmap(std::map<std::string, T> &map) : map(&map) {}
+
+
+		/*virtual void encode(parser &p, std::ostringstream &dst)
+		{
+			p.encode(dst, )
+		};*/
 
 
 		// Convert the actual member value in an object instance to a value
