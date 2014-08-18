@@ -3,9 +3,9 @@
 #include <chrono>
 //#include <sstream>
 
-// #include <cereal/archives/json.hpp>
-// #include <cereal/types/vector.hpp>
-// #include <cereal/types/map.hpp>
+#include <cereal/archives/json.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/map.hpp>
 
 
 using namespace std;
@@ -26,16 +26,16 @@ struct Simple : entity
 		return mapping() << eref(name) << eref(flag) << eref(integer) << eref(bignumber) << eref(floating);
 	}
 
-	// template<class Archive> void serialize(Archive &archive)
-	// {
-	// 	archive(
-	// 		CEREAL_NVP(name),
-	// 		CEREAL_NVP(flag),
-	// 		CEREAL_NVP(integer),
-	// 		CEREAL_NVP(bignumber),
-	// 		CEREAL_NVP(floating)
-	// 	);
-	// }
+	template<class Archive> void serialize(Archive &archive)
+	{
+		archive(
+			CEREAL_NVP(name),
+			CEREAL_NVP(flag),
+			CEREAL_NVP(integer),
+			CEREAL_NVP(bignumber),
+			CEREAL_NVP(floating)
+		);
+	}
 };
 
 
@@ -51,15 +51,15 @@ struct Collection : entity
 		return mapping() << eref(strings) << eref(doubles) << eref(binary) << eref(dictionary);
 	}
 
-	// template<class Archive> void serialize(Archive &archive)
-	// {
-	// 	archive(
-	// 		CEREAL_NVP(strings),
-	// 		CEREAL_NVP(doubles),
-	// 		CEREAL_NVP(binary),
-	// 		CEREAL_NVP(dictionary)
-	// 	);
-	// }
+	template<class Archive> void serialize(Archive &archive)
+	{
+		archive(
+			CEREAL_NVP(strings),
+			CEREAL_NVP(doubles),
+			CEREAL_NVP(binary),
+			CEREAL_NVP(dictionary)
+		);
+	}
 };
 
 
@@ -75,19 +75,19 @@ struct Complex : entity
 		return mapping() << eref(name) << eref(entities) << eref(collection) << eref(simple);
 	}
 
-	// template<class Archive> void serialize(Archive &archive)
-	// {
-	// 	archive(
-	// 		CEREAL_NVP(name),
-	// 		CEREAL_NVP(entities),
-	// 		CEREAL_NVP(collection),
-	// 		CEREAL_NVP(simple)
-	// 	);
-	// }
+	template<class Archive> void serialize(Archive &archive)
+	{
+		archive(
+			CEREAL_NVP(name),
+			CEREAL_NVP(entities),
+			CEREAL_NVP(collection),
+			CEREAL_NVP(simple)
+		);
+	}
 };
 
 
-#define BENCHMARK_ITERATIONS 1000000
+#define BENCHMARK_ITERATIONS 100000
 // #define BENCHMARK_ITERATIONS 100000
 // #define BENCHMARK_ITERATIONS 1000
 
@@ -99,15 +99,16 @@ template <class T> void JsonTestTo(T &e, bool useCereal = false)
 
 	if (useCereal)
 	{
-		// stringstream ss;
-		// for (int i=0; i<BENCHMARK_ITERATIONS; i++)
-		// {
-		// 	ss.str("");
-		// 	ss.clear();
- 	// 		cereal::JSONOutputArchive archive(ss);
- 	// 		archive(cereal::make_nvp("test", e));
- 	// 		result = ss.str();
- 	// 	}
+
+		for (int i=0; i<BENCHMARK_ITERATIONS; i++)
+		{
+			//ss.str("");
+			//ss.clear();
+			stringstream ss;
+ 			cereal::JSONOutputArchive archive(ss);
+ 			archive(cereal::make_nvp("test", e));
+ 			result = ss.str();
+ 		}
 	}
 	else
 	{
@@ -119,21 +120,25 @@ template <class T> void JsonTestTo(T &e, bool useCereal = false)
 
 	long duration = duration_cast<milliseconds>(steady_clock::now() - start).count();
 
-	cout << result << endl;
+	//cout << result << endl;
 	cout << "Time taken for " << BENCHMARK_ITERATIONS << " iterations was " << duration << "ms" << endl;
 	cout << "Which is an average of " << (1000.0 * (double)duration / BENCHMARK_ITERATIONS) << "us per serialisation" << endl;
 }
 
+
+#include <entity/json2.h>
+#include <entity/bson2.h>
+
 template <class T> void JsonTest2(T &e)
 {
 	string result;
-	json2 p;
+	//json2 p;
 
 	auto start = steady_clock::now();
 
 	for (int i=0; i<BENCHMARK_ITERATIONS; i++)
 	{
-		result = p.to(e);
+		result = encode<json2>(e); //p.to(e);
 	}
 
 	long duration = duration_cast<milliseconds>(steady_clock::now() - start).count();
@@ -165,14 +170,14 @@ template <class T> void JsonTestFrom(T &e, string data, bool useCereal = false)
 
 	if (useCereal)
 	{
-		// stringstream ss(data);
-		// for (int i=0; i<BENCHMARK_ITERATIONS; i++)
-		// {
-		// 	ss.clear();
-		// 	ss.seekg(0,ios::beg);
-		// 	cereal::JSONInputArchive archive(ss);
-  //      		archive(e);
-		// }
+		stringstream ss(data);
+		for (int i=0; i<BENCHMARK_ITERATIONS; i++)
+		{
+			ss.clear();
+			ss.seekg(0,ios::beg);
+			cereal::JSONInputArchive archive(ss);
+       		archive(e);
+		}
 	}
 	else
 	{
@@ -209,6 +214,7 @@ void JsonTestFrom(string data)
 
 
 #include <entity/entity2.h>
+
 struct Simple2 : entity2
 {
 	string name		= "simple";
@@ -266,8 +272,14 @@ int main(int argc, char **argv)
 
 	Complex complex;
 
-	JsonTestTo(complex);
 	JsonTest2(complex2);
+	JsonTestTo(complex);
+	JsonTestTo(complex, true);
+	JsonTest2(complex2);
+
+	cout << encode<json2pretty>(complex2) << endl;
+
+	//cout << encode<bson2>(complex2) << endl;
 
 	return 0;
 

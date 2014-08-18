@@ -3,15 +3,14 @@
 #include <map>
 #include <vector>
 #include <memory>
-//#include <iostream>
 #include <sstream>
-//#include <entity/parser.h>
 #include <entity/codec.h>
-//#include <entity/entity2.h>
 
 
 namespace ent
 {
+	using std::string;
+
 	// Forward declaration of entity
 	class entity2;
 	template <class T, class enable=void> struct vref;
@@ -19,7 +18,7 @@ namespace ent
 
 	struct vbase
 	{
-		virtual void encode(codec &c, std::ostringstream &dst, bool pretty, int depth) {};
+		virtual void encode(const codec &c, os &dst, const string &name, std::stack<int> &stack) = 0; //{};
 	};
 
 
@@ -27,19 +26,19 @@ namespace ent
 	{
 		vref(bool &reference) : reference(&reference) {}
 
-		virtual void encode(codec &c, os &dst, bool pretty, int depth) 				{ c.encode(dst, *this->reference); }
-		static void encode(bool &item, codec &c, os &dst, bool pretty, int depth)	{ c.encode(dst, item); }
+		virtual void encode(const codec &c, os &dst, const string &name, std::stack<int> &stack) 			{ c.item(dst, name, *this->reference, stack.size()); };
+		static void encode(bool &item, const codec &c, os &dst, const string &name, std::stack<int> &stack)	{ c.item(dst, name, item, stack.size()); }
 
 		bool *reference;
 	};
 
 
-	template <class T> struct vref<T, typename std::enable_if<std::is_same<std::string, T>::value || std::is_same<std::vector<byte>, T>::value>::type> : public vbase
+	template <class T> struct vref<T, typename std::enable_if<std::is_same<string, T>::value || std::is_same<std::vector<byte>, T>::value>::type> : public vbase
 	{
 		vref(T &reference) : reference(&reference) {}
 
-		virtual void encode(codec &c, os &dst, bool pretty, int depth)			{ c.encode(dst, *this->reference); }
-		static void encode(T &item, codec &c, os &dst, bool pretty, int depth)	{ c.encode(dst, item); }
+		virtual void encode(const codec &c, os &dst, const string &name, std::stack<int> &stack) 			{ c.item(dst, name, *this->reference, stack.size()); };
+		static void encode(T &item, const codec &c, os &dst, const string &name, std::stack<int> &stack)	{ c.item(dst, name, item, stack.size()); }
 
 		T *reference;
 	};
@@ -49,8 +48,8 @@ namespace ent
 	{
 		vref(T &reference) : reference(&reference) {}
 
-		virtual void encode(codec &c, os &dst, bool pretty, int depth)			{ c.encode(dst, (long)*this->reference); }
-		static void encode(T &item, codec &c, os &dst, bool pretty, int depth)	{ c.encode(dst, (long)item); }
+		virtual void encode(const codec &c, os &dst, const string &name, std::stack<int> &stack) 			{ c.item(dst, name, *this->reference, stack.size()); };
+		static void encode(T &item, const codec &c, os &dst, const string &name, std::stack<int> &stack)	{ c.item(dst, name, item, stack.size()); }
 
 		T *reference;
 	};
@@ -60,8 +59,8 @@ namespace ent
 	{
 		vref(T &reference) : reference(&reference) {}
 
-		virtual void encode(codec &c, os &dst, bool pretty, int depth)			{ c.encode(dst, (double)*this->reference); }
-		static void encode(T &item, codec &c, os &dst, bool pretty, int depth)	{ c.encode(dst, (double)item); }
+		virtual void encode(const codec &c, os &dst, const string &name, std::stack<int> &stack) 			{ c.item(dst, name, *this->reference, stack.size()); };
+		static void encode(T &item, const codec &c, os &dst, const string &name, std::stack<int> &stack)	{ c.item(dst, name, item, stack.size()); }
 
 		T *reference;
 	};
@@ -71,26 +70,25 @@ namespace ent
 	{
 		vref(T &reference) : reference(&reference) {}
 
-		virtual void encode(codec &c, os &dst, bool pretty, int depth)
+		virtual void encode(const codec &c, os &dst, const string &name, std::stack<int> &stack)
 		{
-			encode(*this->reference, c, dst, pretty, depth);
+			encode(*this->reference, c, dst, name, stack);
 		}
 
-		static void encode(T &item, codec &c, os &dst, bool pretty, int depth)
+		static void encode(T &item, const codec &c, os &dst, const string &name, std::stack<int> &stack)
 		{
 			auto map	= item.map();
 			int i		= map.lookup.size() - 1;
 
-			c.object_start(dst, pretty, depth);
+			c.object_start(dst, name, stack);
 
 			for (auto &v : map.lookup)
 			{
-				c.key(dst, v.first, pretty, depth + 1);
-				v.second->encode(c, dst, pretty, depth + 1);
-				c.separator(dst, !i--, pretty, depth);
+				v.second->encode(c, dst, v.first, stack);
+				c.separator(dst, !i--);
 			}
 
-			c.object_end(dst, pretty, depth);
+			c.object_end(dst, stack);
 		}
 
 		T *reference;
@@ -99,25 +97,24 @@ namespace ent
 
 	template <class T> struct vobj : public vbase
 	{
-		vobj(std::map<std::string, T> &reference) : reference(&reference) {}
+		vobj(std::map<string, T> &reference) : reference(&reference) {}
 
-		virtual void encode(codec &c, os &dst, bool pretty, int depth)
+		virtual void encode(const codec &c, os &dst, const string &name, std::stack<int> &stack)
 		{
 			int j = this->reference->size() - 1;
 
-			c.object_start(dst, pretty, depth);
+			c.object_start(dst, name, stack);
 
 			for (auto &i : *this->reference)
 			{
-				c.key(dst, i.first, pretty, depth + 1);
-				vref<T>::encode(i.second, c, dst, pretty, depth + 1);
-				c.separator(dst, !j--, pretty, depth);
+				vref<T>::encode(i.second, c, dst, i.first, stack);
+				c.separator(dst, !j--);
 			}
 
-			c.object_end(dst, pretty, depth);
+			c.object_end(dst, stack);
 		}
 
-		std::map<std::string, T> *reference;
+		std::map<string, T> *reference;
 	};
 
 
@@ -125,20 +122,20 @@ namespace ent
 	{
 		varr(std::vector<T> &reference) : reference(&reference) {}
 
-		void encode(codec &c, os &dst, bool pretty, int depth)
+		virtual void encode(const codec &c, os &dst, const string &name, std::stack<int> &stack)
 		{
 			int j = this->reference->size() - 1;
+			int k = 0;
 
-			c.array_start(dst, pretty, depth);
+			c.array_start(dst, name, stack);
 
 			for (auto &i : *this->reference)
 			{
-				c.item(dst, pretty, depth + 1);
-				vref<T>::encode(i, c, dst, pretty, depth + 1);
-				c.separator(dst, !j--, pretty, depth);
+				vref<T>::encode(i, c, dst, c.array_item_name(k++), stack);
+				c.separator(dst, !j--);
 			}
 
-			c.array_end(dst, pretty, depth);
+			c.array_end(dst, stack);
 		}
 
 		std::vector<T> *reference;
