@@ -6,6 +6,8 @@
 #include <sstream>
 #include <entity/codec.h>
 
+#include <iostream>
+
 
 namespace ent
 {
@@ -18,7 +20,8 @@ namespace ent
 
 	struct vbase
 	{
-		virtual void encode(const codec &c, os &dst, const string &name, std::stack<int> &stack) = 0; //{};
+		virtual void encode(const codec &c, os &dst, const string &name, std::stack<int> &stack) = 0;
+		virtual int decode(const codec &c, const string &data, int position, int type) { return position; }; //= 0;
 	};
 
 
@@ -28,6 +31,9 @@ namespace ent
 
 		virtual void encode(const codec &c, os &dst, const string &name, std::stack<int> &stack) 			{ c.item(dst, name, *this->reference, stack.size()); };
 		static void encode(bool &item, const codec &c, os &dst, const string &name, std::stack<int> &stack)	{ c.item(dst, name, item, stack.size()); }
+
+		virtual int decode(const codec &c, const string &data, int position, int type) 				{ *this->reference	= c.get(data, position, type, false);	return position; };
+		static int decode(bool &item, const codec &c, const string &data, int position, int type) 	{ item				= c.get(data, position, type, false); 	return position; };
 
 		bool *reference;
 	};
@@ -40,30 +46,40 @@ namespace ent
 		virtual void encode(const codec &c, os &dst, const string &name, std::stack<int> &stack) 			{ c.item(dst, name, *this->reference, stack.size()); };
 		static void encode(T &item, const codec &c, os &dst, const string &name, std::stack<int> &stack)	{ c.item(dst, name, item, stack.size()); }
 
+		virtual int decode(const codec &c, const string &data, int position, int type) 			{ *this->reference	= c.get(data, position, type, T());	return position; };
+		static int decode(T &item, const codec &c, const string &data, int position, int type) 	{ item				= c.get(data, position, type, T()); return position; };
+
 		T *reference;
 	};
 
 
-	template <class T> struct vref<T, typename std::enable_if<std::is_integral<T>::value>::type> : public vbase
+	// template <class T> struct vref<T, typename std::enable_if<std::is_integral<T>::value>::type> : public vbase//
+	template <class T> struct vref<T, typename std::enable_if<std::is_arithmetic<T>::value>::type> : public vbase
 	{
 		vref(T &reference) : reference(&reference) {}
 
 		virtual void encode(const codec &c, os &dst, const string &name, std::stack<int> &stack) 			{ c.item(dst, name, *this->reference, stack.size()); };
 		static void encode(T &item, const codec &c, os &dst, const string &name, std::stack<int> &stack)	{ c.item(dst, name, item, stack.size()); }
 
+		virtual int decode(const codec &c, const string &data, int position, int type) 			{ *this->reference	= c.get(data, position, type, T()); return position; };
+		static int decode(T &item, const codec &c, const string &data, int position, int type) 	{ item				= c.get(data, position, type, T()); return position; };
+
 		T *reference;
 	};
 
 
-	template <class T> struct vref<T, typename std::enable_if<std::is_floating_point<T>::value>::type> : public vbase
+	/*template <class T> struct vref<T, typename std::enable_if<std::is_floating_point<T>::value>::type> : public vbase
 	{
 		vref(T &reference) : reference(&reference) {}
 
 		virtual void encode(const codec &c, os &dst, const string &name, std::stack<int> &stack) 			{ c.item(dst, name, *this->reference, stack.size()); };
 		static void encode(T &item, const codec &c, os &dst, const string &name, std::stack<int> &stack)	{ c.item(dst, name, item, stack.size()); }
 
+		virtual int decode(const codec &c, const string &data, int position, int type) 				{ return c.get(data, position, type, *this->reference); };
+		static int decode(bool &item, const codec &c, const string &data, int position, int type) 	{ return c.get(data, position, type, item); };
+
 		T *reference;
-	};
+	};*/
 
 
 	template <class T> struct vref<T, typename std::enable_if<std::is_base_of<entity2, T>::value>::type> : public vbase
@@ -89,6 +105,36 @@ namespace ent
 			}
 
 			c.object_end(dst, stack);
+		}
+
+
+		virtual void decode(const codec &c, const string &data, int &position, int type)
+		{
+			decode(*this->reference, c, data, position, type);
+		}
+
+
+		static int decode(T &item, const codec &c, const string &data, int position, int type)
+		{
+			auto map 			= item.map();
+			std::string name	= "";
+
+			if (c.object_start(data, position))
+			{
+				while (c.item(data, position, name, type))
+				{
+					if (map.lookup.count(name))
+					{
+						position = map.lookup[name]->decode(c, data, position, type);
+					}
+					else c.skip(data, position, type);
+				}
+
+				c.object_end(data, position);
+			}
+			else c.skip(data, position, type);
+
+			return position;
 		}
 
 		T *reference;

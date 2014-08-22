@@ -1,6 +1,11 @@
 #pragma once
 
+#include <map>
 #include <list>
+#include <vector>
+#include <memory>
+#include <algorithm>
+#include <functional>
 
 
 namespace ent
@@ -9,7 +14,7 @@ namespace ent
 	{
 		public:
 			virtual ~qbase() {}
-			
+
 		protected:
 			std::shared_ptr<qbase> parent = nullptr;
 			template <class T> friend class query;
@@ -339,7 +344,7 @@ namespace ent
 			bool all(std::function<bool(const T&)> predicate)
 			{
 				for (T *i = start(this, true); i; i = next(this)) if (!predicate(*i)) return false;
-				
+
 				return true;
 			}
 
@@ -376,7 +381,7 @@ namespace ent
 
 			T element_at(int index)											{ return this->element_at(index, true); }
 			T element_at_or_default(int index)								{ return this->element_at(index, false); }
-			
+
 			T first()														{ return this->first_last(nullptr, true, true); }
 			T first_or_default()											{ return this->first_last(nullptr, false, true); }
 			T first(std::function<bool(const T&)> predicate)				{ return this->first_last(predicate, true, true); }
@@ -498,7 +503,7 @@ namespace ent
 			iterator rend()	const	{ return iterator(); }
 
 		private:
-	
+
 			struct ibase
 			{
 				virtual T *next() = 0;
@@ -626,7 +631,7 @@ namespace ent
 			std::list<std::shared_ptr<qbase>> queries;	// Handle parent queries in the correct order (see concat)
 			int counter = 0;							// Counter used by operations such as take and skip
 			T item;										// Temporary used to return a reference to a modified value
-			
+
 			std::function<bool(const T&, const T&)> comparator = nullptr;
 
 			template <class U> friend class query;
@@ -649,7 +654,7 @@ namespace ent
 		public:
 
 			typedef T value_type;
-			
+
 			wrapper(T *data, int size) : data(data), size(size) {}
 
 			T *begin()	{ return data; }

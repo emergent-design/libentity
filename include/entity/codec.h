@@ -34,7 +34,7 @@ namespace ent
 		// virtual void encode(os &dst, const std::string &value) const = 0;
 		// virtual void encode(os &dst, const std::vector<byte> &value) const = 0;
 
-
+		// Encoding functions
 		virtual std::string array_item_name(int index) const 	{ return {}; }
 		virtual void separator(os &dst, bool last) const		{}	// Item separator
 		virtual void object_start(os &dst, const std::string &name, std::stack<int> &stack) const = 0;
@@ -48,5 +48,20 @@ namespace ent
 		virtual void item(os &dst, const std::string &name, double value, int depth) const = 0;
 		virtual void item(os &dst, const std::string &name, const std::string &value, int depth) const = 0;
 		virtual void item(os &dst, const std::string &name, const std::vector<byte> &value, int depth) const = 0;
+
+		// Decoding functions
+		virtual bool validate(const std::string &data) const = 0;
+		virtual bool object_start(const std::string &data, int &i) const = 0;
+		virtual bool object_end(const std::string &data, int &i) const = 0;
+		virtual bool item(const std::string &data, int &i, std::string &name, int &type) const = 0;
+		virtual void skip(const std::string &data, int &i, int type) const = 0;
+
+		virtual bool get(const std::string &data, int &i, int type, bool def) const = 0;
+		virtual int32_t get(const std::string &data, int &i, int type, int32_t def) const = 0;
+		virtual int64_t get(const std::string &data, int &i, int type, int64_t def) const = 0;
+		virtual double get(const std::string &data, int &i, int type, double def) const = 0;
+		virtual std::string get(const std::string &data, int &i, int type, const std::string def) const = 0;
+		virtual std::vector<byte> get(const std::string &data, int &i, int type, const std::vector<byte> def) const = 0;
 	};
 }
+

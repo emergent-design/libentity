@@ -22,8 +22,7 @@ namespace ent
 	template <class C, class T> static T decode(const std::string &data)
 	{
 		T result;
-		decode<C>(data, result);
-		return result;
+		return decode<C>(data, result);
 	}
 
 
@@ -32,9 +31,11 @@ namespace ent
 		static_assert(std::is_base_of<entity2, T>::value,	"Item must be derived from entity");
 		static_assert(std::is_base_of<codec, C>::value,		"Invalid codec specified");
 
-		std::stack<int> stack;
-
-		//vref<T>::decode(data, C(), item, stack);
+		//std::stack<int> stack;
+		if (C().validate(data))
+		{
+			vref<T>::decode(item, C(), data, 0, 0);
+		}
 
 		return item;
 	}

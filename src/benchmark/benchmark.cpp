@@ -195,6 +195,21 @@ template <class T> void JsonTestFrom(T &e, string data, bool useCereal = false)
 	cout << "Which is an average of " << (1000.0 * (double)duration / BENCHMARK_ITERATIONS) << "us per deserialisation" << endl;
 }
 
+template <class T> void JsonTestFrom2(T &e, string data, bool useCereal = false)
+{
+	auto start = steady_clock::now();
+
+	for (int i=0; i<BENCHMARK_ITERATIONS; i++)
+	{
+		decode<json2>(data, e);
+	}
+
+	long duration = duration_cast<milliseconds>(steady_clock::now() - start).count();
+
+	cout << "Time taken for " << BENCHMARK_ITERATIONS << " iterations was " << duration << "ms" << endl;
+	cout << "Which is an average of " << (1000.0 * (double)duration / BENCHMARK_ITERATIONS) << "us per deserialisation" << endl;
+}
+
 
 void JsonTestFrom(string data)
 {
@@ -258,7 +273,9 @@ struct Complex2 : entity2
 
 int main(int argc, char **argv)
 {
-	//Simple2 simple;
+	Simple simple;
+	Complex complex;
+	Simple2 simple2;
 	Complex2 complex2;
 	//Collection2 collection;
 
@@ -270,16 +287,39 @@ int main(int argc, char **argv)
 
 	//cout << json2::jcodec::to(complex, true) << endl;
 
-	Complex complex;
+	//Complex complex;
+	string simpleData		= R"json({"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"})json";
+	string simpleCereal		= R"json({"test":{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"}})json";
+	string complexData		= R"json({"collection":{"binary":"AAECiP8=","dictionary":{"first":"item","second":"item"},"doubles":[0.11,0.22,0.33],"strings":["one","two","three"]},"entities":[{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"},{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"}],"name":"complex","simple":{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"}})json";
+	string complexCereal	= R"json({"test":{"collection":{"binary":[0,1,2,136,255],"dictionary":[{"key":"first","value":"item"},{"key":"second","value":"item"}],"doubles":[0.11,0.22,0.33],"strings":["one","two","three"]},"entities":[{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"},{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"}],"name":"complex","simple":{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"}}})json";
 
-	JsonTest2(complex2);
-	JsonTestTo(complex);
-	JsonTestTo(complex, true);
-	JsonTest2(complex2);
+	// JsonTest2(complex2);
+	// JsonTestTo(complex);
+	// JsonTestTo(complex, true);
+	// JsonTest2(complex2);
 
-	cout << encode<json2pretty>(complex2) << endl;
+	// JsonTestFrom2(simple2, simpleData);
+	// JsonTestFrom(simple, simpleData);
+	// JsonTestFrom(simple, simpleCereal, true);
+	// JsonTestFrom2(simple2, simpleData);
+
+	// JsonTestTo(complex);
+	// JsonTestTo(complex, true);
+	// JsonTest2(complex2);
+
+	// cout << encode<json2pretty>(complex2) << endl;
 
 	//cout << encode<bson2>(complex2) << endl;
+
+	//auto complex = decode<json2, Complex2>(complexData);
+	//cout << encode<json2pretty>(complex) << endl;
+
+	simple2 = decode<json2, Simple2>(simpleData);
+	cout << encode<json2pretty>(simple2) << endl;
+
+//whitespace[' '] = whitespace['\t'] = whitespace['\r'] = whitespace['\n'] = whitespace[','] = true;
+	//cout << (int)' ' << ", " << (int)'\t' << ", " << (int)'\r' << ", " << (int)'\n' << ", " << (int)',' << endl;
+
 
 	return 0;
 
