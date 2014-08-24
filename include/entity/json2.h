@@ -56,6 +56,43 @@ namespace ent
 
 		virtual bool validate(const string &data) const
 		{
+			char c;
+			int length				= data.length();
+			bool quotes				= false;
+			bool ignore				= false;
+			std::stack<std::pair<char,int>> levels;
+
+			for (int i=0; i<length; i++)
+			{
+				c = data[i];
+
+				if (!whitespace[(byte)c])
+				{
+					if (!quotes && (c == '}' || c == ']'))
+					{
+						if (levels.size())
+						{
+							if (levels.top().first == c)	levels.pop();
+							else							error("unterminated object/array", data, levels.top().second);
+						}
+						else error("missing opening brace", data, 0);
+					}
+					else switch (c)
+					{
+						case '"':	if (!ignore) quotes = !quotes;			break;
+						case '{':	if (!quotes) levels.emplace('}', i);	break;	// Each time a new object or array is started push the end
+						case '[':	if (!quotes) levels.emplace(']', i);	break;	// symbol and position in the string onto a stack.
+					}
+
+					// If a backslash is found within a string then ignore the next
+					// character in case it is a quote.
+					ignore = quotes && c == '\\';
+				}
+			}
+
+			// If there are any levels left in the stack at the end then there was a problem
+			// with the json.
+			if (!levels.empty()) error("unterminated object/array", data, levels.top().second);
 			return true;
 		}
 
@@ -115,71 +152,79 @@ namespace ent
 		}
 
 
-		virtual bool get(const string &data, int &i, int type, bool def) const
+		virtual bool array_start(const std::string &data, int &i) const
 		{
-			auto c = data[i];
+			int length = data.length();
+
+			// Swallow whitespace
+			for (; i<length && whitespace[(byte)data[i]]; i++);
+
+			// An object should always start with an opening square brace
+			return i<length && data[i] == '[';
+		}
+
+
+		virtual bool array_end(const std::string &data, int &i) const
+		{
+			return data[i] == ']';
+		}
+
+
+		virtual bool array_item(const std::string &data, int &i, int &type) const
+		{
+			int length = data.length();
+
+			for (i++; i<length && whitespace[(byte)data[i]]; i++);
+
+			return i < length && data[i] != ']';
+		}
+
+
+		bool inline check_simple(const char c, const string &data, int &i, int type) const
+		{
 			if (c == '{' || c == '[' || c == '"' || c == '}')
 			{
 				skip(data, i, type);
 				return false;
 			}
+			return true;
+		}
 
-			auto item = parse_item(data, '}', i);
 
-			return item == "true";
+		virtual bool get(const string &data, int &i, int type, bool def) const
+		{
+			if (!check_simple(data[i], data, i, type)) return false;
+
+			return parse_item(data, i) == "true";
 		}
 
 
 		virtual int32_t get(const string &data, int &i, int type, int32_t def) const
 		{
-			auto c = data[i];
-			if (c == '{' || c == '[' || c == '"' || c == '}')
-			{
-				skip(data, i, type);
-				return 0;
-			}
+			if (!check_simple(data[i], data, i, type)) return false;
 
-			auto item = parse_item(data, '}', i);
-
-			try 		{ return stoi(item); }
-			catch (...)	{ error("value '" + item + "' is not a valid number", data, i); }
-
+			try 		{ return stoi(parse_item(data, i)); }
+			catch (...)	{ error("value is not a valid number", data, i); }
 			return 0;
 		}
 
 
 		virtual int64_t get(const string &data, int &i, int type, int64_t def) const
 		{
-			auto c = data[i];
-			if (c == '{' || c == '[' || c == '"' || c == '}')
-			{
-				skip(data, i, type);
-				return 0;
-			}
+			if (!check_simple(data[i], data, i, type)) return false;
 
-			auto item = parse_item(data, '}', i);
-
-			try 		{ return stoll(item); }
-			catch (...)	{ error("value '" + item + "' is not a valid number", data, i); }
-
+			try 		{ return stoll(parse_item(data, i)); }
+			catch (...)	{ error("value is not a valid number", data, i); }
 			return 0;
 		}
 
 
 		virtual double get(const string &data, int &i, int type, double def) const
 		{
-			auto c = data[i];
-			if (c == '{' || c == '[' || c == '"' || c == '}')
-			{
-				skip(data, i, type);
-				return 0.0;
-			}
+			if (!check_simple(data[i], data, i, type)) return false;
 
-			auto item = parse_item(data, '}', i);
-
-			try 		{ return stod(item); }
-			catch (...)	{ error("value '" + item + "' is not a valid number", data, i); }
-
+			try 		{ return stod(parse_item(data, i)); }
+			catch (...)	{ error("value is not a valid number", data, i); }
 			return 0.0;
 		}
 
@@ -188,9 +233,32 @@ namespace ent
 		{
 			if (data[i] == '"')
 			{
-				auto result = parse_string(data, i);
+				string result;
+				auto s			= parse_string(data, i);
+				bool special	= false;
+				const char *c	= data.data() + s.first;
+				const char *end	= c + s.second;
 
-				// TODO: Unescape here
+				for (result.reserve(s.second); c < end; c++)
+				{
+					if (special)
+					{
+						switch (*c)
+						{
+							case '"':	result.append("\"");	break;
+							case '\\':	result.append("\\");	break;
+							case 't':	result.append("\t");	break;
+							case 'n':	result.append("\n");	break;
+							case 'r':	result.append("\r");	break;
+							case 'b':	result.append("\b");	break;
+							case 'f':	result.append("\f");	break;
+							case 'u':	result.append("\\u");	break;	// Unicode characters are just passed straight through
+						}
+						special = false;
+					}
+					else if (*c == '\\')	special = true;
+					else 					result += *c;
+				}
 
 				return result;
 			}
@@ -204,7 +272,8 @@ namespace ent
 		{
 			if (data[i] == '"')
 			{
-				return decode64(parse_string(data, i));
+				auto s = parse_string(data, i);
+				return decode64(data.substr(s.first, s.second));
 			}
 
 			skip(data, i, type);
@@ -225,8 +294,8 @@ namespace ent
 
 				if (!whitespace[(byte)c])
 				{
-					if (!quotes && c == open)	count--;
-					if (!quotes && c == close)	count++;
+					if (!quotes && c == open)	count++;
+					if (!quotes && c == close)	count--;
 					if (!ignore && c == '"')	quotes = !quotes;
 
 					ignore = quotes && c == '\\';
@@ -237,13 +306,12 @@ namespace ent
 
 		virtual void skip(const string &data, int &i, int type) const
 		{
-			std::cout << "skipping" << std::endl;
 			auto c = data[i];
 
 			if (c == '{')		skip(data, i, '{', '}');
 			else if (c == '[')	skip(data, i, '[', ']');
 			else if (c == '"')	parse_string(data, i);
-			else				parse_item(data, '}', i);
+			else				parse_item(data, i);
 		}
 
 
@@ -257,7 +325,7 @@ namespace ent
 		}
 
 
-		string parse_string(const string &data, int &i) const
+		std::pair<int, int> parse_string(const string &data, int &i) const
 		{
 			int start	= ++i;
 			bool ignore = false;	// Flag to ensure escaped quotes within the string are ignored
@@ -268,14 +336,14 @@ namespace ent
 				ignore = data[i] == '\\';
 			}
 
-			return data.substr(start, i-start);
+			return { start, i-start };
 		}
 
 
-		string parse_item(const string &data, const char end, int &i) const
+		string parse_item(const string &data, int &i) const
 		{
 			int start = i;
-			for (i++; i<data.length() && !whitespace[(byte)data[i]] && data[i] != end; i++);
+			for (i++; i<data.length() && !whitespace[(byte)data[i]] && data[i] != '}' && data[i] != ']'; i++);
 
 			// Jump back a character since the parse_array and parse methods expect
 			// to swallow whitespace or opening character next so allow it to find

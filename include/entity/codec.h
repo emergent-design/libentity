@@ -54,6 +54,9 @@ namespace ent
 		virtual bool object_start(const std::string &data, int &i) const = 0;
 		virtual bool object_end(const std::string &data, int &i) const = 0;
 		virtual bool item(const std::string &data, int &i, std::string &name, int &type) const = 0;
+		virtual bool array_start(const std::string &data, int &i) const = 0;
+		virtual bool array_end(const std::string &data, int &i) const = 0;
+		virtual bool array_item(const std::string &data, int &i, int &type) const = 0;
 		virtual void skip(const std::string &data, int &i, int type) const = 0;
 
 		virtual bool get(const std::string &data, int &i, int type, bool def) const = 0;

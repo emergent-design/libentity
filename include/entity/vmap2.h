@@ -6,12 +6,11 @@
 #include <sstream>
 #include <entity/codec.h>
 
-#include <iostream>
-
 
 namespace ent
 {
 	using std::string;
+	using std::stack;
 
 	// Forward declaration of entity
 	class entity2;
@@ -20,31 +19,31 @@ namespace ent
 
 	struct vbase
 	{
-		virtual void encode(const codec &c, os &dst, const string &name, std::stack<int> &stack) = 0;
-		virtual int decode(const codec &c, const string &data, int position, int type) { return position; }; //= 0;
+		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack) = 0;
+		virtual int decode(const codec &c, const string &data, int position, int type) = 0;
 	};
 
 
-	template <> struct vref<bool> : public vbase
-	{
-		vref(bool &reference) : reference(&reference) {}
+	// template <> struct vref<bool> : public vbase
+	// {
+	// 	vref(bool &reference) : reference(&reference) {}
 
-		virtual void encode(const codec &c, os &dst, const string &name, std::stack<int> &stack) 			{ c.item(dst, name, *this->reference, stack.size()); };
-		static void encode(bool &item, const codec &c, os &dst, const string &name, std::stack<int> &stack)	{ c.item(dst, name, item, stack.size()); }
+	// 	virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack) 			{ c.item(dst, name, *this->reference, stack.size()); };
+	// 	static void encode(bool &item, const codec &c, os &dst, const string &name, stack<int> &stack)	{ c.item(dst, name, item, stack.size()); }
 
-		virtual int decode(const codec &c, const string &data, int position, int type) 				{ *this->reference	= c.get(data, position, type, false);	return position; };
-		static int decode(bool &item, const codec &c, const string &data, int position, int type) 	{ item				= c.get(data, position, type, false); 	return position; };
+	// 	virtual int decode(const codec &c, const string &data, int position, int type) 				{ *this->reference	= c.get(data, position, type, false);	return position; };
+	// 	static int decode(bool &item, const codec &c, const string &data, int position, int type) 	{ item				= c.get(data, position, type, false); 	return position; };
 
-		bool *reference;
-	};
+	// 	bool *reference;
+	// };
 
 
-	template <class T> struct vref<T, typename std::enable_if<std::is_same<string, T>::value || std::is_same<std::vector<byte>, T>::value>::type> : public vbase
+	/*template <class T> struct vref<T, typename std::enable_if<std::is_same<string, T>::value || std::is_same<std::vector<byte>, T>::value>::type> : public vbase
 	{
 		vref(T &reference) : reference(&reference) {}
 
-		virtual void encode(const codec &c, os &dst, const string &name, std::stack<int> &stack) 			{ c.item(dst, name, *this->reference, stack.size()); };
-		static void encode(T &item, const codec &c, os &dst, const string &name, std::stack<int> &stack)	{ c.item(dst, name, item, stack.size()); }
+		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack) 		{ c.item(dst, name, *this->reference, stack.size()); };
+		static void encode(T &item, const codec &c, os &dst, const string &name, stack<int> &stack)	{ c.item(dst, name, item, stack.size()); }
 
 		virtual int decode(const codec &c, const string &data, int position, int type) 			{ *this->reference	= c.get(data, position, type, T());	return position; };
 		static int decode(T &item, const codec &c, const string &data, int position, int type) 	{ item				= c.get(data, position, type, T()); return position; };
@@ -53,30 +52,15 @@ namespace ent
 	};
 
 
-	// template <class T> struct vref<T, typename std::enable_if<std::is_integral<T>::value>::type> : public vbase//
 	template <class T> struct vref<T, typename std::enable_if<std::is_arithmetic<T>::value>::type> : public vbase
 	{
 		vref(T &reference) : reference(&reference) {}
 
-		virtual void encode(const codec &c, os &dst, const string &name, std::stack<int> &stack) 			{ c.item(dst, name, *this->reference, stack.size()); };
-		static void encode(T &item, const codec &c, os &dst, const string &name, std::stack<int> &stack)	{ c.item(dst, name, item, stack.size()); }
+		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack) 		{ c.item(dst, name, *this->reference, stack.size()); };
+		static void encode(T &item, const codec &c, os &dst, const string &name, stack<int> &stack)	{ c.item(dst, name, item, stack.size()); }
 
 		virtual int decode(const codec &c, const string &data, int position, int type) 			{ *this->reference	= c.get(data, position, type, T()); return position; };
 		static int decode(T &item, const codec &c, const string &data, int position, int type) 	{ item				= c.get(data, position, type, T()); return position; };
-
-		T *reference;
-	};
-
-
-	/*template <class T> struct vref<T, typename std::enable_if<std::is_floating_point<T>::value>::type> : public vbase
-	{
-		vref(T &reference) : reference(&reference) {}
-
-		virtual void encode(const codec &c, os &dst, const string &name, std::stack<int> &stack) 			{ c.item(dst, name, *this->reference, stack.size()); };
-		static void encode(T &item, const codec &c, os &dst, const string &name, std::stack<int> &stack)	{ c.item(dst, name, item, stack.size()); }
-
-		virtual int decode(const codec &c, const string &data, int position, int type) 				{ return c.get(data, position, type, *this->reference); };
-		static int decode(bool &item, const codec &c, const string &data, int position, int type) 	{ return c.get(data, position, type, item); };
 
 		T *reference;
 	};*/
@@ -86,12 +70,12 @@ namespace ent
 	{
 		vref(T &reference) : reference(&reference) {}
 
-		virtual void encode(const codec &c, os &dst, const string &name, std::stack<int> &stack)
+		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
 		{
 			encode(*this->reference, c, dst, name, stack);
 		}
 
-		static void encode(T &item, const codec &c, os &dst, const string &name, std::stack<int> &stack)
+		static void encode(T &item, const codec &c, os &dst, const string &name, stack<int> &stack)
 		{
 			auto map	= item.map();
 			int i		= map.lookup.size() - 1;
@@ -108,9 +92,9 @@ namespace ent
 		}
 
 
-		virtual void decode(const codec &c, const string &data, int &position, int type)
+		virtual int decode(const codec &c, const string &data, int position, int type)
 		{
-			decode(*this->reference, c, data, position, type);
+			return decode(*this->reference, c, data, position, type);
 		}
 
 
@@ -137,6 +121,39 @@ namespace ent
 			return position;
 		}
 
+
+		T *reference;
+	};
+
+
+	template <class T> struct vref<T, typename std::enable_if<!std::is_base_of<entity2, T>::value>::type> : public vbase
+	{
+		vref(T &reference) : reference(&reference) {}
+
+
+		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
+		{
+			c.item(dst, name, *this->reference, stack.size());
+		};
+
+
+		static void encode(T &item, const codec &c, os &dst, const string &name, stack<int> &stack)
+		{
+			c.item(dst, name, item, stack.size());
+		}
+
+		virtual int decode(const codec &c, const string &data, int position, int type)
+		{
+			*this->reference = c.get(data, position, type, T()); return position;
+		};
+
+
+		static int decode(T &item, const codec &c, const string &data, int position, int type)
+		{
+			item = c.get(data, position, type, T()); return position;
+		};
+
+
 		T *reference;
 	};
 
@@ -145,7 +162,7 @@ namespace ent
 	{
 		vobj(std::map<string, T> &reference) : reference(&reference) {}
 
-		virtual void encode(const codec &c, os &dst, const string &name, std::stack<int> &stack)
+		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
 		{
 			int j = this->reference->size() - 1;
 
@@ -160,6 +177,28 @@ namespace ent
 			c.object_end(dst, stack);
 		}
 
+
+		virtual int decode(const codec &c, const string &data, int position, int type)
+		{
+			T item;
+			std::string name = "";
+			this->reference->clear();
+
+			if (c.object_start(data, position))
+			{
+				while (c.item(data, position, name, type))
+				{
+					position = vref<T>::decode(item, c, data, position, type);
+					this->reference->emplace(name, item);
+				}
+
+				c.object_end(data, position);
+			}
+			else c.skip(data, position, type);
+
+			return position;
+		}
+
 		std::map<string, T> *reference;
 	};
 
@@ -168,7 +207,7 @@ namespace ent
 	{
 		varr(std::vector<T> &reference) : reference(&reference) {}
 
-		virtual void encode(const codec &c, os &dst, const string &name, std::stack<int> &stack)
+		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
 		{
 			int j = this->reference->size() - 1;
 			int k = 0;
@@ -184,6 +223,28 @@ namespace ent
 			c.array_end(dst, stack);
 		}
 
+
+		virtual int decode(const codec &c, const string &data, int position, int type)
+		{
+			T item;
+			this->reference->clear();
+
+			if (c.array_start(data, position))
+			{
+				while (c.array_item(data, position, type))
+				{
+					position = vref<T>::decode(item, c, data, position, type);
+					this->reference->push_back(item);
+				}
+
+				c.array_end(data, position);
+			}
+			else c.skip(data, position, type);
+
+			return position;
+		}
+
 		std::vector<T> *reference;
 	};
 }
+

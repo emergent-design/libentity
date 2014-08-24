@@ -31,10 +31,11 @@ namespace ent
 		static_assert(std::is_base_of<entity2, T>::value,	"Item must be derived from entity");
 		static_assert(std::is_base_of<codec, C>::value,		"Invalid codec specified");
 
-		//std::stack<int> stack;
-		if (C().validate(data))
+		C codec;
+
+		if (codec.validate(data))
 		{
-			vref<T>::decode(item, C(), data, 0, 0);
+			vref<T>::decode(item, codec, data, 0, 0);
 		}
 
 		return item;

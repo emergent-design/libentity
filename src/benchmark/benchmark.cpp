@@ -87,8 +87,8 @@ struct Complex : entity
 };
 
 
+// #define BENCHMARK_ITERATIONS 1000000
 #define BENCHMARK_ITERATIONS 100000
-// #define BENCHMARK_ITERATIONS 100000
 // #define BENCHMARK_ITERATIONS 1000
 
 
@@ -189,8 +189,8 @@ template <class T> void JsonTestFrom(T &e, string data, bool useCereal = false)
 
 	long duration = duration_cast<milliseconds>(steady_clock::now() - start).count();
 
-	cout << e.name << endl;
-	cout << e << endl;
+	//cout << e.name << endl;
+	//cout << e << endl;
 	cout << "Time taken for " << BENCHMARK_ITERATIONS << " iterations was " << duration << "ms" << endl;
 	cout << "Which is an average of " << (1000.0 * (double)duration / BENCHMARK_ITERATIONS) << "us per deserialisation" << endl;
 }
@@ -298,10 +298,16 @@ int main(int argc, char **argv)
 	// JsonTestTo(complex, true);
 	// JsonTest2(complex2);
 
-	// JsonTestFrom2(simple2, simpleData);
-	// JsonTestFrom(simple, simpleData);
-	// JsonTestFrom(simple, simpleCereal, true);
-	// JsonTestFrom2(simple2, simpleData);
+	// cout << "New: " << endl;	JsonTestFrom2(simple2, simpleData);
+	// cout << "Old: " << endl;	JsonTestFrom(simple, simpleData);
+	// cout << "Cereal: " << endl;	JsonTestFrom(simple, simpleCereal, true);
+	// cout << "New: " << endl;	JsonTestFrom2(simple2, simpleData);
+	//
+
+	cout << "New: " << endl;	JsonTestFrom2(complex2, complexData);
+	cout << "Old: " << endl;	JsonTestFrom(complex, complexData);
+	cout << "Cereal: " << endl;	JsonTestFrom(complex, complexCereal, true);
+	cout << "New: " << endl;	JsonTestFrom2(complex2, complexData);
 
 	// JsonTestTo(complex);
 	// JsonTestTo(complex, true);
@@ -311,11 +317,11 @@ int main(int argc, char **argv)
 
 	//cout << encode<bson2>(complex2) << endl;
 
-	//auto complex = decode<json2, Complex2>(complexData);
-	//cout << encode<json2pretty>(complex) << endl;
+	complex2 = decode<json2, Complex2>(complexData);
+	cout << encode<json2pretty>(complex2) << endl;
 
-	simple2 = decode<json2, Simple2>(simpleData);
-	cout << encode<json2pretty>(simple2) << endl;
+	// simple2 = decode<json2, Simple2>(simpleData);
+	// cout << encode<json2pretty>(simple2) << endl;
 
 //whitespace[' '] = whitespace['\t'] = whitespace['\r'] = whitespace['\n'] = whitespace[','] = true;
 	//cout << (int)' ' << ", " << (int)'\t' << ", " << (int)'\r' << ", " << (int)'\n' << ", " << (int)',' << endl;
