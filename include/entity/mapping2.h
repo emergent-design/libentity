@@ -22,7 +22,6 @@ namespace ent
 	// Storage for the mapping lookup table
 	class mapping2
 	{
-		//friend class parser;
 		template <class T, class U> friend struct vref;
 
 		public:
@@ -48,37 +47,12 @@ namespace ent
 			// Default
 			mapping2() {}
 
-			// Construct from a single reference
-			mapping2(const reference &item)
-			{
-				*this << item;
-			}
-
-			// Construct from a list of references
-			mapping2(std::initializer_list<reference> items)
-			{
-				*this << items;
-			}
-
 			// Add a reference to the mapping
 			mapping2 &operator<<(const reference &item)
 			{
 				this->lookup[item.name] = item.item;
 				return *this;
 			}
-
-			// Add a list of references to the mapping
-			mapping2 &operator<<(std::initializer_list<reference> items)
-			{
-				for (auto &i : items) this->lookup[i.name] = i.item;
-				return *this;
-			}
-
-			// Traverses the map to generate a tree
-			//tree to();
-
-			// Traverses the map and updates with values from the tree
-			//void from(const tree &tree);
 
 		private:
 

@@ -25,8 +25,6 @@ namespace ent
 	{
 		virtual value to() = 0;
 		virtual void from(const value &value) = 0;
-
-		//virtual void encode(parser &p, std::ostringstream &dst) {};
 	};
 
 

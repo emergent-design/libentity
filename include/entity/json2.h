@@ -371,7 +371,7 @@ namespace ent
 	};
 
 
-	struct json2pretty : json2
+	struct prettyjson : json2
 	{
 		// Array items have 0 length name
 		virtual inline os &write_name(os &dst, const string &name, int depth) const

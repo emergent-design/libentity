@@ -24,48 +24,6 @@ namespace ent
 	};
 
 
-	// template <> struct vref<bool> : public vbase
-	// {
-	// 	vref(bool &reference) : reference(&reference) {}
-
-	// 	virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack) 			{ c.item(dst, name, *this->reference, stack.size()); };
-	// 	static void encode(bool &item, const codec &c, os &dst, const string &name, stack<int> &stack)	{ c.item(dst, name, item, stack.size()); }
-
-	// 	virtual int decode(const codec &c, const string &data, int position, int type) 				{ *this->reference	= c.get(data, position, type, false);	return position; };
-	// 	static int decode(bool &item, const codec &c, const string &data, int position, int type) 	{ item				= c.get(data, position, type, false); 	return position; };
-
-	// 	bool *reference;
-	// };
-
-
-	/*template <class T> struct vref<T, typename std::enable_if<std::is_same<string, T>::value || std::is_same<std::vector<byte>, T>::value>::type> : public vbase
-	{
-		vref(T &reference) : reference(&reference) {}
-
-		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack) 		{ c.item(dst, name, *this->reference, stack.size()); };
-		static void encode(T &item, const codec &c, os &dst, const string &name, stack<int> &stack)	{ c.item(dst, name, item, stack.size()); }
-
-		virtual int decode(const codec &c, const string &data, int position, int type) 			{ *this->reference	= c.get(data, position, type, T());	return position; };
-		static int decode(T &item, const codec &c, const string &data, int position, int type) 	{ item				= c.get(data, position, type, T()); return position; };
-
-		T *reference;
-	};
-
-
-	template <class T> struct vref<T, typename std::enable_if<std::is_arithmetic<T>::value>::type> : public vbase
-	{
-		vref(T &reference) : reference(&reference) {}
-
-		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack) 		{ c.item(dst, name, *this->reference, stack.size()); };
-		static void encode(T &item, const codec &c, os &dst, const string &name, stack<int> &stack)	{ c.item(dst, name, item, stack.size()); }
-
-		virtual int decode(const codec &c, const string &data, int position, int type) 			{ *this->reference	= c.get(data, position, type, T()); return position; };
-		static int decode(T &item, const codec &c, const string &data, int position, int type) 	{ item				= c.get(data, position, type, T()); return position; };
-
-		T *reference;
-	};*/
-
-
 	template <class T> struct vref<T, typename std::enable_if<std::is_base_of<entity2, T>::value>::type> : public vbase
 	{
 		vref(T &reference) : reference(&reference) {}

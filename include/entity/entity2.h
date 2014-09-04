@@ -12,9 +12,9 @@ namespace ent
 	{
 		template <class T, class U> friend struct vref;
 
-		public:
+		// public:
 
-			virtual ~entity2() {}
+		// 	virtual ~entity2() {}
 
 		protected:
 

@@ -318,7 +318,7 @@ int main(int argc, char **argv)
 	//cout << encode<bson2>(complex2) << endl;
 
 	complex2 = decode<json2, Complex2>(complexData);
-	cout << encode<json2pretty>(complex2) << endl;
+	cout << encode<prettyjson>(complex2) << endl;
 
 	// simple2 = decode<json2, Simple2>(simpleData);
 	// cout << encode<json2pretty>(simple2) << endl;
