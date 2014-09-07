@@ -5,9 +5,6 @@
 
 namespace ent
 {
-	using std::string;
-	using std::vector;
-
 	struct json2 : codec
 	{
 		// Array items have 0 length name
@@ -18,10 +15,10 @@ namespace ent
 		}
 
 		virtual void separator(os &dst, bool last) const											{ if (!last) dst << ","; }
-		virtual void object_start(os &dst, const string &name, std::stack<int> &stack) const		{ write_name(dst, name, stack.size()) << '{'; }
-		virtual void object_end(os &dst, std::stack<int> &stack) const								{ dst << '}'; }
-		virtual void array_start(os &dst, const string &name, std::stack<int> &stack) const			{ write_name(dst, name, stack.size()) << '['; }
-		virtual void array_end(os &dst, std::stack<int> &stack) const								{ dst << ']'; }
+		virtual void object_start(os &dst, const string &name, stack<int> &stack) const				{ write_name(dst, name, stack.size()) << '{'; }
+		virtual void object_end(os &dst, stack<int> &stack) const									{ dst << '}'; }
+		virtual void array_start(os &dst, const string &name, stack<int> &stack) const				{ write_name(dst, name, stack.size()) << '['; }
+		virtual void array_end(os &dst, stack<int> &stack) const									{ dst << ']'; }
 		virtual void item(os &dst, const string &name, int depth) const								{ write_name(dst, name, depth) << "null"; }
 		virtual void item(os &dst, const string &name, bool value, int depth) const					{ write_name(dst, name, depth) << (value ? "true" : "false"); }
 		virtual void item(os &dst, const string &name, int32_t value, int depth) const				{ write_name(dst, name, depth) << value; }
@@ -97,7 +94,7 @@ namespace ent
 		}
 
 
-		virtual bool object_start(const string &data, int &i) const
+		virtual bool object_start(const string &data, int &i, int type) const
 		{
 			int length = data.length();
 
@@ -152,7 +149,7 @@ namespace ent
 		}
 
 
-		virtual bool array_start(const std::string &data, int &i) const
+		virtual bool array_start(const string &data, int &i, int type) const
 		{
 			int length = data.length();
 
@@ -164,13 +161,13 @@ namespace ent
 		}
 
 
-		virtual bool array_end(const std::string &data, int &i) const
+		virtual bool array_end(const string &data, int &i) const
 		{
 			return data[i] == ']';
 		}
 
 
-		virtual bool array_item(const std::string &data, int &i, int &type) const
+		virtual bool array_item(const string &data, int &i, int &type) const
 		{
 			int length = data.length();
 
@@ -304,7 +301,7 @@ namespace ent
 		}
 
 
-		virtual void skip(const string &data, int &i, int type) const
+		virtual int skip(const string &data, int &i, int type) const
 		{
 			auto c = data[i];
 
@@ -312,6 +309,8 @@ namespace ent
 			else if (c == '[')	skip(data, i, '[', ']');
 			else if (c == '"')	parse_string(data, i);
 			else				parse_item(data, i);
+
+			return 0;
 		}
 
 
@@ -381,10 +380,10 @@ namespace ent
 			return dst;
 		}
 
-		virtual void separator(os &dst, bool last) const										{ dst << (last ? "\n" : ",\n"); }
-		virtual void object_start(os &dst, const string &name, std::stack<int> &stack) const	{ write_name(dst, name, stack.size()) << "{\n";				stack.push(0); }
-		virtual void object_end(os &dst, std::stack<int> &stack) const							{ dst << std::string(2 * (stack.size() - 1), ' ') << '}';	stack.pop(); }
-		virtual void array_start(os &dst, const string &name, std::stack<int> &stack) const		{ write_name(dst, name, stack.size()) << "[\n";				stack.push(0); }
-		virtual void array_end(os &dst, std::stack<int> &stack) const							{ dst << std::string(2 * (stack.size() - 1), ' ') << ']';	stack.pop(); }
+		virtual void separator(os &dst, bool last) const								{ dst << (last ? "\n" : ",\n"); }
+		virtual void object_start(os &dst, const string &name, stack<int> &stack) const	{ write_name(dst, name, stack.size()) << "{\n";			stack.push(0); }
+		virtual void object_end(os &dst, stack<int> &stack) const						{ dst << string(2 * (stack.size() - 1), ' ') << '}';	stack.pop(); }
+		virtual void array_start(os &dst, const string &name, stack<int> &stack) const	{ write_name(dst, name, stack.size()) << "[\n";			stack.push(0); }
+		virtual void array_end(os &dst, stack<int> &stack) const						{ dst << string(2 * (stack.size() - 1), ' ') << ']';	stack.pop(); }
 	};
 }

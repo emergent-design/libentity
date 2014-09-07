@@ -61,7 +61,7 @@ namespace ent
 			auto map 			= item.map();
 			std::string name	= "";
 
-			if (c.object_start(data, position))
+			if (c.object_start(data, position, type))
 			{
 				while (c.item(data, position, name, type))
 				{
@@ -142,7 +142,7 @@ namespace ent
 			std::string name = "";
 			this->reference->clear();
 
-			if (c.object_start(data, position))
+			if (c.object_start(data, position, type))
 			{
 				while (c.item(data, position, name, type))
 				{
@@ -187,7 +187,7 @@ namespace ent
 			T item;
 			this->reference->clear();
 
-			if (c.array_start(data, position))
+			if (c.array_start(data, position, type))
 			{
 				while (c.array_item(data, position, type))
 				{

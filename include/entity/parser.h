@@ -35,7 +35,7 @@ namespace ent
 
 		if (codec.validate(data))
 		{
-			vref<T>::decode(item, codec, data, 0, 0);
+			vref<T>::decode(item, codec, data, 0, -1);
 		}
 
 		return item;
