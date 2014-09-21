@@ -10,7 +10,13 @@
 namespace ent
 {
 	using std::string;
+	using std::vector;
 	using std::stack;
+	using std::map;
+
+	using std::enable_if;
+	using std::is_base_of;
+	using std::is_same;
 
 	// Forward declaration of entity
 	class entity2;
@@ -24,7 +30,53 @@ namespace ent
 	};
 
 
-	template <class T> struct vref<T, typename std::enable_if<std::is_base_of<entity2, T>::value>::type> : public vbase
+	template <typename T> struct is_container
+	{
+		private:
+			template <typename U> static char test(typename U::iterator*);
+			template <typename U> static int test(...);
+
+		public:
+			enum { value = sizeof(test<T>(0)) == sizeof(char) };
+	};
+
+
+	// Reference for any simple types (bool, number, string, vector<byte>)
+	template <class T> struct vref<T, typename enable_if<!is_base_of<entity2, T>::value && (is_same<string, T>::value || is_same<vector<byte>, T>::value || !is_container<T>::value)>::type> : public vbase
+	{
+		vref(T &reference) : reference(&reference) {}
+
+
+		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
+		{
+			c.item(dst, name, *this->reference, stack.size());
+		};
+
+
+		static void encode(T &item, const codec &c, os &dst, const string &name, stack<int> &stack)
+		{
+			c.item(dst, name, item, stack.size());
+		}
+
+
+		virtual int decode(const codec &c, const string &data, int position, int type)
+		{
+			*this->reference = c.get(data, position, type, T()); return position;
+		};
+
+
+		static int decode(T &item, const codec &c, const string &data, int position, int type)
+		{
+			item = c.get(data, position, type, T()); return position;
+		};
+
+
+		T *reference;
+	};
+
+
+	// Reference for derived entities
+	template <class T> struct vref<T, typename enable_if<is_base_of<entity2, T>::value>::type> : public vbase
 	{
 		vref(T &reference) : reference(&reference) {}
 
@@ -84,51 +136,27 @@ namespace ent
 	};
 
 
-	template <class T> struct vref<T, typename std::enable_if<!std::is_base_of<entity2, T>::value>::type> : public vbase
+	// Reference for std::map
+	template <class T> struct vref<T, typename enable_if<is_same<map<string, typename T::mapped_type>, T>::value>::type> : public vbase
 	{
 		vref(T &reference) : reference(&reference) {}
 
 
 		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
 		{
-			c.item(dst, name, *this->reference, stack.size());
-		};
+			encode(*this->reference, c, dst, name, stack);
+		}
 
 
 		static void encode(T &item, const codec &c, os &dst, const string &name, stack<int> &stack)
 		{
-			c.item(dst, name, item, stack.size());
-		}
-
-		virtual int decode(const codec &c, const string &data, int position, int type)
-		{
-			*this->reference = c.get(data, position, type, T()); return position;
-		};
-
-
-		static int decode(T &item, const codec &c, const string &data, int position, int type)
-		{
-			item = c.get(data, position, type, T()); return position;
-		};
-
-
-		T *reference;
-	};
-
-
-	template <class T> struct vobj : public vbase
-	{
-		vobj(std::map<string, T> &reference) : reference(&reference) {}
-
-		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
-		{
-			int j = this->reference->size() - 1;
+			int j = item.size() - 1;
 
 			c.object_start(dst, name, stack);
 
-			for (auto &i : *this->reference)
+			for (auto &i : item)
 			{
-				vref<T>::encode(i.second, c, dst, i.first, stack);
+				vref<typename T::mapped_type>::encode(i.second, c, dst, i.first, stack);
 				c.separator(dst, !j--);
 			}
 
@@ -138,16 +166,22 @@ namespace ent
 
 		virtual int decode(const codec &c, const string &data, int position, int type)
 		{
-			T item;
-			std::string name = "";
-			this->reference->clear();
+			return decode(*this->reference, c, data, position, type);
+		}
+
+
+		static int decode(T &item, const codec &c, const string &data, int position, int type)
+		{
+			typename T::mapped_type child;
+			string name = "";
+			item.clear();
 
 			if (c.object_start(data, position, type))
 			{
 				while (c.item(data, position, name, type))
 				{
-					position = vref<T>::decode(item, c, data, position, type);
-					this->reference->emplace(name, item);
+					position = vref<typename T::mapped_type>::decode(child, c, data, position, type);
+					item.emplace(name, child);
 				}
 
 				c.object_end(data, position);
@@ -157,24 +191,33 @@ namespace ent
 			return position;
 		}
 
-		std::map<string, T> *reference;
+
+		T *reference;
 	};
 
 
-	template <class T> struct varr : public vbase
+	// Reference for std::vector (except std::vector<byte>)
+	template <class T> struct vref<T, typename enable_if<is_same<vector<typename T::value_type>, T>::value && !is_same<typename T::value_type, byte>::value>::type> : public vbase
 	{
-		varr(std::vector<T> &reference) : reference(&reference) {}
+		vref(T &reference) : reference(&reference) {}
+
 
 		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
 		{
-			int j = this->reference->size() - 1;
+			encode(*this->reference, c, dst, name, stack);
+		}
+
+
+		static void encode(T &item, const codec &c, os &dst, const string &name, stack<int> &stack)
+		{
+			int j = item.size() - 1;
 			int k = 0;
 
 			c.array_start(dst, name, stack);
 
-			for (auto &i : *this->reference)
+			for (auto &i : item)
 			{
-				vref<T>::encode(i, c, dst, c.array_item_name(k++), stack);
+				vref<typename T::value_type>::encode(i, c, dst, c.array_item_name(k++), stack);
 				c.separator(dst, !j--);
 			}
 
@@ -184,15 +227,21 @@ namespace ent
 
 		virtual int decode(const codec &c, const string &data, int position, int type)
 		{
-			T item;
-			this->reference->clear();
+			return decode(*this->reference, c, data, position, type);
+		}
+
+
+		static int decode(T &item, const codec &c, const string &data, int position, int type)
+		{
+			typename T::value_type child;
+			item.clear();
 
 			if (c.array_start(data, position, type))
 			{
 				while (c.array_item(data, position, type))
 				{
-					position = vref<T>::decode(item, c, data, position, type);
-					this->reference->push_back(item);
+					position = vref<typename T::value_type>::decode(child, c, data, position, type);
+					item.push_back(child);
 				}
 
 				c.array_end(data, position);
@@ -202,7 +251,8 @@ namespace ent
 			return position;
 		}
 
-		std::vector<T> *reference;
+
+		T *reference;
 	};
 }
 

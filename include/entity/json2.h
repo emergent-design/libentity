@@ -1,6 +1,6 @@
 #pragma once
 
-#include <entity/parser.h>
+#include <entity/parser.hpp>
 
 
 namespace ent

@@ -1,6 +1,5 @@
 #pragma once
 
-//#include <map>
 #include <stack>
 #include <sstream>
 #include <entity/utilities.h>

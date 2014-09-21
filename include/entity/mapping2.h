@@ -32,15 +32,7 @@ namespace ent
 				std::string name;
 				std::shared_ptr<vbase> item;
 
-				// Create a mapping reference for a singular value
 				template <class T> reference(std::string name, T &item) : name(name), item(std::make_shared<vref<T>>(item)) {}
-
-				// Create a mapping reference for an array (except vector<byte>)
-				template <class T, class = typename std::enable_if<!std::is_same<T, byte>::value>::type>
-					reference(std::string name, std::vector<T> &item) : name(name), item(std::make_shared<varr<T>>(item)) {}
-
-				// Create a mapping reference for a dictionary
-				template <class T> reference(std::string name, std::map<std::string, T> &item) : name(name), item(std::make_shared<vobj<T>>(item)) {}
 			};
 
 
@@ -50,7 +42,8 @@ namespace ent
 			// Add a reference to the mapping
 			mapping2 &operator<<(const reference &item)
 			{
-				this->lookup[item.name] = item.item;
+				this->lookup.emplace(item.name, item.item);
+				// this->lookup[item.name] = std::move(item.item);
 				return *this;
 			}
 

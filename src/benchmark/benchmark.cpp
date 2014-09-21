@@ -1,5 +1,5 @@
 #include <entity/json.h>
-#include <entity/parser.h>
+#include <entity/parser.hpp>
 #include <chrono>
 //#include <sstream>
 
@@ -271,8 +271,32 @@ struct Complex2 : entity2
 	}
 };
 
+
+#include <entity/tree2.h>
+
 int main(int argc, char **argv)
 {
+	tree2 t = {
+		{ "first", 42 },
+		{ "second", true },
+		{ "third", "forty-two" },
+		{ "fourth", 5.6 },
+		{ "child", {
+			{ "first", "name"}
+		}},
+		{ "array", vector<tree2> { 42, true, "hello"}}
+	};
+
+	// cout << t["first"].as_long(10) << endl;
+	// cout << t["doesn't exist"].as_long(10) << endl;
+	// for (auto &i : t["array"].as_array()) cout << i.as_string() << endl;
+
+	cout << encode_tree<prettyjson>(t) << endl;
+
+	return 0; //*/
+
+
+
 	Simple simple;
 	Complex complex;
 	Simple2 simple2;
