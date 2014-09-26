@@ -62,7 +62,7 @@ namespace ent
 		return this->type == Type::Binary
 			? static_cast<container<vector<byte>> *>(this->content)->data
 			: this->type == Type::String
-				? decode64(static_cast<container<std::string> *>(this->content)->data)
+				? base64::decode(static_cast<container<std::string> *>(this->content)->data)
 				: defaultValue;
 	}
 }

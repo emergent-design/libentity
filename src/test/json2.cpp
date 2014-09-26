@@ -1,6 +1,6 @@
 #include <xUnit++/xUnit++.h>
 #include <test/entities.h>
-#include <entity/json2.h>
+#include <entity/json.hpp>
 
 using namespace std;
 using namespace ent;
@@ -48,13 +48,13 @@ SUITE("JSON Tests")
 	FACT("Compact JSON can be generated")
 	{
 		SimpleEntity e;
-		Assert.Equal(COMPACT_JSON, encode<json2>(e));
+		Assert.Equal(COMPACT_JSON, entity2::encode<json2>(e));
 	}
 
 
 	FACT("Compact JSON can be parsed")
 	{
-		auto e = decode<json2, SimpleEntity>(ALT_JSON);
+		auto e = entity2::decode<json2, SimpleEntity>(ALT_JSON);
 
 		Assert.Equal(12345678, e.bignumber);
 		Assert.False(e.flag);
@@ -67,13 +67,13 @@ SUITE("JSON Tests")
 	FACT("Padded JSON can be generated")
 	{
 		SimpleEntity e;
-		Assert.Equal(PADDED_JSON, encode<prettyjson>(e));
+		Assert.Equal(PADDED_JSON, entity2::encode<prettyjson>(e));
 	}
 
 
 	FACT("Padded JSON can be parsed")
 	{
-		auto e = decode<json2, SimpleEntity>(PADDED_JSON);
+		auto e = entity2::decode<json2, SimpleEntity>(PADDED_JSON);
 
 		Assert.Equal(20349758, e.bignumber);
 		Assert.True(e.flag);
@@ -88,13 +88,13 @@ SUITE("JSON Tests")
 		TextEntity e;
 		e.text = "Must\tbe \"escaped\"\n";
 
-		Assert.Equal(u8R"json({"text":"Must\tbe \"escaped\"\n"})json", encode<json2>(e));
+		Assert.Equal(u8R"json({"text":"Must\tbe \"escaped\"\n"})json", entity2::encode<json2>(e));
 	}
 
 
 	FACT("Strings are unescaped appropriately")
 	{
-		auto e = decode<json2, TextEntity>(u8R"json({ "text": "Must\tbe \"escaped\"\n" })json");
+		auto e = entity2::decode<json2, TextEntity>(u8R"json({ "text": "Must\tbe \"escaped\"\n" })json");
 
 		Assert.Equal("Must\tbe \"escaped\"\n", e.text);
 	}
@@ -102,7 +102,7 @@ SUITE("JSON Tests")
 
 	FACT("Collections can be parsed")
 	{
-		auto e = decode<json2, CollectionEntity>(COLLECTION_JSON);
+		auto e = entity2::decode<json2, CollectionEntity>(COLLECTION_JSON);
 
 		Assert.Equal(3, e.strings.size());
 		Assert.Equal("two", e.strings[1]);
@@ -116,7 +116,7 @@ SUITE("JSON Tests")
 
 	FACT("Complex types can be parsed")
 	{
-		auto e = decode<json2, ComplexEntity>(COMPLEX_JSON);
+		auto e = entity2::decode<json2, ComplexEntity>(COMPLEX_JSON);
 
 		Assert.Equal(3, e.collection.strings.size());
 		Assert.Equal(2, e.entities.size());
@@ -128,36 +128,36 @@ SUITE("JSON Tests")
 
 	FACT("Can cope with an empty object")
 	{
-		Assert.Equal("", decode<json2, TextEntity>("{}").text);
+		Assert.Equal("", entity2::decode<json2, TextEntity>("{}").text);
 	}
 
 
 	FACT("Can cope with alternative style line endings")
 	{
-		Assert.Equal("hello", decode<json2, TextEntity>("{ \"a\": 1,\r\n\"text\": \"hello\" }").text);
+		Assert.Equal("hello", entity2::decode<json2, TextEntity>("{ \"a\": 1,\r\n\"text\": \"hello\" }").text);
 	}
 
 
 	FACT("Can cope with standard JSON number formats")
 	{
-		Assert.Equal(42, decode<json2, SimpleEntity>(u8R"json({ "integer": 42 })json").integer);
-		Assert.Equal(3.14, decode<json2, SimpleEntity>(u8R"json({ "floating": 3.14 })json").floating);
-		Assert.Equal(3.141e-10, decode<json2, SimpleEntity>(u8R"json({ "floating": 3.141e-10 })json").floating);
-		Assert.Equal(3.141e-10, decode<json2, SimpleEntity>(u8R"json({ "floating": 3.141E-10 })json").floating);
-		Assert.Equal(12345123456789, decode<json2, SimpleEntity>(u8R"json({ "bignumber": 12345123456789 })json").bignumber);
-		Assert.Equal(123456789123456789123456789.0, decode<json2, SimpleEntity>(u8R"json({ "floating": 123456789123456789123456789 })json").floating);
+		Assert.Equal(42, entity2::decode<json2, SimpleEntity>(u8R"json({ "integer": 42 })json").integer);
+		Assert.Equal(3.14, entity2::decode<json2, SimpleEntity>(u8R"json({ "floating": 3.14 })json").floating);
+		Assert.Equal(3.141e-10, entity2::decode<json2, SimpleEntity>(u8R"json({ "floating": 3.141e-10 })json").floating);
+		Assert.Equal(3.141e-10, entity2::decode<json2, SimpleEntity>(u8R"json({ "floating": 3.141E-10 })json").floating);
+		Assert.Equal(12345123456789, entity2::decode<json2, SimpleEntity>(u8R"json({ "bignumber": 12345123456789 })json").bignumber);
+		Assert.Equal(123456789123456789123456789.0, entity2::decode<json2, SimpleEntity>(u8R"json({ "floating": 123456789123456789123456789 })json").floating);
 	}
 
 
 	FACT("Will ignore unicode encodings")
 	{
-		Assert.Equal("\\u2000\\u20ff", decode<json2, TextEntity>(u8R"json({ "text":"\u2000\u20ff" })json").text);
+		Assert.Equal("\\u2000\\u20ff", entity2::decode<json2, TextEntity>(u8R"json({ "text":"\u2000\u20ff" })json").text);
 	}
 
 
 	FACT("Will support unprotected forward slashes")
 	{
-		Assert.Equal("http://something", decode<json2, TextEntity>(u8R"json({ "text":"http://something" })json").text);
+		Assert.Equal("http://something", entity2::decode<json2, TextEntity>(u8R"json({ "text":"http://something" })json").text);
 	}
 
 
@@ -178,6 +178,6 @@ SUITE("JSON Tests")
 
 	DATA_THEORY("Will throw exception if the JSON is invalid", (string invalid), invalid_json)
 	{
-		Assert.Throws<exception>([&](){ decode<json2, SimpleEntity>(invalid); });
+		Assert.Throws<exception>([&](){ entity2::decode<json2, SimpleEntity>(invalid); });
 	}
 }

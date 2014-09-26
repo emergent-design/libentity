@@ -2,17 +2,20 @@
 
 #include <map>
 #include <cmath>
+#include <stack>
 #include <vector>
 #include <memory>
-#include <entity/utilities.h>
+#include <entity/codec.hpp>
+#include <entity/utilities.hpp>
 
-#include <iostream>
 
 namespace ent
 {
 	using std::string;
 	using std::vector;
+	using std::stack;
 	using std::map;
+
 
 	class tree2
 	{
@@ -24,14 +27,6 @@ namespace ent
 			{
 				Null, String, Integer, Floating, Boolean, Binary, Array, Object
 			};
-
-
-			// Indicates whether the underlying number type is integer or floating-point
-			// enum class Number : byte
-			// {
-			// 	Integer, Floating
-			// };
-
 
 			tree2() {}
 			tree2(tree2 &&value) 					: children(value.children), type(value.type), leaf(std::move(value.leaf)) {}
@@ -165,27 +160,60 @@ namespace ent
 					case Type::Integer:		return std::to_string(cast<long>());
 					case Type::Floating:	return std::to_string(cast<double>());
 					case Type::Boolean:		return cast<bool>() ? "true" : "false";
-					case Type::Binary:		return encode64(cast<vector<byte>>());
+					case Type::Binary:		return base64::encode(cast<vector<byte>>());
 					default:				return def;
 				}
 			}
 
 
-			vector<byte> &as_binary() const
+			vector<byte> as_binary() const
 			{
-				static vector<byte> empty;
-				empty.clear();
-
-				return this->type == Type::Binary ? cast<vector<byte>>() : empty;
+				switch (this->type)
+				{
+					case Type::Binary:	return cast<vector<byte>>();
+					case Type::String:	return base64::decode(cast<string>());
+					default:			return {};
+				}
 			}
 
 
 			vector<tree2> &as_array() const
 			{
 				static vector<tree2> empty;
-				empty.clear();
 
 				return this->type == Type::Array ? cast<vector<tree2>>() : empty;
+			}
+
+
+			template <class Codec> static std::string encode(const tree2 &item)
+			{
+				//static_assert(std::is_base_of<codec, Codec>::value,	"Invalid codec specified");
+
+				os result(Codec::oflags);
+				stack<int> stack;
+
+				if (item.get_type() == tree2::Type::Object)
+				{
+					Codec().item(item, result, "", stack);
+				}
+
+				return result.str();
+			}
+
+
+			template <class Codec> static tree2 decode(const std::string &data, bool skipValidation = false)
+			{
+				//static_assert(std::is_base_of<codec, Codec>::value,	"Invalid codec specified");
+
+				Codec c;
+				int position = 0;
+
+				if (skipValidation || c.validate(data))
+				{
+					return c.object(data, position, -1);
+				}
+
+				return {};
 			}
 
 

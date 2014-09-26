@@ -7,6 +7,10 @@ namespace ent
 {
 	struct json2 : codec
 	{
+		using codec::item;
+		using codec::object;
+
+
 		// Array items have 0 length name
 		virtual inline os &write_name(os &dst, const string &name, int depth) const
 		{
@@ -24,7 +28,7 @@ namespace ent
 		virtual void item(os &dst, const string &name, int32_t value, int depth) const				{ write_name(dst, name, depth) << value; }
 		virtual void item(os &dst, const string &name, int64_t value, int depth) const				{ write_name(dst, name, depth) << value; }
 		virtual void item(os &dst, const string &name, double value, int depth) const				{ write_name(dst, name, depth) << value; }
-		virtual void item(os &dst, const string &name, const vector<byte> &value, int depth) const	{ write_name(dst, name, depth) << '"' << encode64(value) << '"'; }
+		virtual void item(os &dst, const string &name, const vector<byte> &value, int depth) const	{ write_name(dst, name, depth) << '"' << base64::encode(value) << '"'; }
 		virtual void item(os &dst, const string &name, const string &value, int depth) const
 		{
 			write_name(dst, name, depth) << '"';
@@ -179,7 +183,9 @@ namespace ent
 
 		bool inline check_simple(const char c, const string &data, int &i, int type) const
 		{
-			if (c == '{' || c == '[' || c == '"' || c == '}')
+			if (c == '}') error("missing object value", data, i);
+
+			if (c == '{' || c == '[' || c == '"')
 			{
 				skip(data, i, type);
 				return false;
@@ -270,7 +276,7 @@ namespace ent
 			if (data[i] == '"')
 			{
 				auto s = parse_string(data, i);
-				return decode64(data.substr(s.first, s.second));
+				return base64::decode(data.substr(s.first, s.second));
 			}
 
 			skip(data, i, type);
@@ -348,6 +354,34 @@ namespace ent
 			// to swallow whitespace or opening character next so allow it to find
 			// an end of array/object.
 			return data.substr(start, i-- - start);
+		}
+
+
+		// Decode item to dynamic type
+		virtual tree2 item(const string &data, int &i, int type) const
+		{
+			if (data[i] == '{') return this->object(data, i, type);
+			if (data[i] == '[') return this->array(data, i, type);
+			if (data[i] == '}') error("missing object value", data, i);
+			if (data[i] == '"') return this->get(data, i, type, string());
+
+			auto item = parse_item(data, i);
+
+			if (item == "true")		return true;
+			if (item == "false")	return false;
+			if (item == "null")		return nullptr;
+
+			try
+			{
+				if (item.find('.') == string::npos) return std::stol(item);
+				else								return std::stod(item);
+			}
+			catch (...)
+			{
+				error("value is not a valid number", data, i);
+			}
+
+			return nullptr;
 		}
 
 

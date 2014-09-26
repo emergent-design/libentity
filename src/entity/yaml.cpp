@@ -118,7 +118,7 @@ namespace ent
 			else
 			{
 				result << "\n";
-				
+
 				for (auto &i : array)
 				{
 					result << indent << "- " << property(i, depth+1);
@@ -131,7 +131,7 @@ namespace ent
 			case value::Type::Number:	if (item.is_floating()) result << item.get(0.0) << "\n"; else result << item.get(0) << "\n";	break;
 			case value::Type::Boolean:	result << (item.get(false) ? "true" : "false") << "\n";											break;
 			case value::Type::Object:	result << "\n" << to(item.object(), false, depth+1);											break;
-			case value::Type::Binary:	result << escape(encode64(item.get(vector<byte>())), depth+1) << "\n";							break;
+			case value::Type::Binary:	result << escape(base64::encode(item.get(vector<byte>())), depth+1) << "\n";					break;
 			default:					result << "\n";																					break;
 		}
 

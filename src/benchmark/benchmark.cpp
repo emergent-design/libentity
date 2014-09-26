@@ -126,8 +126,8 @@ template <class T> void JsonTestTo(T &e, bool useCereal = false)
 }
 
 
-#include <entity/json2.h>
-#include <entity/bson2.h>
+#include <entity/json.hpp>
+#include <entity/bson.hpp>
 
 template <class T> void JsonTest2(T &e)
 {
@@ -138,7 +138,7 @@ template <class T> void JsonTest2(T &e)
 
 	for (int i=0; i<BENCHMARK_ITERATIONS; i++)
 	{
-		result = encode<json2>(e); //p.to(e);
+		result = entity2::encode<json2>(e); //p.to(e);
 	}
 
 	long duration = duration_cast<milliseconds>(steady_clock::now() - start).count();
@@ -155,6 +155,23 @@ void JsonTestTo(tree &t)
 	for (int i=0; i<BENCHMARK_ITERATIONS; i++)
 	{
 		result = json::to(t, false);
+	}
+
+	long duration = duration_cast<milliseconds>(steady_clock::now() - start).count();
+
+	cout << "Time taken for " << BENCHMARK_ITERATIONS << " iterations was " << duration << "ms" << endl;
+	cout << "Which is an average of " << (1000.0 * (double)duration / BENCHMARK_ITERATIONS) << "us per serialisation" << endl;
+}
+
+
+void JsonTest2(tree2 &t)
+{
+	string result;
+
+	auto start = steady_clock::now();
+	for (int i=0; i<BENCHMARK_ITERATIONS; i++)
+	{
+		result = tree2::encode<json2>(t);
 	}
 
 	long duration = duration_cast<milliseconds>(steady_clock::now() - start).count();
@@ -195,13 +212,31 @@ template <class T> void JsonTestFrom(T &e, string data, bool useCereal = false)
 	cout << "Which is an average of " << (1000.0 * (double)duration / BENCHMARK_ITERATIONS) << "us per deserialisation" << endl;
 }
 
-template <class T> void JsonTestFrom2(T &e, string data, bool useCereal = false)
+template <class T> void JsonTestFrom2(T &e, string data)
 {
 	auto start = steady_clock::now();
 
 	for (int i=0; i<BENCHMARK_ITERATIONS; i++)
 	{
-		decode<json2>(data, e);
+		entity2::decode<json2>(data, e);
+	}
+
+	long duration = duration_cast<milliseconds>(steady_clock::now() - start).count();
+
+	cout << "Time taken for " << BENCHMARK_ITERATIONS << " iterations was " << duration << "ms" << endl;
+	cout << "Which is an average of " << (1000.0 * (double)duration / BENCHMARK_ITERATIONS) << "us per deserialisation" << endl;
+}
+
+
+void JsonTestFrom2(string data)
+{
+	tree2 result;
+	auto start = steady_clock::now();
+
+	for (int i=0; i<BENCHMARK_ITERATIONS; i++)
+	{
+		// result = tree2::decode<json2>(data);
+		tree2::decode<json2>(data);
 	}
 
 	long duration = duration_cast<milliseconds>(steady_clock::now() - start).count();
@@ -228,7 +263,9 @@ void JsonTestFrom(string data)
 }
 
 
-#include <entity/entity2.h>
+#include <entity/entity.hpp>
+
+enum class MyEnum { First, Second };
 
 struct Simple2 : entity2
 {
@@ -237,10 +274,11 @@ struct Simple2 : entity2
 	int integer		= 42;
 	long bignumber	= 20349758;
 	double floating	= 3.142;
+	MyEnum myenum	= MyEnum::Second;
 
 	mapping2 map()
 	{
-		return mapping2() << eref2(name) << eref2(flag) << eref2(integer) << eref2(bignumber) << eref2(floating);
+		return mapping2() << eref2(name) << eref2(flag) << eref2(integer) << eref2(bignumber) << eref2(floating) << eref2(myenum);
 	}
 };
 
@@ -251,9 +289,12 @@ struct Collection2 : entity2
 	std::vector<byte> binary				= { 0x00, 0x01, 0x02, 0x88, 0xff };
 	std::map<string, string> dictionary		= { { "first", "item" }, { "second", "item" } };
 
+	//std::map<string, vector<Simple2>> arraymap	= {{ "array", { {}, {} } }};
+	//vector<std::map<string, string>> maparray	= { { { "first", "item" }, { "second", "item" }}, { {"another", "map"}} };
+
 	mapping2 map()
 	{
-		return mapping2() << eref2(strings) << eref2(doubles) << eref2(binary) << eref2(dictionary);
+		return mapping2() << eref2(strings) << eref2(doubles) << eref2(binary) << eref2(dictionary);// << eref2(arraymap) << eref2(maparray);
 	}
 };
 
@@ -272,10 +313,15 @@ struct Complex2 : entity2
 };
 
 
-#include <entity/tree2.h>
 
 int main(int argc, char **argv)
 {
+	string simpleData		= R"json({"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"})json";
+	string simpleCereal		= R"json({"test":{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"}})json";
+	string complexData		= R"json({"collection":{"binary":"AAECiP8=","dictionary":{"first":"item","second":"item"},"doubles":[0.11,0.22,0.33],"strings":["one","two","three"]},"entities":[{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"},{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"}],"name":"complex","simple":{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"}})json";
+	string complexCereal	= R"json({"test":{"collection":{"binary":[0,1,2,136,255],"dictionary":[{"key":"first","value":"item"},{"key":"second","value":"item"}],"doubles":[0.11,0.22,0.33],"strings":["one","two","three"]},"entities":[{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"},{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"}],"name":"complex","simple":{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"}}})json";
+
+
 	tree2 t = {
 		{ "first", 42 },
 		{ "second", true },
@@ -291,7 +337,21 @@ int main(int argc, char **argv)
 	// cout << t["doesn't exist"].as_long(10) << endl;
 	// for (auto &i : t["array"].as_array()) cout << i.as_string() << endl;
 
-	cout << encode_tree<prettyjson>(t) << endl;
+	//cout << encode_tree<prettyjson>(t) << endl;
+
+	//auto a = tree2::decode<json2>(complexData);
+
+	//cout << tree2::encode<prettyjson>(a) << endl;
+
+	Simple2 simplex;
+	Complex2 complexi;
+	Collection2 collectioni;
+
+	//cout << entity2::encode<json2>(simplex) << endl;
+	// cout << entity2::encode<prettyjson>(complexi) << endl;
+	cout << entity2::encode<prettyjson>(collectioni) << endl;
+
+	//cout << a["collection"]["dictionary"]["first"].as_string() << endl;
 
 	return 0; //*/
 
@@ -312,10 +372,6 @@ int main(int argc, char **argv)
 	//cout << json2::jcodec::to(complex, true) << endl;
 
 	//Complex complex;
-	string simpleData		= R"json({"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"})json";
-	string simpleCereal		= R"json({"test":{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"}})json";
-	string complexData		= R"json({"collection":{"binary":"AAECiP8=","dictionary":{"first":"item","second":"item"},"doubles":[0.11,0.22,0.33],"strings":["one","two","three"]},"entities":[{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"},{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"}],"name":"complex","simple":{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"}})json";
-	string complexCereal	= R"json({"test":{"collection":{"binary":[0,1,2,136,255],"dictionary":[{"key":"first","value":"item"},{"key":"second","value":"item"}],"doubles":[0.11,0.22,0.33],"strings":["one","two","three"]},"entities":[{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"},{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"}],"name":"complex","simple":{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"}}})json";
 
 	// JsonTest2(complex2);
 	// JsonTestTo(complex);
@@ -332,6 +388,7 @@ int main(int argc, char **argv)
 	cout << "Old: " << endl;	JsonTestFrom(complex, complexData);
 	cout << "Cereal: " << endl;	JsonTestFrom(complex, complexCereal, true);
 	cout << "New: " << endl;	JsonTestFrom2(complex2, complexData);
+	cout << "New tree: " << endl;	JsonTestFrom2(complexData);
 
 	// JsonTestTo(complex);
 	// JsonTestTo(complex, true);
@@ -341,8 +398,8 @@ int main(int argc, char **argv)
 
 	//cout << encode<bson2>(complex2) << endl;
 
-	complex2 = decode<json2, Complex2>(complexData);
-	cout << encode<prettyjson>(complex2) << endl;
+	complex2 = entity2::decode<json2, Complex2>(complexData);
+	cout << entity2::encode<prettyjson>(complex2) << endl;
 
 	// simple2 = decode<json2, Simple2>(simpleData);
 	// cout << encode<json2pretty>(simple2) << endl;

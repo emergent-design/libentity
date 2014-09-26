@@ -1,5 +1,5 @@
 #pragma once
-#include <entity/entity2.h>
+#include <entity/entity.hpp>
 
 
 struct TextEntity : ent::entity2

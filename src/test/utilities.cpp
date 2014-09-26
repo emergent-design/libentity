@@ -1,5 +1,5 @@
 #include <xUnit++/xUnit++.h>
-#include <entity/utilities.h>
+#include <entity/utilities.hpp>
 
 using namespace std;
 using namespace ent;
@@ -24,12 +24,12 @@ SUITE("Utility Tests")
 
 	DATA_THEORY("Base64 encoder test vectors", (string expected, vector<byte> value), base64_vectors)
 	{
-		Assert.Equal(expected, encode64(value));
+		Assert.Equal(expected, base64::encode(value));
 	}
 
 
 	DATA_THEORY("Base64 decoder test vectors", (string value, vector<byte> expected), base64_vectors)
 	{
-		Assert.Equal(expected, decode64(value));
+		Assert.Equal(expected, base64::decode(value));
 	}
 }

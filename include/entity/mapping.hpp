@@ -1,6 +1,6 @@
 #pragma once
 
-#include <entity/vmap2.h>
+#include <entity/vref.hpp>
 
 
 namespace ent

@@ -1,12 +1,13 @@
 #pragma once
 
-#include <entity/treemap.hpp>
-#include <entity/entity2.h>
+//#include <entity/treemap.hpp>
+#include <entity/entity.hpp>
+#include <entity/tree.hpp>
 
 
 namespace ent
 {
-	template <class Codec, class T> static std::string encode(T &item)
+	/*template <class Codec, class T> static std::string encode(T &item)
 	{
 		static_assert(std::is_base_of<entity2, T>::value,	"Item must be derived from entity");
 		static_assert(std::is_base_of<codec, Codec>::value,	"Invalid codec specified");
@@ -20,10 +21,10 @@ namespace ent
 	}
 
 
-	template <class Codec, class T> static T decode(const std::string &data)
+	template <class Codec, class T> static T decode(const std::string &data, bool skipValidation = false)
 	{
 		T result;
-		return decode<Codec>(data, result);
+		return decode<Codec>(data, result, skipValidation);
 	}
 
 
@@ -32,27 +33,27 @@ namespace ent
 		static_assert(std::is_base_of<entity2, T>::value,	"Item must be derived from entity");
 		static_assert(std::is_base_of<codec, Codec>::value,	"Invalid codec specified");
 
-		Codec codec;
+		Codec c;
 
-		if (skipValidation || codec.validate(data))
+		if (skipValidation || c.validate(data))
 		{
-			vref<T>::decode(item, codec, data, 0, -1);
+			vref<T>::decode(item, c, data, 0, -1);
 		}
 
 		return item;
-	}
+	}*/
 
 
-	template <class Codec> static std::string encode_tree(const tree2 &item)
+	/*template <class Codec> static std::string encode_tree(const tree2 &item)
 	{
 		static_assert(std::is_base_of<codec, Codec>::value,	"Invalid codec specified");
 
 		os result(Codec::oflags);
-		std::stack<int> stack;
+		stack<int> stack;
 
 		if (item.get_type() == tree2::Type::Object)
 		{
-			treemap::encode(item, Codec(), result, "", stack);
+			Codec().item(item, result, "", stack);
 		}
 
 		return result.str();
@@ -63,15 +64,15 @@ namespace ent
 	{
 		static_assert(std::is_base_of<codec, Codec>::value,	"Invalid codec specified");
 
-		tree2 result;
-		Codec codec;
+		Codec c;
+		int position = 0;
 
-		if (skipValidation || codec.validate(data))
+		if (skipValidation || c.validate(data))
 		{
-			treemap::decode(result, codec, data, 0, -1);
+			return c.object(data, position, -1);
 		}
 
-		return result;
-	}
+		return {};
+	}*/
 }
 

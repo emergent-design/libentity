@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <initializer_list>
 
-#include <entity/utilities.h>
+#include <entity/utilities.hpp>
 
 
 namespace ent
@@ -139,6 +139,6 @@ namespace ent
 			// cause bad things when trying to get values from content.
 			Type type		= Type::Null;
 			Number number	= Number::Integer;
-			base *content	= nullptr;			
+			base *content	= nullptr;
 	};
 }

@@ -113,7 +113,7 @@ namespace ent
 		{
 			//case value::Type::String:	result.append(quote).append(escape(item.get(string()))).append(quote);					break;
 			case value::Type::String:	result.append(quote); escape(item.get(string()), result); result.append(quote);			break;
-			case value::Type::Binary:	result.append(quote).append(encode64(item.get(vector<byte>()))).append(quote);			break;
+			case value::Type::Binary:	result.append(quote).append(base64::encode(item.get(vector<byte>()))).append(quote);	break;
 			//case value::Type::Number:	convert_number(result, item);															break;
 			case value::Type::Number:	result.append(item.is_floating() ? to_string(item.get(0.0)) : to_string(item.get(0)));	break;
 			case value::Type::Boolean:	result.append(item.get(false) ? "true" : "false");										break;

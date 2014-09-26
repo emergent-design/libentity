@@ -59,8 +59,8 @@ namespace ent
 
 	bool xml::whitespace[256]	= { false };
 	const string header			= u8R"xml(<?xml version="1.0" encoding="UTF-8" standalone="yes"?>)xml";
-	
-	
+
+
 	string xml::to(const tree &item, bool pretty, int depth)
 	{
 		stringstream result;
@@ -103,7 +103,7 @@ namespace ent
 		else switch (item.get_type())
 		{
 			case value::Type::String:	result << ">" << escape(item.get(string())) << end;								break;
-			case value::Type::Binary:	result << ">" << encode64(item.get(vector<byte>())) << end;						break;
+			case value::Type::Binary:	result << ">" << base64::encode(item.get(vector<byte>())) << end;				break;
 			case value::Type::Number:	result << " value=\"";
 										if (item.is_floating()) result << item.get(0.0); else result << item.get(0);
 										result << "\" />";
@@ -117,7 +117,7 @@ namespace ent
 		return result.str();
 	}
 
-	
+
 	tree xml::from(const string &text)
 	{
 		if (!whitespace[' '])
@@ -290,7 +290,7 @@ namespace ent
 	string xml::parse_item(const string &text, int &i)
 	{
 		int length = text.length();
-		
+
 		for (; i<length && whitespace[(byte)text[i]]; i++);
 
 		if (text[i] == '=')

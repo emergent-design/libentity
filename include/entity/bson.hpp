@@ -8,6 +8,9 @@ namespace ent
 {
 	struct bson2 : codec
 	{
+		using codec::item;
+		using codec::object;
+
 		static_assert(sizeof(int) == 4 && sizeof(long long) == 8 && sizeof(double) == 8, "Sizes of fundamental types are incompatible");
 		static const std::ios_base::openmode oflags = std::ios::out | std::ios::binary;
 		const int blank = 0;
@@ -241,6 +244,13 @@ namespace ent
 			}
 
 			return 0;
+		}
+
+		virtual tree2 item(const string &data, int &i, int type) const
+		{
+			// TODO
+
+			return {};
 		}
 
 		virtual bool get(const string &data, int &i, int type, bool def) const							{ return type == Boolean	? next(data, i) > 0	: skip(data, i, type); }

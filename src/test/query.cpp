@@ -1,6 +1,6 @@
 #include <xUnit++/xUnit++.h>
 #include <entity/entity.h>
-#include <entity/query.h>
+#include <entity/query.hpp>
 #include <entity/json.h>
 
 #include <set>
@@ -69,7 +69,7 @@ SUITE("Query Tests")
 
 		//for (auto &i : from(data).concat(more)) cout << i << endl;
 		//for (auto &i : from(data).concat(more).order_by<int>([](const int &i) { return i; })) cout << i << endl;
-		
+
 		//for (auto &i : from(data).concat(more)) 			cout << i << endl;
 		//cout << endl;
 		//for (auto &i : from(data).concat(more).reverse()) 	cout << i << endl;
@@ -178,7 +178,7 @@ SUITE("Query Tests")
 		//auto r = from(data);
 
 		//data.push_back(8);
-		
+
 		//cout << from(data).any([](int &i) { return i == 5; }) << endl;
 		//cout << from(data).count([](int &i) { return i % 2; }) << endl;
 
