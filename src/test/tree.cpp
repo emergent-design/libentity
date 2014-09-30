@@ -1,5 +1,5 @@
 #include <xUnit++/xUnit++.h>
-#include <entity/entity.h>
+#include <entity/tree.hpp>
 
 using namespace std;
 using namespace ent;
@@ -9,62 +9,51 @@ SUITE("Tree Tests")
 {
 	FACT("Non-existent scalar properties return default values")
 	{
-		Assert.True(tree().get("donotexist").properties.empty());
-		Assert.True(tree().get("donotexist", true));
-		Assert.Equal("something",	tree().get("donotexist", string("something")));
-		Assert.Equal(42,			tree().get("donotexist", 42));
-		Assert.Equal(42.5,			tree().get("donotexist", 42.5));
+		Assert.True(tree()["donotexist"].children.empty());
+		Assert.True(tree()["donotexist"].as_bool(true));
+		Assert.Equal("something",	tree()["donotexist"].as_string("something"));
+		Assert.Equal(42,			tree()["donotexist"].as_long(42));
+		Assert.Equal(42.5,			tree()["donotexist"].as_double(42.5));
 	}
 
 
-	FACT("Non-existent collection properties return empty containers")
+	FACT("Non-existent array properties return empty containers")
 	{
-		Assert.True(tree().array<int>("donotexist").empty());
-		Assert.True(tree().map<string>("donotexist").empty());
+		Assert.True(tree()["donotexist"].as_array().empty());
 	}
 
 
 	FACT("Setting a simple property permits it to be retrieved")
 	{
-		Assert.Equal("something",	tree().set("simple", "something").get<string>("simple"));
-		Assert.Equal(42,			tree().set("simple", 42).get<int>("simple"));
-		Assert.Equal(42.2,			tree().set("simple", 42.2).get<double>("simple"));
-		Assert.True(tree().set("simple", true).get<bool>("simple"));	
-	}
-
-
-	FACT("A property can be set and retrieved as an array of simple items")
-	{
-		Assert.Equal(2, tree().set("array", vector<int> { 1, 2, 3, 4}).array<int>("array")[1]);
-	}
-
-
-	FACT("A property can be set and retrieved using a map<string, T>")
-	{
-		auto m = map<string, int> {{ "one", 1 }, { "two", 2 }};
-		
-		Assert.Equal(value::Type::Object,	tree().set("map", m).properties["map"].get_type());
-		Assert.Equal(2,						tree().set("map", m).map<int>("map")["two"]);
+		Assert.Equal("something",	tree().set("simple", "something")["simple"].as_string());
+		Assert.Equal(42,			tree().set("simple", 42)["simple"].as_long());
+		Assert.Equal(42.2,			tree().set("simple", 42.2)["simple"].as_double());
+		Assert.True(tree().set("simple", true)["simple"].as_bool());
 	}
 
 
 	FACT("A property can be another tree")
 	{
-		Assert.Equal(42, tree().set("tree", tree().set("child", 42)).get("tree").get<int>("child"));
+		Assert.Equal(42, tree().set("tree", tree().set("child", 42))["tree"]["child"].as_long());
 	}
 
 
 	FACT("Binary data can be set and retrieved as a vector<byte>")
 	{
-		Assert.Equal(0x88, tree().set("binary", vector<byte> { 0x00, 0x01, 0x02, 0x88, 0xff }).get<vector<byte>>("binary")[3]);
+		Assert.Equal(0x88, tree().set("binary", vector<byte> { 0x00, 0x01, 0x02, 0x88, 0xff })["binary"].as_binary()[3]);
 	}
 
 
 	FACT("A property can be an array of trees")
 	{
-		auto t = tree().set("array", vector<tree> { tree().set("name", "first"), tree().set("name", "second") });
+		tree t = {{
+			"array", vector<tree> {
+				{{ "name", "first" }},
+				{{ "name", "second" }}
+			}
+		}};
 
-		Assert.Equal("second", t.array<tree>("array")[1].get<string>("name"));
+		Assert.Equal("second", t["array"].as_array()[1]["name"].as_string());
 	}
 
 
@@ -75,14 +64,14 @@ SUITE("Tree Tests")
 			.set("integer", 42)
 			.set("floating", 3.14)
 			.set("boolean", true)
-			.set("array", vector<int> { 1, 2, 3 })
+			.set("array", vector<tree> { 1, 2, 3 })
 			.set("tree", tree().set("name", "child"));
 
-		Assert.Equal("string value",	t.get<string>("string"));
-		Assert.Equal(42,				t.get<int>("integer"));
-		Assert.Equal(3.14,				t.get<double>("floating"));
-		Assert.Equal(2,					t.array<int>("array")[1]);
-		Assert.Equal("child",			t.get("tree").get<string>("name"));
-		Assert.True(t.get<bool>("boolean"));
+		Assert.Equal("string value",	t["string"].as_string());
+		Assert.Equal(42,				t["integer"].as_long());
+		Assert.Equal(3.14,				t["floating"].as_double());
+		Assert.Equal(2,					t["array"].as_array()[1].as_long());
+		Assert.Equal("child",			t["tree"]["name"].as_string());
+		Assert.True(t["boolean"].as_bool());
 	}
 }

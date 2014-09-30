@@ -1,6 +1,6 @@
 #include <xUnit++/xUnit++.h>
-#include <entity/entity.h>
-#include <entity/json.h>
+#include <entity/entity.hpp>
+#include <entity/json.hpp>
 
 using namespace std;
 using namespace ent;
@@ -17,63 +17,63 @@ SUITE("JSON Tests")
 {
 	FACT("Compact JSON can be generated")
 	{
-		auto t = tree().set("name", "simple").set("integer", 42).set("flag", true);
+		tree t = { {"name", "simple" }, { "integer", 42 }, { "flag", true} };
 
-		Assert.Equal(u8R"json({"flag":true,"integer":42,"name":"simple"})json", json::to(t, false));
+		Assert.Equal(u8R"json({"flag":true,"integer":42,"name":"simple"})json", tree::encode<json>(t));
 	}
 
 
 	FACT("Compact JSON can be parsed")
 	{
-		auto t = json::from(u8R"json({"flag":true,"name":"simple","integer":42})json");
+		auto t = tree::decode<json>(u8R"json({"flag":true,"name":"simple","integer":42})json");
 
-		Assert.Equal("simple", t.get<string>("name"));
-		Assert.Equal(42, t.get<int>("integer"));
-		Assert.True(t.get<bool>("flag"));
+		Assert.Equal("simple", t["name"].as_string());
+		Assert.Equal(42, t["integer"].as_long());
+		Assert.True(t["flag"].as_bool());
 	}
 
 
 	FACT("Padded JSON can be generated")
 	{
-		auto t = tree().set("name", "simple").set("integer", 42).set("flag", true);
+		tree t = { { "name", "simple" }, {"integer", 42}, {"flag", true} };
 
-		Assert.Equal(PADDED_JSON, json::to(t, true));
+		Assert.Equal(PADDED_JSON, tree::encode<prettyjson>(t));
 	}
 
 
 	FACT("Padded JSON can be parsed")
 	{
-		auto t = json::from(u8R"json({
+		auto t = tree::decode<json>(u8R"json({
 			"flag": true,
 			"integer": 42
 			"name": "simple",
 		})json");
 
-		Assert.Equal("simple", t.get<string>("name"));
-		Assert.Equal(42, t.get<int>("integer"));
-		Assert.True(t.get<bool>("flag"));
+		Assert.Equal("simple", t["name"].as_string());
+		Assert.Equal(42, t["integer"].as_long());
+		Assert.True(t["flag"].as_bool());
 	}
 
 
 	FACT("Strings are escaped appropriately")
 	{
-		auto t = tree().set("text", "Must\tbe \"escaped\"\n");
+		tree t = { {"text", "Must\tbe \"escaped\"\n"} };
 
-		Assert.Equal(u8R"json({"text":"Must\tbe \"escaped\"\n"})json", json::to(t, false));
+		Assert.Equal(u8R"json({"text":"Must\tbe \"escaped\"\n"})json", tree::encode<json>(t));
 	}
 
 
 	FACT("Strings are unescaped appropriately")
 	{
-		auto t = json::from(u8R"json({ "text": "Must\tbe \"escaped\"\n" })json");
+		auto t = tree::decode<json>(u8R"json({ "text": "Must\tbe \"escaped\"\n" })json");
 
-		Assert.Equal("Must\tbe \"escaped\"\n", t.get<string>("text"));
+		Assert.Equal("Must\tbe \"escaped\"\n", t["text"].as_string());
 	}
 
 
 	FACT("Simple types can be parsed")
 	{
-		auto t = json::from(u8R"json({
+		auto t = tree::decode<json>(u8R"json({
 			"name": "simple",
 			"integer": 42,
 			"double": 3.14,
@@ -81,105 +81,108 @@ SUITE("JSON Tests")
 			"nothing": null,
 		})json");
 
-		Assert.Equal(value::Type::String,	t.properties["name"].get_type());
-		Assert.Equal(value::Type::Number,	t.properties["integer"].get_type());
-		Assert.Equal(value::Type::Number,	t.properties["double"].get_type());
-		Assert.Equal(value::Type::Boolean,	t.properties["flag"].get_type());
-		Assert.Equal(value::Type::Null,		t.properties["nothing"].get_type());
+		Assert.Equal(tree::Type::String,	t["name"].get_type());
+		Assert.Equal(tree::Type::Integer,	t["integer"].get_type());
+		Assert.Equal(tree::Type::Floating,	t["double"].get_type());
+		Assert.Equal(tree::Type::Boolean,	t["flag"].get_type());
+		Assert.Equal(tree::Type::Null,		t["nothing"].get_type());
 	}
 
 
 	FACT("Arrays can be parsed")
 	{
-		auto t = json::from(u8R"json({
+		auto t = tree::decode<json>(u8R"json({
 			"array": [ 1, 2, 3, 4 ]
 		})json");
 
-		Assert.Equal(value::Type::Array,	t.properties["array"].get_type());
-		Assert.Equal(4,						t.properties["array"].array().size());
+		Assert.Equal(tree::Type::Array,	t["array"].get_type());
+		Assert.Equal(4,					t["array"].as_array().size());
 	}
 
 
 	FACT("Compact arrays can be parsed")
 	{
-		auto t = json::from(u8R"json({
+		auto t = tree::decode<json>(u8R"json({
 			"array": [1,2,3,4]
 		})json");
 
-		Assert.Equal(value::Type::Array,	t.properties["array"].get_type());
-		Assert.Equal(4,						t.properties["array"].array().size());
+		Assert.Equal(tree::Type::Array,	t["array"].get_type());
+		Assert.Equal(4,					t["array"].as_array().size());
 	}
 
 
 	FACT("Object trees can be parsed")
 	{
-		auto t = json::from(u8R"json({
+		auto t = tree::decode<json>(u8R"json({
 			"object": {
 				"name": "complex"
 			}
 		})json");
 
-		Assert.Equal(value::Type::Object,	t.properties["object"].get_type());
-		Assert.Equal("complex",				t.properties["object"].object().get<string>("name"));
+		Assert.Equal(tree::Type::Object,	t["object"].get_type());
+		Assert.Equal("complex",				t["object"]["name"].as_string());
 	}
 
 
 	FACT("Can cope with an empty object")
 	{
-		Assert.Equal(0, json::from("{}").properties.size());
+		Assert.Equal(0, tree::decode<json>("{}").children.size());
 	}
 
 
 	FACT("Can cope with alternative style line endings")
 	{
-		Assert.Equal(2, json::from("{ \"a\": 1,\r\n\"b\": 2 }").get<int>("b"));
+		Assert.Equal(2, tree::decode<json>("{ \"a\": 1,\r\n\"b\": 2 }")["b"].as_long());
 	}
 
 
 	FACT("Can cope with standard JSON number formats")
 	{
-		auto t = json::from(u8R"json({
+		// Largest exact integral size represented by JSON is 2^53 so anything bigger
+		// (like "big") must be handled as a double and therefore accuracy will be lost.
+
+		auto t = tree::decode<json>(u8R"json({
 			"integer": 42,
 			"double": 3.14,
 			"scientific": 3.141e-10,
 			"upper": 3.141E-10,
 			"long": 12345123456789,
-			"big": 123456789123456789123456789
+			"big": 123456789123456789123456789.0
 		})json");
 
-		Assert.Equal(42,							t.get<int>("integer"));
-		Assert.Equal(3.14,							t.get<double>("double"));
-		Assert.Equal(3.141e-10,						t.get<double>("scientific"));
-		Assert.Equal(3.141e-10,						t.get<double>("upper"));
-		Assert.Equal(12345123456789,				t.get<long>("long"));
-		Assert.Equal(123456789123456789123456789.0,	t.get<double>("big"));
+		Assert.Equal(42,							t["integer"].as_long());
+		Assert.Equal(3.14,							t["double"].as_double());
+		Assert.Equal(3.141e-10,						t["scientific"].as_double());
+		Assert.Equal(3.141e-10,						t["upper"].as_double());
+		Assert.Equal(12345123456789,				t["long"].as_long());
+		Assert.Equal(123456789123456789123456789.0,	t["big"].as_double());
 	}
 
 
 	FACT("Will ignore unicode encodings")
 	{
-		Assert.Equal("\\u2000\\u20ff", json::from(u8R"json({ "text":"\u2000\u20ff" })json").get<string>("text"));
+		Assert.Equal("\\u2000\\u20ff", tree::decode<json>(u8R"json({ "text":"\u2000\u20ff" })json")["text"].as_string());
 	}
 
 	FACT("Supports arrays of objects")
 	{
-		auto t = json::from(u8R"json({
+		auto t = tree::decode<json>(u8R"json({
 			"coords":[{"x":0,"y":0},{"x":1,"y":1},{"x":2,"y":2}]
 		})json");
 
-		Assert.Equal(value::Type::Array,	t.properties["coords"].get_type());
-		Assert.Equal(0, t.array<tree>("coords")[0].get<double>("x"));
-		Assert.Equal(0, t.array<tree>("coords")[0].get<double>("y"));
-		Assert.Equal(1, t.array<tree>("coords")[1].get<double>("x"));
-		Assert.Equal(1, t.array<tree>("coords")[1].get<double>("y"));
-		Assert.Equal(2, t.array<tree>("coords")[2].get<double>("x"));
-		Assert.Equal(2, t.array<tree>("coords")[2].get<double>("y"));
+		Assert.Equal(tree::Type::Array,	t["coords"].get_type());
+		Assert.Equal(0, t["coords"].as_array()[0]["x"].as_long());
+		Assert.Equal(0, t["coords"].as_array()[0]["y"].as_long());
+		Assert.Equal(1, t["coords"].as_array()[1]["x"].as_long());
+		Assert.Equal(1, t["coords"].as_array()[1]["y"].as_long());
+		Assert.Equal(2, t["coords"].as_array()[2]["x"].as_long());
+		Assert.Equal(2, t["coords"].as_array()[2]["y"].as_long());
 	}
 
 
 	FACT("Will support unprotected forward slashes")
 	{
-		Assert.Equal("http://something", json::from(u8R"json({ "text":"http://something" })json").get<string>("text"));
+		Assert.Equal("http://something", tree::decode<json>(u8R"json({ "text":"http://something" })json")["text"].as_string());
 	}
 
 
@@ -200,7 +203,7 @@ SUITE("JSON Tests")
 
 	DATA_THEORY("Will throw exception if the JSON is invalid", (string invalid), invalid_json)
 	{
-		Assert.Throws<exception>([&](){ json::from(invalid); });
+		Assert.Throws<exception>([&](){ tree::decode<json>(invalid); });
 	}
 }
 

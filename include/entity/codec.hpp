@@ -52,7 +52,7 @@ namespace ent
 
 
 		// Encode dynamic type
-		void object(const tree2 &item, os &dst, const string &name, stack<int> &stack) const
+		void object(const tree &item, os &dst, const string &name, stack<int> &stack) const
 		{
 			int i = item.children.size() - 1;
 
@@ -68,7 +68,7 @@ namespace ent
 		}
 
 
-		void array(const tree2 &item, os &dst, const string &name, stack<int> &stack) const
+		void array(const tree &item, os &dst, const string &name, stack<int> &stack) const
 		{
 			auto &array = item.as_array();
 			int i		= array.size() - 1;
@@ -86,29 +86,29 @@ namespace ent
 		}
 
 
-		void item(const tree2 &item, os &dst, const string &name, stack<int> &stack) const
+		void item(const tree &item, os &dst, const string &name, stack<int> &stack) const
 		{
 			switch (item.get_type())
 			{
-				case tree2::Type::Null:		this->item(dst, name, stack.size());					break;
-				case tree2::Type::String:	this->item(dst, name, item.as_string(), stack.size());	break;
-				case tree2::Type::Integer:	this->item(dst, name, item.as_long(), stack.size());	break;
-				case tree2::Type::Floating: this->item(dst, name, item.as_double(), stack.size());	break;
-				case tree2::Type::Boolean:	this->item(dst, name, item.as_bool(), stack.size());	break;
-				case tree2::Type::Binary:	this->item(dst, name, item.as_binary(), stack.size());	break;
-				case tree2::Type::Array:	this->array(item, dst, name, stack);					break;
-				case tree2::Type::Object:	this->object(item, dst, name, stack);					break;
+				case tree::Type::Null:		this->item(dst, name, stack.size());					break;
+				case tree::Type::String:	this->item(dst, name, item.as_string(), stack.size());	break;
+				case tree::Type::Integer:	this->item(dst, name, item.as_long(), stack.size());	break;
+				case tree::Type::Floating:	this->item(dst, name, item.as_double(), stack.size());	break;
+				case tree::Type::Boolean:	this->item(dst, name, item.as_bool(), stack.size());	break;
+				case tree::Type::Binary:	this->item(dst, name, item.as_binary(), stack.size());	break;
+				case tree::Type::Array:		this->array(item, dst, name, stack);					break;
+				case tree::Type::Object:	this->object(item, dst, name, stack);					break;
 			}
 		}
 
 
 		// Decode dynamic type
-		virtual tree2 item(const string &data, int &i, int type) const = 0;
+		virtual tree item(const string &data, int &i, int type) const = 0;
 
-		tree2 object(const string &data, int &i, int type) const
+		tree object(const string &data, int &i, int type) const
 		{
 			string name;
-			tree2 result;
+			tree result;
 
 			if (this->object_start(data, i, type))
 			{
@@ -125,10 +125,10 @@ namespace ent
 		}
 
 
-		vector<tree2> array(const string &data, int &i, int type) const
+		vector<tree> array(const string &data, int &i, int type) const
 		{
 			string name;
-			vector<tree2> result;
+			vector<tree> result;
 
 			if (this->array_start(data, i, type))
 			{

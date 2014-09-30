@@ -2,18 +2,18 @@
 #include <entity/entity.hpp>
 
 
-struct TextEntity : ent::entity2
+struct TextEntity : ent::entity
 {
 	std::string text = "";
 
-	ent::mapping2 map()
+	ent::mapping describe()
 	{
-		return ent::mapping2() << eref2(text);
+		return { eref(text) };
 	}
 };
 
 
-struct SimpleEntity : ent::entity2
+struct SimpleEntity : ent::entity
 {
 	std::string name	= "simple";
 	bool flag			= true;
@@ -21,36 +21,36 @@ struct SimpleEntity : ent::entity2
 	long bignumber		= 20349758;
 	double floating		= 3.142;
 
-	ent::mapping2 map()
+	ent::mapping describe()
 	{
-		return ent::mapping2() << eref2(name) << eref2(flag) << eref2(integer) << eref2(bignumber) << eref2(floating);
+		return { eref(name), eref(flag), eref(integer), eref(bignumber), eref(floating) };
 	}
 };
 
 
-struct CollectionEntity : ent::entity2
+struct CollectionEntity : ent::entity
 {
 	std::vector<std::string> strings;//	 			= { "one", "two", "three" };
 	std::vector<double> doubles;//						= { 0.11, 0.22, 0.33 };
 	std::vector<byte> binary;//						= { 0x00, 0x01, 0x02, 0x88, 0xff };
 	std::map<std::string, std::string> dictionary;//	= { { "first", "item" }, { "second", "item" } };
 
-	ent::mapping2 map()
+	ent::mapping describe()
 	{
-		return ent::mapping2() << eref2(strings) << eref2(doubles) << eref2(binary) << eref2(dictionary);
+		return { eref(strings), eref(doubles), eref(binary), eref(dictionary) };
 	}
 };
 
 
-struct ComplexEntity : ent::entity2
+struct ComplexEntity : ent::entity
 {
 	std::string name; // 					= "complex";
 	std::vector<SimpleEntity> entities; //	= { SimpleEntity(), SimpleEntity() };
 	CollectionEntity collection;
 	SimpleEntity simple;
 
-	ent::mapping2 map()
+	ent::mapping describe()
 	{
-		return ent::mapping2() << eref2(name) << eref2(entities) << eref2(collection) << eref2(simple);
+		return { eref(name), eref(entities), eref(collection), eref(simple) };
 	}
 };

@@ -5,7 +5,7 @@
 #include <stack>
 #include <vector>
 #include <memory>
-#include <entity/codec.hpp>
+//#include <entity/codec.hpp>
 #include <entity/utilities.hpp>
 
 
@@ -17,7 +17,7 @@ namespace ent
 	using std::map;
 
 
-	class tree2
+	class tree
 	{
 		public:
 			// The fundamental types that can be stored in the tree structure. These
@@ -28,44 +28,44 @@ namespace ent
 				Null, String, Integer, Floating, Boolean, Binary, Array, Object
 			};
 
-			tree2() {}
-			tree2(tree2 &&value) 					: children(value.children), type(value.type), leaf(std::move(value.leaf)) {}
-			tree2(const tree2 &value) 				: children(value.children), type(value.type), leaf(value.leaf ? value.leaf->clone() : nullptr) {}
-			tree2(std::nullptr_t)					: type(Type::Null) {}
-			tree2(const bool value)					: type(Type::Boolean),	leaf(new container<bool>(value)) {}
-			tree2(const char *value)				: type(Type::String),	leaf(new container<string>(string(value))) {}
-			tree2(const string &value)				: type(Type::String),	leaf(new container<string>(value)) {}
-			tree2(const vector<byte> &value)		: type(Type::Binary),	leaf(new container<vector<byte>>(value)) {}
-			tree2(const vector<tree2> &value) 		: type(Type::Array),	leaf(new container<vector<tree2>>(value)) {}
+			tree() {}
+			tree(tree &&value) 					: children(value.children), type(value.type), leaf(std::move(value.leaf)) {}
+			tree(const tree &value) 			: children(value.children), type(value.type), leaf(value.leaf ? value.leaf->clone() : nullptr) {}
+			tree(std::nullptr_t)				: type(Type::Null) {}
+			tree(const bool value)				: type(Type::Boolean),	leaf(new container<bool>(value)) {}
+			tree(const char *value)				: type(Type::String),	leaf(new container<string>(string(value))) {}
+			tree(const string &value)			: type(Type::String),	leaf(new container<string>(value)) {}
+			tree(const vector<byte> &value)		: type(Type::Binary),	leaf(new container<vector<byte>>(value)) {}
+			tree(const vector<tree> &value) 	: type(Type::Array),	leaf(new container<vector<tree>>(value)) {}
 
-			tree2(std::initializer_list<std::pair<const string, tree2>> value) : children(value) {}
+			tree(std::initializer_list<std::pair<const string, tree>> value) : children(value) {}
 
-			template <class T, class = typename std::enable_if<std::is_arithmetic<T>::value>::type> tree2(const T &value) :
+			template <class T, class = typename std::enable_if<std::is_arithmetic<T>::value>::type> tree(const T &value) :
 				type(std::is_floating_point<T>::value ? Type::Floating : Type::Integer),
 				leaf(new container<typename std::conditional<std::is_floating_point<T>::value, double, long>::type>(value)) {}
 
 
-			tree2 &set(const string &name, tree2 &&value)
+			tree &set(const string &name, tree &&value)
 			{
 				this->children.emplace(name, std::move(value));
 				return *this;
 			}
 
 
-			tree2 &set(const string &name, const tree2 &value)
+			tree &set(const string &name, const tree &value)
 			{
 				this->children.emplace(name, value);
 				return *this;
 			}
 
 
-			tree2 &operator[](const string &name)
+			tree &operator[](const string &name)
 			{
 				return this->children[name];
 			}
 
 
-			tree2 &operator=(tree2 &&value)
+			tree &operator=(tree &&value)
 			{
 				this->type		= value.type;
 				this->children	= std::move(value.children);
@@ -75,7 +75,7 @@ namespace ent
 
 
 			// Assignment override
-			tree2 &operator=(const tree2 &value)
+			tree &operator=(const tree &value)
 			{
 				this->type		= value.type;
 				this->children	= value.children;
@@ -85,7 +85,7 @@ namespace ent
 
 
 			// Comparison override
-			bool operator==(const tree2 &v) const
+			bool operator==(const tree &v) const
 			{
 				return v.type == this->type && v.leaf && this->leaf
 					&& (this->type == Type::Null || this->leaf->compare(v.leaf.get()));
@@ -177,22 +177,22 @@ namespace ent
 			}
 
 
-			vector<tree2> &as_array() const
+			vector<tree> &as_array() const
 			{
-				static vector<tree2> empty;
+				static vector<tree> empty;
 
-				return this->type == Type::Array ? cast<vector<tree2>>() : empty;
+				return this->type == Type::Array ? cast<vector<tree>>() : empty;
 			}
 
 
-			template <class Codec> static std::string encode(const tree2 &item)
+			template <class Codec> static std::string encode(const tree &item)
 			{
 				//static_assert(std::is_base_of<codec, Codec>::value,	"Invalid codec specified");
 
 				os result(Codec::oflags);
 				stack<int> stack;
 
-				if (item.get_type() == tree2::Type::Object)
+				if (item.get_type() == tree::Type::Object)
 				{
 					Codec().item(item, result, "", stack);
 				}
@@ -201,7 +201,7 @@ namespace ent
 			}
 
 
-			template <class Codec> static tree2 decode(const std::string &data, bool skipValidation = false)
+			template <class Codec> static tree decode(const std::string &data, bool skipValidation = false)
 			{
 				//static_assert(std::is_base_of<codec, Codec>::value,	"Invalid codec specified");
 
@@ -220,7 +220,7 @@ namespace ent
 			Type get_type() const { return this->type; }
 
 			// The map of property values
-			map<string, tree2> children;
+			map<string, tree> children;
 
 
 		private:

@@ -1,9 +1,10 @@
 #include <xUnit++/xUnit++.h>
-#include <entity/entity.h>
+// #include <entity/entity.h>
 #include <entity/query.hpp>
-#include <entity/json.h>
+// #include <entity/json.h>
 
 #include <set>
+#include <iostream>
 
 using namespace std;
 using namespace ent;

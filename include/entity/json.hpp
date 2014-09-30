@@ -1,11 +1,11 @@
 #pragma once
 
-#include <entity/parser.hpp>
+#include <entity/codec.hpp>
 
 
 namespace ent
 {
-	struct json2 : codec
+	struct json : codec
 	{
 		using codec::item;
 		using codec::object;
@@ -358,7 +358,7 @@ namespace ent
 
 
 		// Decode item to dynamic type
-		virtual tree2 item(const string &data, int &i, int type) const
+		virtual tree item(const string &data, int &i, int type) const
 		{
 			if (data[i] == '{') return this->object(data, i, type);
 			if (data[i] == '[') return this->array(data, i, type);
@@ -404,7 +404,7 @@ namespace ent
 	};
 
 
-	struct prettyjson : json2
+	struct prettyjson : json
 	{
 		// Array items have 0 length name
 		virtual inline os &write_name(os &dst, const string &name, int depth) const

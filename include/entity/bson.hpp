@@ -1,12 +1,13 @@
 #pragma once
 
-#include <entity/parser.hpp>
+#include <limits>
+#include <entity/codec.hpp>
 
 
 
 namespace ent
 {
-	struct bson2 : codec
+	struct bson : codec
 	{
 		using codec::item;
 		using codec::object;
@@ -93,7 +94,14 @@ namespace ent
 
 		virtual void item(os &dst, const string &name, int64_t value, int depth) const
 		{
-			dst.put(Int64).write(name.data(), name.size()).put(0x00); write(dst, value);
+			if (value <= std::numeric_limits<int32_t>::max())
+			{
+				dst.put(Int32).write(name.data(), name.size()).put(0x00); write(dst, (int32_t)value);
+			}
+			else
+			{
+				dst.put(Int64).write(name.data(), name.size()).put(0x00); write(dst, value);
+			}
 		}
 
 		virtual void item(os &dst, const string &name, double value, int depth) const
@@ -173,7 +181,7 @@ namespace ent
 		{
 			if (type < 0 || type == Object)
 			{
-				return i + int32(data, i) - 4 <= data.size() || error("invalid object document length", i);
+				return i + int32(data, i) <= data.size() || error("invalid object document length", i);
 			}
 			return false;
 		}
@@ -200,7 +208,7 @@ namespace ent
 		{
 			if (type == Array)
 			{
-				return i + int32(data, i) - 4 <= data.size() || error("invalid array document length", i);
+				return i + int32(data, i) <= data.size() || error("invalid array document length", i);
 			}
 			return false;
 		}
@@ -246,9 +254,29 @@ namespace ent
 			return 0;
 		}
 
-		virtual tree2 item(const string &data, int &i, int type) const
+		virtual tree item(const string &data, int &i, int type) const
 		{
-			// TODO
+			switch (type)
+			{
+				case String:	return get(data, i, type, string());
+				case Object:	return this->object(data, i, type);
+				case Array:		return this->array(data, i, type);
+				case Binary:	return this->get(data, i, type, vector<byte>());
+				case Boolean:	return this->get(data, i, type, false);
+				case Int32:		return this->get(data, i, type, int32_t());
+				case Int64:		return this->get(data, i, type, int64_t());
+				case Double:	return this->get(data, i, type, double());
+				case Null:		return nullptr;
+
+				// Unsupported types
+				case UTC:			increment(data, i, 8);					break;
+				case Timestamp:		increment(data, i, 8);					break;
+				case ObjectId:		increment(data, i, 12);					break;
+				case RegEx:			cstring(data, i); cstring(data, i);		break;
+				case JsScope:		increment(data, i, int32(data, i) - 4);	break;
+				case Javascript:	increment(data, i, int32(data, i) - 4);	break;
+				default:			break;
+			}
 
 			return {};
 		}

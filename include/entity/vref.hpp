@@ -16,13 +16,13 @@ namespace ent
 	using std::map;
 
 	// Forward declaration of entity
-	class entity2;
-	template <class T, class enable=void> struct vref;
+	class entity;
 
 	// Template conditionals
+	template <class T, class enable=void> struct vref;
 	template <typename T> using if_simple	= typename std::enable_if<std::is_arithmetic<T>::value || std::is_same<string, T>::value || std::is_same<vector<byte>, T>::value>::type;
 	template <typename T> using if_enum		= typename std::enable_if<std::is_enum<T>::value>::type;
-	template <typename T> using if_entity	= typename std::enable_if<std::is_base_of<entity2, T>::value>::type;
+	template <typename T> using if_entity	= typename std::enable_if<std::is_base_of<entity, T>::value>::type;
 	template <typename T> using if_map		= typename std::enable_if<std::is_same<map<string, typename T::mapped_type>, T>::value>::type;
 	template <typename T> using if_vector	= typename std::enable_if<std::is_same<vector<typename T::value_type>, T>::value && !std::is_same<typename T::value_type, byte>::value>::type;
 
@@ -114,12 +114,13 @@ namespace ent
 
 		static void encode(T &item, const codec &c, os &dst, const string &name, stack<int> &stack)
 		{
-			auto map	= item.map();
-			int i		= map.lookup.size() - 1;
+			auto map	= item.describe();
+			int i		= map.size() - 1;
 
 			c.object_start(dst, name, stack);
 
-			for (auto &v : map.lookup)
+			//for (auto &v : map.lookup)
+			for (auto &v : map)
 			{
 				v.second->encode(c, dst, v.first, stack);
 				c.separator(dst, !i--);
@@ -137,16 +138,16 @@ namespace ent
 
 		static int decode(T &item, const codec &c, const string &data, int position, int type)
 		{
-			auto map 			= item.map();
+			auto map 			= item.describe();
 			std::string name	= "";
 
 			if (c.object_start(data, position, type))
 			{
 				while (c.item(data, position, name, type))
 				{
-					if (map.lookup.count(name))
+					if (map.count(name))
 					{
-						position = map.lookup[name]->decode(c, data, position, type);
+						position = map[name]->decode(c, data, position, type);
 					}
 					else c.skip(data, position, type);
 				}
@@ -281,5 +282,7 @@ namespace ent
 
 		T *reference;
 	};
+
+
 }
 
