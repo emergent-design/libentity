@@ -9,26 +9,11 @@ solution "entity"
 	libdirs 		{ "lib" }
 	excludes		{ "**.bak", "**~" }
 
-	-- project "libentity"
-	-- 	kind 			"None"
-	-- 	targetname		"entity"
-	-- 	linkoptions		"-Wl,-soname,libentity.so.0"
-	-- 	includedirs		{ "include/entity" }
-	-- 	files 			{ "include/entity/**.hpp", "src/entity/**.cpp" }
-	-- 	postbuildcommands	{ "./strip lib/libentity.so" }
-
 	project "libtest"
 		kind				"SharedLib"
 		targetname			"test"
 		defines				{ "__stdcall=" }
-		links				{ "xUnit++" } --{ "libentity", "xUnit++" }
+		links				{ "xUnit++" }
 		files				{ "src/test/**.cpp" }
 		postbuildcommands	{ "./runner" }
 
-	project "benchmark"
-		kind			"ConsoleApp"
-		targetname		"benchmark"
-		targetdir		"bin"
-		includedirs		{ "include/benchmark" }
-		-- links			{ "libentity" }
-		files			{ "src/benchmark/**.cpp" }
