@@ -142,7 +142,6 @@ namespace ent
 			else this->skip(data, i, type);
 
 			return result;
-
 		}
 	};
 }

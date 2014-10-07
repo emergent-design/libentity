@@ -128,30 +128,10 @@ template <class T> void JsonTestTo(T &e, bool useCereal = false)
 
 	long duration = duration_cast<milliseconds>(steady_clock::now() - start).count();
 
-	//cout << result << endl;
 	cout << "Time taken for " << BENCHMARK_ITERATIONS << " iterations was " << duration << "ms" << endl;
 	cout << "Which is an average of " << (1000.0 * (double)duration / BENCHMARK_ITERATIONS) << "us per serialisation" << endl;
 }
 
-
-/*
-template <class T> void JsonTest2(T &e)
-{
-	string result;
-	//json2 p;
-
-	auto start = steady_clock::now();
-
-	for (int i=0; i<BENCHMARK_ITERATIONS; i++)
-	{
-		result = entity::encode<json>(e); //p.to(e);
-	}
-
-	long duration = duration_cast<milliseconds>(steady_clock::now() - start).count();
-
-	cout << "Time taken for " << BENCHMARK_ITERATIONS << " iterations was " << duration << "ms" << endl;
-	cout << "Which is an average of " << (1000.0 * (double)duration / BENCHMARK_ITERATIONS) << "us per serialisation" << endl;
-}*/
 
 void JsonTestTo(tree &t)
 {
@@ -168,23 +148,6 @@ void JsonTestTo(tree &t)
 	cout << "Time taken for " << BENCHMARK_ITERATIONS << " iterations was " << duration << "ms" << endl;
 	cout << "Which is an average of " << (1000.0 * (double)duration / BENCHMARK_ITERATIONS) << "us per serialisation" << endl;
 }
-
-/*
-void JsonTest2(tree2 &t)
-{
-	string result;
-
-	auto start = steady_clock::now();
-	for (int i=0; i<BENCHMARK_ITERATIONS; i++)
-	{
-		result = tree2::encode<json2>(t);
-	}
-
-	long duration = duration_cast<milliseconds>(steady_clock::now() - start).count();
-
-	cout << "Time taken for " << BENCHMARK_ITERATIONS << " iterations was " << duration << "ms" << endl;
-	cout << "Which is an average of " << (1000.0 * (double)duration / BENCHMARK_ITERATIONS) << "us per serialisation" << endl;
-}*/
 
 
 template <class T> void JsonTestFrom(T &e, string data, bool useCereal = false)
@@ -206,53 +169,16 @@ template <class T> void JsonTestFrom(T &e, string data, bool useCereal = false)
 	{
 		for (int i=0; i<BENCHMARK_ITERATIONS; i++)
 		{
-			//e.template from<json>(data);
 			entity::decode<json>(data, e);
 		}
 	}
 
 	long duration = duration_cast<milliseconds>(steady_clock::now() - start).count();
 
-	//cout << e.name << endl;
-	//cout << e << endl;
 	cout << "Time taken for " << BENCHMARK_ITERATIONS << " iterations was " << duration << "ms" << endl;
 	cout << "Which is an average of " << (1000.0 * (double)duration / BENCHMARK_ITERATIONS) << "us per deserialisation" << endl;
 }
 
-/*
-template <class T> void JsonTestFrom2(T &e, string data)
-{
-	auto start = steady_clock::now();
-
-	for (int i=0; i<BENCHMARK_ITERATIONS; i++)
-	{
-		entity2::decode<json2>(data, e);
-	}
-
-	long duration = duration_cast<milliseconds>(steady_clock::now() - start).count();
-
-	cout << "Time taken for " << BENCHMARK_ITERATIONS << " iterations was " << duration << "ms" << endl;
-	cout << "Which is an average of " << (1000.0 * (double)duration / BENCHMARK_ITERATIONS) << "us per deserialisation" << endl;
-}*/
-
-/*
-void JsonTestFrom2(string data)
-{
-	tree2 result;
-	auto start = steady_clock::now();
-
-	for (int i=0; i<BENCHMARK_ITERATIONS; i++)
-	{
-		// result = tree2::decode<json2>(data);
-		tree2::decode<json2>(data);
-	}
-
-	long duration = duration_cast<milliseconds>(steady_clock::now() - start).count();
-
-	cout << "Time taken for " << BENCHMARK_ITERATIONS << " iterations was " << duration << "ms" << endl;
-	cout << "Which is an average of " << (1000.0 * (double)duration / BENCHMARK_ITERATIONS) << "us per deserialisation" << endl;
-}
-*/
 
 void JsonTestFrom(string data)
 {
@@ -270,58 +196,6 @@ void JsonTestFrom(string data)
 	cout << "Which is an average of " << (1000.0 * (double)duration / BENCHMARK_ITERATIONS) << "us per deserialisation" << endl;
 }
 
-
-/*
-enum class MyEnum { First, Second };
-
-struct Simple2 : entity2
-{
-	string name		= "simple";
-	bool flag		= true;
-	int integer		= 42;
-	long bignumber	= 20349758;
-	double floating	= 3.142;
-	MyEnum myenum	= MyEnum::Second;
-
-	mapping2 describe()
-	{
-		// return mapping2() << eref(name) << eref(flag) << eref(integer) << eref(bignumber) << eref(floating) << eref(myenum);
-		return { eref(name), eref(flag), eref(integer), eref(bignumber), eref(floating), eref(myenum) };
-	}
-};
-
-struct Collection2 : entity2
-{
-	std::vector<string> strings	 			= { "one", "two", "three" };
-	std::vector<double> doubles				= { 0.11, 0.22, 0.33 };
-	std::vector<byte> binary				= { 0x00, 0x01, 0x02, 0x88, 0xff };
-	std::map<string, string> dictionary		= { { "first", "item" }, { "second", "item" } };
-
-	//std::map<string, vector<Simple2>> arraymap	= {{ "array", { {}, {} } }};
-	//vector<std::map<string, string>> maparray	= { { { "first", "item" }, { "second", "item" }}, { {"another", "map"}} };
-
-	mapping2 describe()
-	{
-		// return mapping2() << eref(strings) << eref(doubles) << eref(binary) << eref(dictionary);// << eref(arraymap) << eref(maparray);
-		return { eref(strings), eref(doubles), eref(binary), eref(dictionary) };// eref(arraymap) << eref(maparray);
-	}
-};
-
-
-struct Complex2 : entity2
-{
-	string name 					= "complex";
-	std::vector<Simple2> entities	= { Simple2(), Simple2() };
-	Collection2 collection;
-	Simple2 simple;
-
-	mapping2 describe()
-	{
-		//return mapping2() << eref(name) << eref(entities) << eref(collection) << eref(simple);
-		return { eref(name), eref(entities), eref(collection), eref(simple) };
-	}
-};
-*/
 
 
 int main(int argc, char **argv)

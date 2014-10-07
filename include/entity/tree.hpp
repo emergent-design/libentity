@@ -251,4 +251,5 @@ namespace ent
 			Type type					= Type::Object;
 			std::unique_ptr<base> leaf	= nullptr;
 	};
+
 }

@@ -1,166 +1,173 @@
 #include <xUnit++/xUnit++.h>
 #include <entity/vref.hpp>
+#include <entity/json.hpp>
 
 using namespace std;
 using namespace ent;
 
 
-// enum class EnumTest
-// {
-// 	Zero,
-// 	One,
-// 	Two
-// };
+enum class EnumTest
+{
+	Zero,
+	One,
+	Two
+};
 
 
-// SUITE("VRef Tests")
-// {
-// 	FACT("Can create a map to numeric types")
-// 	{
-// 		int integer		= 42;
-// 		double floating	= 3.14;
-// 		// value newValue	= 1.01;
-// 		auto imap		= vref<int>(integer);
-// 		auto fmap		= vref<double>(floating);
+SUITE("VRef Tests")
+{
+	json c;
+	stack<int> stack;
 
-// 		Assert.Equal(42,	imap.to().get(0));
-// 		Assert.Equal(3.14,	fmap.to().get(0.0));
+	FACT("Can create a map to integer types")
+	{
+		os dst;
+		int integer = 42;
+		auto imap	= vref<int>(integer);
 
-// 		imap.from(newValue);
-// 		fmap.from(newValue);
+		imap.encode(c, dst, "a", stack);
+		Assert.Equal("\"a\":42", dst.str());
 
-// 		Assert.Equal(1,		integer);
-// 		Assert.Equal(1.01,	floating);
-// 	}
+		imap.decode(c, "1", 0, 0);
+		Assert.Equal(1, integer);
+	}
 
 
-// 	FACT("Can create a map to string types")
-// 	{
-// 		string text		= "something";
-// 		value newValue	= "something else";
-// 		auto smap		= vmap<string>(text);
+	FACT("Can create a map to floating-point types")
+	{
+		os dst;
+		double floating	= 3.14;
+		auto fmap		= vref<double>(floating);
 
-// 		Assert.Equal("something", smap.to().get(string()));
+		fmap.encode(c, dst, "a", stack);
+		Assert.Equal("\"a\":3.14", dst.str());
 
-// 		smap.from(newValue);
-
-// 		Assert.Equal("something else", text);
-// 	}
-
-
-// 	FACT("Can create a map to boolean types")
-// 	{
-// 		bool flag		= true;
-// 		value newValue	= false;
-// 		auto bmap		= vmap<bool>(flag);
-
-// 		Assert.True(bmap.to().get(false));
-
-// 		bmap.from(newValue);
-
-// 		Assert.False(flag);
-// 	}
+		fmap.decode(c, "1.01", 0, 0);
+		Assert.Equal(1.01, floating);
+	}
 
 
-// 	FACT("Can create a map to enumerated types")
-// 	{
-// 		EnumTest e 		= EnumTest::One;
-// 		value newValue	= 2;
-// 		auto emap		= vmap<EnumTest>(e);
+	FACT("Can create a map to string types")
+	{
+		os dst;
+		string text	= "something";
+		auto smap	= vref<string>(text);
 
-// 		Assert.Equal(1, emap.to().get(0));
+		smap.encode(c, dst, "a", stack);
+		Assert.Equal("\"a\":\"something\"", dst.str());
 
-// 		emap.from(newValue);
-
-// 		Assert.Equal(EnumTest::Two, e);
-// 	}
-
-
-// 	FACT("Mapping from an incorrect value type uses the default value for that type")
-// 	{
-// 		int integer		= 42;
-// 		auto imap		= vmap<int>(integer);
-// 		value newValue	= "invalid";
-
-// 		imap.from(newValue);
-
-// 		Assert.Equal(0, integer);
-// 	}
+		smap.decode(c, "\"something else\"", 0, 0);
+		Assert.Equal("something else", text);
+	}
 
 
-// 	FACT("Can create a map to an array of simple types")
-// 	{
-// 		vector<int> items 		= { 1, 1, 2, 3 };
-// 		vector<value> newItems	= { 3, 2, 1 };
-// 		auto amap				= vmap<int>(items);
-// 		value newValue			= newItems;
+	FACT("Can create a map to boolean types")
+	{
+		os dst;
+		bool flag	= true;
+		auto bmap	= vref<bool>(flag);
 
-// 		Assert.Equal(2, amap.to().array()[2].get(0));
+		bmap.encode(c, dst, "a", stack);
+		Assert.Equal("\"a\":true", dst.str());
 
-// 		amap.from(newValue);
-
-// 		Assert.Equal(3, items.size());
-// 		Assert.Equal(1, items[2]);
-// 	}
+		bmap.decode(c, "false", 0, 0);
+		Assert.False(flag);
+	}
 
 
-// 	FACT("Can create a map to a dictionary of simple types")
-// 	{
-// 		map<string, int> items	= { { "one", 1 }, { "two", 2 } };
-// 		tree newItems			= tree().set("three", 3);
-// 		auto mmap				= vmap<int>(items);
-// 		value newValue			= make_shared<tree>(newItems);
+	FACT("Can create a map to enumerated types")
+	{
+		os dst;
+		EnumTest e 		= EnumTest::One;
+		auto emap		= vref<EnumTest>(e);
 
-// 		Assert.Equal(1, mmap.to().object().get<int>("one"));
+		emap.encode(c, dst, "a", stack);
+		Assert.Equal("\"a\":1", dst.str());
 
-// 		mmap.from(newValue);
-
-// 		Assert.Equal(1, items.size());
-// 		Assert.Equal(3, items["three"]);
-// 	}
+		emap.decode(c, "2", 0, 0);
+		Assert.Equal(EnumTest::Two, e);
+	}
 
 
-// 	FACT("Can create a map to an array of enums")
-// 	{
-// 		vector<EnumTest> items	= { EnumTest::Two, EnumTest::Zero };
-// 		vector<value> newItems	= { 0, 1 };
-// 		auto amap				= vmap<EnumTest>(items);
-// 		value newValue			= newItems;
+	FACT("Mapping from an incorrect value type uses the default value for that type")
+	{
+		int integer		= 42;
+		auto imap		= vref<int>(integer);
 
-// 		Assert.Equal(0, amap.to().array()[1].get(0));
-
-// 		amap.from(newValue);
-
-// 		Assert.Equal(EnumTest::One, items[1]);
-// 	}
+		imap.decode(c, "\"invalid\"", 0, 0);
+		Assert.Equal(0, integer);
+	}
 
 
-// 	FACT("Can create a map to a dictionary of enums")
-// 	{
-// 		map<string, EnumTest> items	= { { "one", EnumTest::One }, { "two", EnumTest::Two } };
-// 		tree newItems				= tree().set("zero", 0);
-// 		auto mmap					= vmap<EnumTest>(items);
-// 		value newValue				= make_shared<tree>(newItems);
+	FACT("Can create a map to an array of simple types")
+	{
+		os dst;
+		vector<int> items 	= { 1, 1, 2, 3 };
+		auto amap			= vref<decltype(items)>(items);
 
-// 		Assert.Equal(1, mmap.to().object().get<int>("one"));
+		amap.encode(c, dst, "a", stack);
+		Assert.Equal("\"a\":[1,1,2,3]", dst.str());
 
-// 		mmap.from(newValue);
+		amap.decode(c, "[3,2,1]", 0, 0);
+		Assert.Equal(3, items.size());
+		Assert.Equal(1, items[2]);
+	}
 
-// 		Assert.Equal(1, items.size());
-// 		Assert.Equal(EnumTest::Zero, items["zero"]);
-// 	}
+
+	FACT("Can create a map to a dictionary of simple types")
+	{
+		os dst;
+		map<string, int> items	= { { "one", 1 }, { "two", 2 } };
+		auto mmap				= vref<decltype(items)>(items);
+
+		mmap.encode(c, dst, "a", stack);
+		Assert.Equal("\"a\":{\"one\":1,\"two\":2}", dst.str());
+
+		mmap.decode(c, "{\"three\":3}", 0, 0);
+		Assert.Equal(1, items.size());
+		Assert.Equal(3, items["three"]);
+	}
 
 
-// 	FACT("Can create a map to a binary blob")
-// 	{
-// 		vector<byte> binary	= { 0x00, 0x01, 0x02, 0x88, 0xff };
-// 		value newValue		= vector<byte> { 0x66, 0x6f, 0x6f, 0x62, 0x61, 0x72 };
-// 		auto bmap			= vmap<vector<byte>>(binary);
+	FACT("Can create a map to an array of enums")
+	{
+		os dst;
+		vector<EnumTest> items	= { EnumTest::Two, EnumTest::Zero };
+		auto amap				= vref<decltype(items)>(items);
 
-// 		Assert.Equal(vector<byte> { 0x00, 0x01, 0x02, 0x88, 0xff }, bmap.to().get(vector<byte>()));
+		amap.encode(c, dst, "a", stack);
+		Assert.Equal("\"a\":[2,0]", dst.str());
 
-// 		bmap.from(newValue);
+		amap.decode(c, "[0,1]", 0, 0);
+		Assert.Equal(EnumTest::One, items[1]);
+	}
 
-// 		Assert.Equal(vector<byte> { 0x66, 0x6f, 0x6f, 0x62, 0x61, 0x72 }, binary);
-// 	}
-// }
+
+	FACT("Can create a map to a dictionary of enums")
+	{
+		os dst;
+		map<string, EnumTest> items	= { { "one", EnumTest::One }, { "two", EnumTest::Two } };
+		auto mmap					= vref<decltype(items)>(items);
+
+		mmap.encode(c, dst, "a", stack);
+		Assert.Equal("\"a\":{\"one\":1,\"two\":2}", dst.str());
+
+		mmap.decode(c, "{\"zero\":0}", 0, 0);
+		Assert.Equal(1, items.size());
+		Assert.Equal(EnumTest::Zero, items["zero"]);
+	}
+
+
+	FACT("Can create a map to a binary blob")
+	{
+		os dst;
+		vector<byte> binary	= { 0x00, 0x01, 0x02, 0x88, 0xff };
+		auto bmap			= vref<vector<byte>>(binary);
+
+		bmap.encode(c, dst, "a", stack);
+		Assert.Equal("\"a\":\"AAECiP8=\"", dst.str());
+
+		bmap.decode(c, "\"Zm9vYmFy\"", 0, 0);
+		Assert.Equal(vector<byte> { 0x66, 0x6f, 0x6f, 0x62, 0x61, 0x72 }, binary);
+	}
+}
