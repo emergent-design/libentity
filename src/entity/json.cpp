@@ -127,10 +127,10 @@ namespace ent
 
 	tree json::from(const string &text)
 	{
-		if (!whitespace[' '])
+		if (!whitespace[(byte)' '])
 		{
 			// Initialise the whitespace lookup if it hasn't been already
-			whitespace[' '] = whitespace['\t'] = whitespace['\r'] = whitespace['\n'] = whitespace[','] = true;
+			whitespace[(byte)' '] = whitespace[(byte)'\t'] = whitespace[(byte)'\r'] = whitespace[(byte)'\n'] = whitespace[(byte)','] = true;
 		}
 
 		// Check that this looks like valid json

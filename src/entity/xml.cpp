@@ -59,8 +59,8 @@ namespace ent
 
 	bool xml::whitespace[256]	= { false };
 	const string header			= u8R"xml(<?xml version="1.0" encoding="UTF-8" standalone="yes"?>)xml";
-	
-	
+
+
 	string xml::to(const tree &item, bool pretty, int depth)
 	{
 		stringstream result;
@@ -117,13 +117,13 @@ namespace ent
 		return result.str();
 	}
 
-	
+
 	tree xml::from(const string &text)
 	{
-		if (!whitespace[' '])
+		if (!whitespace[(byte)' '])
 		{
 			// Initialise the whitespace lookup if it hasn't been already
-			whitespace[' '] = whitespace['\t'] = whitespace['\r'] = whitespace['\n'] = true;
+			whitespace[(byte)' '] = whitespace[(byte)'\t'] = whitespace[(byte)'\r'] = whitespace[(byte)'\n'] = true;
 		}
 
 
@@ -290,7 +290,7 @@ namespace ent
 	string xml::parse_item(const string &text, int &i)
 	{
 		int length = text.length();
-		
+
 		for (; i<length && whitespace[(byte)text[i]]; i++);
 
 		if (text[i] == '=')

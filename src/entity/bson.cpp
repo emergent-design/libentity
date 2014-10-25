@@ -59,14 +59,14 @@ namespace ent
 	inline void bson::write(ss &stream, const std::string &data)		{ int s = data.size();	write(stream, s + 1);	stream.write(data.data(), s).put(0x00); }
 	inline void bson::write(ss &stream, const vector<byte> &data)		{ int s = data.size();	write(stream, s);		stream.put(0x00).write((char *)data.data(), s); }
 	inline void bson::object(ss &stream, tree &item)					{ string child = to(item, false);				stream.write(child.data(), child.size()); }
-	
+
 
 	void bson::number(ss &stream, const string &name, const value &item)
 	{
 		// Figure out if the number is a floating-point, 64-bit int or small enough to fit into a 32-bit int
 		byte type = item.get_numtype() == value::Number::Floating
 			? Type::Double
-			: abs(item.get((long long)0) <= numeric_limits<int>::max()) ? Type::Int32 : Type::Int64;
+			: abs(item.get((long long)0)) <= numeric_limits<int>::max() ? Type::Int32 : Type::Int64;
 
 		key(stream, type, name);
 
@@ -124,7 +124,7 @@ namespace ent
 		for (; pos < end && *pos; pos++);
 
 		return pos < end
-			? std::string((char *)this->increment(pos - this->current + 1), pos - this->current)
+			? std::string((char *)this->increment(pos - this->current + 1))
 			: to_string(error("could not read cstring", *this));
 	}
 
@@ -137,7 +137,7 @@ namespace ent
 			: to_string(error("could not read string", *this));
 	}
 
-	
+
 	std::vector<byte> bson::blob::binary()
 	{
 		int length	= this->int32();
@@ -172,7 +172,7 @@ namespace ent
 			case Javascript:	b.string();					break;
 			default:			break;
 		}
-		
+
 		return value();
 	}
 
@@ -203,7 +203,7 @@ namespace ent
 
 		return value(result);
 	}
-	
+
 
 	tree bson::parse(blob &b)
 	{

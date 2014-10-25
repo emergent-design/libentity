@@ -9,6 +9,9 @@ solution "entity"
 	libdirs 		{ "lib" }
 	excludes		{ "**.bak", "**~" }
 
+	configuration "linux"
+		toolset "clang"
+
 	project "libentity"
 		kind 			"SharedLib"
 		targetname		"entity"
