@@ -1,3 +1,9 @@
+libentity0 (0.0.6) unstable; urgency=medium
+
+  * Bug fix - JSON parser not retrieving integer values from tree as long.
+
+ -- Dan Parnham <dan@emergent-design.co.uk>  Tue, 04 Nov 2014 12:05:47 +0000
+
 libentity0 (0.0.5) unstable; urgency=low
 
   * Bug fix - problem with long integers writing to the output stream as doubles.
