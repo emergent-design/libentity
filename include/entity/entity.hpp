@@ -43,6 +43,7 @@ namespace ent
 				return result.str();
 			}
 
+
 			template <class Codec, class T> static T decode(const std::string &data, bool skipValidation = false)
 			{
 				T result;
@@ -64,7 +65,6 @@ namespace ent
 
 				return item;
 			}
-
 
 		protected:
 
