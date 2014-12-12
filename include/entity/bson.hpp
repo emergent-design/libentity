@@ -4,7 +4,6 @@
 #include <entity/codec.hpp>
 
 
-
 namespace ent
 {
 	struct bson : codec
@@ -94,7 +93,7 @@ namespace ent
 
 		virtual void item(os &dst, const string &name, int64_t value, int depth) const
 		{
-			if (value <= std::numeric_limits<int32_t>::max())
+			if (value >= std::numeric_limits<int32_t>::min() && value <= std::numeric_limits<int32_t>::max())
 			{
 				dst.put(Int32).write(name.data(), name.size()).put(0x00); write(dst, (int32_t)value);
 			}
@@ -283,7 +282,7 @@ namespace ent
 
 		virtual bool get(const string &data, int &i, int type, bool def) const							{ return type == Boolean	? next(data, i) > 0	: skip(data, i, type); }
 		virtual int32_t get(const string &data, int &i, int type, int32_t def) const					{ return type == Int32		? int32(data, i)	: skip(data, i, type); }
-		virtual int64_t get(const string &data, int &i, int type, int64_t def) const					{ return type == Int64		? int64(data, i)	: skip(data, i, type); }
+		virtual int64_t get(const string &data, int &i, int type, int64_t def) const					{ return type == Int64		? int64(data, i)	: type == Int32 ? int32(data, i) : skip(data, i, type); }
 		virtual double get(const string &data, int &i, int type, double def) const						{ return type == Double		? floating(data, i)	: skip(data, i, type); }
 		virtual string get(const string &data, int &i, int type, const string def) const				{ return type == String 	? sstring(data, i)	: string("", skip(data, i, type)); }
 		virtual vector<byte> get(const string &data, int &i, int type, const vector<byte> def) const	{ return type == Binary		? binary(data, i)	: vector<byte>(skip(data, i, type)); }

@@ -22,7 +22,7 @@ namespace ent
 
 
 	// The abstract base class for serialisable objects.
-	// Inherit from this, implement the map function correctly,
+	// Inherit from this, implement the describe function correctly,
 	// and your class will become serialisable.
 	class entity
 	{
