@@ -1,15 +1,10 @@
 Package: libentity-dev
-Version: 0.0.0
+Version: 0.0.5
 Section: libdevel
 Priority: optional
-Architecture: amd64
+Architecture: all
 Maintainer: Dan Parnham <dan@emergent-design.co.uk>
-Installed-Size: 84
-Depends: libentity0
-Suggests: pkg-config
+Installed-Size: 112
 Description: Development headers for libentity
- Provides a libray for serialising/deserialising objects 
- using formats such as JSON. It provides a simple tree structure
- but more importantly it supports a method to directly map a C++
- class or structure to a tree which thereby allows direct 
- serialisation/deserialisation.
+ Provides a C++11 libray for directly serialising/deserialising
+ classes or structs to formats such as JSON.

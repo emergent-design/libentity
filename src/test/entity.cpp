@@ -1,4 +1,4 @@
-#include <xUnit++/xUnit++.h>
+#include "catch.hpp"
 #include <entity/entity.hpp>
 #include <entity/json.hpp>
 
@@ -49,48 +49,43 @@ struct ComplexEntity : ent::entity
 };
 
 
-SUITE("Entity Tests")
+TEST_CASE("an entity can be serialised", "[entity]")
 {
-	FACT("An entity can be serialised")
-	{
-		SimpleEntity e;
+	SimpleEntity e;
+	string data = u8R"json({"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"})json";
 
-		Assert.Equal(
-			u8R"json({"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"})json",
-			entity::encode<json>(e)
-		);
-	}
+	REQUIRE(entity::encode<json>(e) == data);
+}
 
 
-	FACT("An entity can be deserialised")
-	{
-		auto e = entity::decode<json, ComplexEntity>(u8R"json({
-			"name":	"parsed complex",
-			"simple": {
-				"name":		"parsed simple",
-				"flag":		false,
-				"integer":	1234
-			},
-			"collection": {
-				"strings":		[ "a", "b", "c", "d" ],
-				"doubles":		[ 9, 8, 7, 6 ],
-				"binary":		"AAECiP8=",
-				"dictionary":	{ "a": "1", "b": "2" }
-			},
-			"entities": [
-				{ "name": "simple 1", "integer": 1 },
-				{ "name": "simple 2", "integer": 2 },
-			]
-		})json");
+TEST_CASE("an entity can be deserialised", "[entity]")
+{
+	auto e = entity::decode<json, ComplexEntity>(u8R"json({
+		"name":	"parsed complex",
+		"simple": {
+			"name":		"parsed simple",
+			"flag":		false,
+			"integer":	1234
+		},
+		"collection": {
+			"strings":		[ "a", "b", "c", "d" ],
+			"doubles":		[ 9, 8, 7, 6 ],
+			"binary":		"AAECiP8=",
+			"dictionary":	{ "a": "1", "b": "2" }
+		},
+		"entities": [
+			{ "name": "simple 1", "integer": 1 },
+			{ "name": "simple 2", "integer": 2 },
+		]
+	})json");
 
-		Assert.Equal("parsed complex",	e.name);
-		Assert.Equal("parsed simple",	e.simple.name);
-		Assert.Equal(1234,				e.simple.integer);
-		Assert.Equal("b",				e.collection.strings[1]);
-		Assert.Equal(7,					e.collection.doubles[2]);
-		Assert.Equal(0x88,				e.collection.binary[3]);
-		Assert.Equal("2",				e.collection.dictionary["b"]);
-		Assert.Equal("simple 1",		e.entities[0].name);
-		Assert.Equal(2,					e.entities[1].integer);
-	}
+	REQUIRE(e.name							== "parsed complex");
+	REQUIRE(e.simple.name					== "parsed simple");
+	REQUIRE(e.simple.integer				== 1234);
+	REQUIRE(e.collection.strings[1]			== "b");
+	REQUIRE(e.collection.doubles[2]			== 7);
+	REQUIRE(e.collection.binary[3]			== 0x88);
+	REQUIRE(e.collection.dictionary["b"]	== "2");
+	REQUIRE(e.entities[0].name				== "simple 1");
+	REQUIRE(e.entities[1].integer			== 2);
 }

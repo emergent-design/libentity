@@ -1,4 +1,4 @@
-#include <xUnit++/xUnit++.h>
+#include "catch.hpp"
 #include <entity/vref.hpp>
 #include <entity/json.hpp>
 
@@ -14,160 +14,153 @@ enum class EnumTest
 };
 
 
-SUITE("VRef Tests")
+TEST_CASE("vref can map a reference to different types", "[vref]")
 {
 	json c;
+	os dst;
 	stack<int> stack;
 
-	FACT("Can create a map to integer types")
+	SECTION("can map to integer types")
 	{
-		os dst;
 		int integer = 42;
 		auto imap	= vref<int>(integer);
 
 		imap.encode(c, dst, "a", stack);
-		Assert.Equal("\"a\":42", dst.str());
+		REQUIRE(dst.str() == "\"a\":42");
+
 
 		imap.decode(c, "1", 0, 0);
-		Assert.Equal(1, integer);
+		REQUIRE(integer == 1);
 	}
 
 
-	FACT("Can create a map to floating-point types")
+	SECTION("can map to floating-point types")
 	{
-		os dst;
 		double floating	= 3.14;
 		auto fmap		= vref<double>(floating);
 
 		fmap.encode(c, dst, "a", stack);
-		Assert.Equal("\"a\":3.14", dst.str());
+		REQUIRE(dst.str() == "\"a\":3.14");
 
 		fmap.decode(c, "1.01", 0, 0);
-		Assert.Equal(1.01, floating);
+		REQUIRE(floating == 1.01);
 	}
 
 
-	FACT("Can create a map to string types")
+	SECTION("can map to string types")
 	{
-		os dst;
 		string text	= "something";
 		auto smap	= vref<string>(text);
 
 		smap.encode(c, dst, "a", stack);
-		Assert.Equal("\"a\":\"something\"", dst.str());
+		REQUIRE(dst.str() == "\"a\":\"something\"");
 
 		smap.decode(c, "\"something else\"", 0, 0);
-		Assert.Equal("something else", text);
+		REQUIRE(text == "something else");
 	}
 
 
-	FACT("Can create a map to boolean types")
+	SECTION("can map to boolean types")
 	{
-		os dst;
 		bool flag	= true;
 		auto bmap	= vref<bool>(flag);
 
 		bmap.encode(c, dst, "a", stack);
-		Assert.Equal("\"a\":true", dst.str());
+		REQUIRE(dst.str() == "\"a\":true");
 
 		bmap.decode(c, "false", 0, 0);
-		Assert.False(flag);
+		REQUIRE_FALSE(flag);
 	}
 
 
-	FACT("Can create a map to enumerated types")
+	SECTION("can map to enumerated types")
 	{
-		os dst;
-		EnumTest e 		= EnumTest::One;
-		auto emap		= vref<EnumTest>(e);
+		EnumTest e 	= EnumTest::One;
+		auto emap	= vref<EnumTest>(e);
 
 		emap.encode(c, dst, "a", stack);
-		Assert.Equal("\"a\":1", dst.str());
+		REQUIRE(dst.str() == "\"a\":1");
 
 		emap.decode(c, "2", 0, 0);
-		Assert.Equal(EnumTest::Two, e);
+		REQUIRE(e == EnumTest::Two);
 	}
 
 
-	FACT("Mapping from an incorrect value type uses the default value for that type")
+	SECTION("mapping from an incorrect value type uses the default value for that type")
 	{
-		int integer		= 42;
-		auto imap		= vref<int>(integer);
+		int integer	= 42;
+		auto imap	= vref<int>(integer);
 
 		imap.decode(c, "\"invalid\"", 0, 0);
-		Assert.Equal(0, integer);
+		REQUIRE(integer == 0);
 	}
 
 
-	FACT("Can create a map to an array of simple types")
+	SECTION("can map to an array of simple types")
 	{
-		os dst;
 		vector<int> items 	= { 1, 1, 2, 3 };
 		auto amap			= vref<decltype(items)>(items);
 
 		amap.encode(c, dst, "a", stack);
-		Assert.Equal("\"a\":[1,1,2,3]", dst.str());
+		REQUIRE(dst.str() == "\"a\":[1,1,2,3]");
 
 		amap.decode(c, "[3,2,1]", 0, 0);
-		Assert.Equal(3, items.size());
-		Assert.Equal(1, items[2]);
+		REQUIRE(items.size() == 3);
+		REQUIRE(items[2] == 1);
 	}
 
 
-	FACT("Can create a map to a dictionary of simple types")
+	SECTION("can map to a dictionary of simple types")
 	{
-		os dst;
 		map<string, int> items	= { { "one", 1 }, { "two", 2 } };
 		auto mmap				= vref<decltype(items)>(items);
 
 		mmap.encode(c, dst, "a", stack);
-		Assert.Equal("\"a\":{\"one\":1,\"two\":2}", dst.str());
+		REQUIRE(dst.str() == "\"a\":{\"one\":1,\"two\":2}");
 
 		mmap.decode(c, "{\"three\":3}", 0, 0);
-		Assert.Equal(1, items.size());
-		Assert.Equal(3, items["three"]);
+		REQUIRE(items.size() == 1);
+		REQUIRE(items["three"] == 3);
 	}
 
 
-	FACT("Can create a map to an array of enums")
+	SECTION("can map to an array of enums")
 	{
-		os dst;
 		vector<EnumTest> items	= { EnumTest::Two, EnumTest::Zero };
 		auto amap				= vref<decltype(items)>(items);
 
 		amap.encode(c, dst, "a", stack);
-		Assert.Equal("\"a\":[2,0]", dst.str());
+		REQUIRE(dst.str() == "\"a\":[2,0]");
 
 		amap.decode(c, "[0,1]", 0, 0);
-		Assert.Equal(EnumTest::One, items[1]);
+		REQUIRE(items[1] == EnumTest::One);
 	}
 
 
-	FACT("Can create a map to a dictionary of enums")
+	SECTION("can map to a dictionary of enums")
 	{
-		os dst;
 		map<string, EnumTest> items	= { { "one", EnumTest::One }, { "two", EnumTest::Two } };
 		auto mmap					= vref<decltype(items)>(items);
 
 		mmap.encode(c, dst, "a", stack);
-		Assert.Equal("\"a\":{\"one\":1,\"two\":2}", dst.str());
+		REQUIRE(dst.str() == "\"a\":{\"one\":1,\"two\":2}");
 
 		mmap.decode(c, "{\"zero\":0}", 0, 0);
-		Assert.Equal(1, items.size());
-		Assert.Equal(EnumTest::Zero, items["zero"]);
+		REQUIRE(items.size() == 1);
+		REQUIRE(items["zero"] == EnumTest::Zero);
 	}
 
 
-	FACT("Can create a map to a binary blob")
+	SECTION("can map to a binary blob")
 	{
-		os dst;
 		vector<byte> binary	= { 0x00, 0x01, 0x02, 0x88, 0xff };
 		auto bmap			= vref<vector<byte>>(binary);
 
 		bmap.encode(c, dst, "a", stack);
-		Assert.Equal("\"a\":\"AAECiP8=\"", dst.str());
+		REQUIRE(dst.str() == "\"a\":\"AAECiP8=\"");
 
 		bmap.decode(c, "\"Zm9vYmFy\"", 0, 0);
-		Assert.Equal(vector<byte> { 0x66, 0x6f, 0x6f, 0x62, 0x61, 0x72 }, binary);
+		REQUIRE(binary == vector<byte>({ 0x66, 0x6f, 0x6f, 0x62, 0x61, 0x72 }));
 	}
 }
+

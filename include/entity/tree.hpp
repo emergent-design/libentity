@@ -5,7 +5,6 @@
 #include <stack>
 #include <vector>
 #include <memory>
-//#include <entity/codec.hpp>
 #include <entity/utilities.hpp>
 
 
@@ -87,8 +86,7 @@ namespace ent
 			// Comparison override
 			bool operator==(const tree &v) const
 			{
-				return v.type == this->type && v.leaf && this->leaf
-					&& (this->type == Type::Null || this->leaf->compare(v.leaf.get()));
+				return v.type == this->type && (this->null() || (v.leaf && this->leaf && this->leaf->compare(v.leaf.get())));
 			}
 
 

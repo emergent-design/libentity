@@ -1,20 +1,18 @@
 solution "entity"
 	language 		"C++"
-	targetdir		"lib"
 	flags 			"Symbols"
 	configurations	"default"
 	platforms		"native"
 	toolset			"clang"
-	buildoptions	{ "-Wall", "-Wno-sign-compare", "-std=c++11", "-O3", "-fPIC", "-D_FORTIFY_SOURCE=2" }
+	buildoptions	{ "-Wall", "-Wno-sign-compare", "-std=c++14" }
 	includedirs		{ "include" }
 	libdirs 		{ "lib" }
 	excludes		{ "**.bak", "**~" }
 
-	project "libtest"
-		kind				"SharedLib"
+	project "test"
+		kind				"ConsoleApp"
+		targetdir			"bin"
 		targetname			"test"
-		defines				{ "__stdcall=" }
-		links				{ "xUnit++" }
 		files				{ "src/test/**.cpp" }
-		postbuildcommands	{ "./runner" }
+		postbuildcommands	{ "./bin/test" }
 

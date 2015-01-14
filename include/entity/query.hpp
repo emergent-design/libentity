@@ -120,7 +120,7 @@ namespace ent
 			}
 
 
-			template <class U> query<U> select(std::function<U(const T&)> operation)
+			template <class U> query<U> select(std::function<const U(const T&)> operation)
 			{
 				return query<U> {
 					*this,
@@ -169,7 +169,7 @@ namespace ent
 			}
 
 
-			template <class U> query<T> order_by(std::function<U(const T&)> selector, bool descending = false)
+			template <class U> query<T> order_by(std::function<const U(const T&)> selector, bool descending = false)
 			{
 				return {
 					*this,
@@ -209,7 +209,7 @@ namespace ent
 
 			// This uses comparator passing and is therefore safe to call on any query instance, however it will
 			// have no effect on the query unless it follows an order_by/then_by chain.
-			template <class U> query<T> then_by(std::function<U(const T&)> selector, bool descending = false)
+			template <class U> query<T> then_by(std::function<const U(const T&)> selector, bool descending = false)
 			{
 				return {
 					*this,
@@ -308,6 +308,37 @@ namespace ent
 			}
 
 
+			template<class U, class V> query<U> zip(const query<V> &src, std::function<const U(const T&, const V&)> selector)
+			{
+				return {
+					*this,
+					[=](qbase *c, bool forward) {
+						auto t		= static_cast<query<U>*>(c);
+						auto p		= static_cast<query<T>*>(c->parent.get());
+						t->queries	= { std::make_shared<query<V>>(src) };
+						T *i		= p->start(p, forward);
+						V *j		= static_cast<query<V>*>(t->queries.front().get())->start(t->queries.front().get(), forward);
+
+						return i && j ? &(t->item = selector(*i, *j)) : nullptr;
+					},
+					[=](qbase *c) -> U* {
+						auto t	= static_cast<query<U>*>(c);
+						auto p	= static_cast<query<T>*>(c->parent.get());
+
+						if (t->queries.size() == 1)
+						{
+							T *i	= p->next(p);
+							V *j	= static_cast<query<V>*>(t->queries.front().get())->next(t->queries.front().get());
+
+							return i && j ? &(t->item = selector(*i, *j)) : nullptr;
+						}
+
+						return nullptr;
+					}
+				};
+			}
+
+
 			query<T> default_if_empty(const T &defaultValue = T())
 			{
 				return {
@@ -323,19 +354,19 @@ namespace ent
 			}
 
 
-			T aggregate(std::function<T(const T&, const T&)> accumulator)
+			T aggregate(std::function<const T(const T&, const T&)> accumulator)
 			{
 				return std::accumulate(++this->begin(), this->end(), *this->begin(), accumulator);
 			}
 
 
-			template <class U> U aggregate(U seed, std::function<U(const U&, const T&)> accumulator)
+			template <class U> U aggregate(const U seed, std::function<const U(const U&, const T&)> accumulator)
 			{
 				return std::accumulate(this->begin(), this->end(), seed, accumulator);
 			}
 
 
-			template <class U, class V> V aggregate(U seed, std::function<U(const U&, const T&)> accumulator, std::function<V(const U&)> selector)
+			template <class U, class V> V aggregate(const U seed, std::function<const U(const U&, const T&)> accumulator, std::function<const V(const U&)> selector)
 			{
 				return selector(std::accumulate(this->begin(), this->end(), seed, accumulator));
 			}
@@ -365,6 +396,24 @@ namespace ent
 			}
 
 
+			bool sequence_equal(const query<T> &src)
+			{
+				query<T> s = src;
+
+				if (s.count() == this->count())
+				{
+					for (T *i = start(this, true), *j = s.start(&s, true); i && j; i = next(this), j = s.next(&s))
+					{
+						if (*i != *j) return false;
+					}
+
+					return true;
+				}
+
+				return false;
+			}
+
+
 			int count(std::function<bool(const T&)> predicate = nullptr)
 			{
 				int result = 0;
@@ -379,36 +428,36 @@ namespace ent
 			}
 
 
-			T element_at(int index)											{ return this->element_at(index, true); }
-			T element_at_or_default(int index)								{ return this->element_at(index, false); }
+			T element_at(int index)												{ return this->element_at(index, true); }
+			T element_at_or_default(int index)									{ return this->element_at(index, false); }
 
-			T first()														{ return this->first_last(nullptr, true, true); }
-			T first_or_default()											{ return this->first_last(nullptr, false, true); }
-			T first(std::function<bool(const T&)> predicate)				{ return this->first_last(predicate, true, true); }
-			T first_or_default(std::function<bool(const T&)> predicate)		{ return this->first_last(predicate, false, true); }
+			T first()															{ return this->first_last(nullptr, true, true); }
+			T first_or_default()												{ return this->first_last(nullptr, false, true); }
+			T first(std::function<bool(const T&)> predicate)					{ return this->first_last(predicate, true, true); }
+			T first_or_default(std::function<bool(const T&)> predicate)			{ return this->first_last(predicate, false, true); }
 
-			T last()														{ return this->first_last(nullptr, true, false); }
-			T last_or_default()												{ return this->first_last(nullptr, false, false); }
-			T last(std::function<bool(const T&)> predicate)					{ return this->first_last(predicate, true, false); }
-			T last_or_default(std::function<bool(const T&)> predicate)		{ return this->first_last(predicate, false, false); }
+			T last()															{ return this->first_last(nullptr, true, false); }
+			T last_or_default()													{ return this->first_last(nullptr, false, false); }
+			T last(std::function<bool(const T&)> predicate)						{ return this->first_last(predicate, true, false); }
+			T last_or_default(std::function<bool(const T&)> predicate)			{ return this->first_last(predicate, false, false); }
 
-			T single() 														{ return this->single(nullptr, true); }
-			T single_or_default()											{ return this->single(nullptr, false); }
-			T single(std::function<bool(const T&)> predicate)				{ return this->single(predicate, true); }
-			T single_or_default(std::function<bool(const T&)> predicate)	{ return this->single(predicate, false); }
+			T single() 															{ return this->single(nullptr, true); }
+			T single_or_default()												{ return this->single(nullptr, false); }
+			T single(std::function<bool(const T&)> predicate)					{ return this->single(predicate, true); }
+			T single_or_default(std::function<bool(const T&)> predicate)		{ return this->single(predicate, false); }
 
-			T min()															{ return this->min_max<T>(nullptr, true); }
-			T max()															{ return this->min_max<T>(nullptr, false); }
-			T sum()															{ return sum<T>(nullptr); }
-			double average()												{ return average<T>(nullptr); }
-			template <class U> U min(std::function<U(const T&)> selector)	{ return this->min_max<U>(selector, true); }
-			template <class U> U max(std::function<U(const T&)> selector)	{ return this->min_max<U>(selector, false); }
+			T min()																{ return this->min_max(true); }
+			T max()																{ return this->min_max(false); }
+			T sum()																{ return sum<T>(nullptr); }
+			double average()													{ return average<T>(nullptr); }
+			template <class U> U min(std::function<const U(const T&)> selector)	{ return this->min_max<U>(selector, true); }
+			template <class U> U max(std::function<const U(const T&)> selector)	{ return this->min_max<U>(selector, false); }
 
-			query<T> skip(int count)										{ return this->skip(count, nullptr); }
-			query<T> skip_while(std::function<bool(const T&)> predicate)	{ return this->skip(0, predicate); }
+			query<T> skip(int count)											{ return this->skip(count, nullptr); }
+			query<T> skip_while(std::function<bool(const T&)> predicate)		{ return this->skip(0, predicate); }
 
 
-			template <class U> double average(std::function<U(const T&)> selector)
+			template <class U> double average(std::function<const U(const T&)> selector)
 			{
 				static_assert(std::is_arithmetic<U>::value, "query::average is only suitable for arithmetic types");
 
@@ -424,7 +473,7 @@ namespace ent
 			}
 
 
-			template <class U> U sum(std::function<U(const T&)> selector)
+			template <class U> U sum(std::function<const U(const T&)> selector)
 			{
 				static_assert(std::is_arithmetic<U>::value, "query::sum is only suitable for arithmetic types");
 
@@ -449,7 +498,7 @@ namespace ent
 			}
 
 
-			template <class U, class V> std::map<U, V> map(std::function<U(T&)> key, std::function<V(T&)> value)
+			template <class U, class V> std::map<U, V> map(std::function<const U(const T&)> key, std::function<const V(const T&)> value)
 			{
 				std::map<U, V> result;
 
@@ -590,15 +639,29 @@ namespace ent
 			}
 
 
-			template <class U> U min_max(std::function<U(const T&)> selector, bool min)
+			T min_max(bool min)
 			{
 				T *i = start(this, true);
 				if (!i) throw std::runtime_error("query::min/max invalid since query result is empty");
 
-				U result = selector ? selector(*i) : *i;
+				T result = *i;
 
-				if (min)	for (T *i = next(this); i; i = next(this)) result = std::min(result, selector ? selector(*i) : *i);
-				else		for (T *i = next(this); i; i = next(this)) result = std::max(result, selector ? selector(*i) : *i);
+				if (min)	for (T *i = next(this); i; i = next(this)) result = std::min(result, *i);
+				else		for (T *i = next(this); i; i = next(this)) result = std::max(result, *i);
+
+				return result;
+			}
+
+
+			template <class U> U min_max(std::function<const U(const T&)> selector, bool min)
+			{
+				T *i = start(this, true);
+				if (!i) throw std::runtime_error("query::min/max invalid since query result is empty");
+
+				U result = selector(*i);
+
+				if (min)	for (T *i = next(this); i; i = next(this)) result = std::min(result, selector(*i));
+				else		for (T *i = next(this); i; i = next(this)) result = std::max(result, selector(*i));
 
 				return result;
 			}
@@ -672,14 +735,10 @@ namespace ent
 	template <class T, class = typename std::enable_if<is_container<T>::value>::type> query<typename T::value_type> from(T &data) { return query<typename T::value_type>(data); }
 	template <class T> query<T> from(std::initializer_list<T> data) { return query<T>(data); }
 	//template <class T> query<T> from(T *data, int size) { return query<T>(wrapper<T>(data, size)); }
-
-	//reinterpret_cast< std::array<int, 5>* >( &data )
-	//std::array<int, 5> &a = reinterpret_cast<std::array<int, 5>&>(data);
-	//template <class T, class = typename std::enable_if<is_container<T>::value>::type> query2<typename T::value_type> from2(T &data) { return q2_from<typename T::value_type, T>(data); }
 }
 
 
-/* 41/51
+/* 44/51
 -aggregate(reducer)
 -aggregate(seed, reducer)
 -aggregate(seed, reducer, selector)
@@ -697,7 +756,7 @@ namespace ent
 -element_at_or_default(index)
 -except(range)
 -first()
--first(predicate, value)
+-first(predicate)
 -first_or_default()
 -first_or_default(predicate)
 group_by(key_selector)
@@ -706,7 +765,7 @@ group_join(range, outer_key_selector, inner_key_selector, result_selector)
 intersect(range)
 join(range, outer_key_selector, inner_key_selector, result_selector)
 -last()
--last(predicate, value)
+-last(predicate)
 -last_or_default()
 -last_or_default(predicate)
 -max()
@@ -716,7 +775,7 @@ join(range, outer_key_selector, inner_key_selector, result_selector)
 -reverse()
 -select(selector)
 select_many(selector)
-sequence_equal(range)
+-sequence_equal(range)
 -single()
 -single_or_default()
 -skip(count)
@@ -729,6 +788,6 @@ sequence_equal(range)
 -to_container()
 union(range)
 -where(predicate)
-zip(range)
-zip(range, selector)
+-zip(range)
+-zip(range, selector)
 */

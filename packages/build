@@ -2,49 +2,36 @@
 
 
 VERSION="$(cat version)"
+root="libentity-dev"
 
 echo "Copying files ..."
 gzip -c9 debian/changelog > changelog.gz
-mkdir -p libentity0/usr/lib/x86_64-linux-gnu
-mkdir -p libentity-dev/usr/include
-cp changelog.gz libentity0/usr/share/doc/libentity0/
-cp changelog.gz libentity-dev/usr/share/doc/libentity-dev/
-cp ../lib/libentity.so libentity0/usr/lib/x86_64-linux-gnu/libentity.so.${VERSION}
-ln -s libentity.so.${VERSION} libentity0/usr/lib/x86_64-linux-gnu/libentity.so.0
-cp -r ../include/entity libentity-dev/usr/include/
+mkdir -p $root/usr/include
+cp changelog.gz $root/usr/share/doc/$root/
+cp -r ../include/entity $root/usr/include/
 
-sed -i "s/^Version.*/Version: $VERSION/" libentity-dev/usr/lib/x86_64-linux-gnu/pkgconfig/entity.pc
+echo "Packaging $root"
 
-for root in "libentity0" "libentity-dev"; do
+echo -n "  Modifying control file ... "
+	SIZE=$(du -s $root/usr | tr -cd '[[:digit:]]')
+	sed -i "s/^Installed-Size.*/Installed-Size: $SIZE/" $root/DEBIAN/control
+	sed -i "s/^Version.*/Version: $VERSION/" $root/DEBIAN/control
+echo "done"
 
-	echo "Packaging $root"
-	
-	echo -n "  Modifying control file ... "
-		SIZE=$(du -s $root/usr | tr -cd '[[:digit:]]')
-		sed -i "s/^Installed-Size.*/Installed-Size: $SIZE/" $root/DEBIAN/control
-		sed -i "s/^Version.*/Version: $VERSION/" $root/DEBIAN/control
-	echo "done"
+echo -n "  Removing temporary files and setting permissions ... "
+	find $root -name '*~' -type f -exec rm {} \;
+	find $root/usr -type d -exec chmod 0755 {} \;
+	find $root/usr -type f -exec chmod 0644 {} \;
+	[ -e $root/DEBIAN/postinst ] && chmod 0755 $root/DEBIAN/postinst
+	[ -e $root/DEBIAN/postrm ] && chmod 0755 $root/DEBIAN/postrm
+	[ -e $root/DEBIAN/shlibs ] && chmod 0644 $root/DEBIAN/shlibs
+echo "done"
 
-	echo -n "  Removing temporary files and setting permissions ... "
-		find $root -name '*~' -type f -exec rm {} \;
-		find $root/usr -type d -exec chmod 0755 {} \;
-		find $root/usr -type f -exec chmod 0644 {} \;
-		[ -e $root/DEBIAN/postinst ] && chmod 0755 $root/DEBIAN/postinst
-		[ -e $root/DEBIAN/postrm ] && chmod 0755 $root/DEBIAN/postrm
-		[ -e $root/DEBIAN/shlibs ] && chmod 0644 $root/DEBIAN/shlibs
-	echo "done"
-
-	echo -n "  Building deb ... "
-		fakeroot dpkg-deb --build $root
-	echo "done"
-
-	mv ${root}.deb ${root}_${VERSION}_amd64.deb
-done
-
+echo -n "  Building deb ... "
+	fakeroot dpkg-deb --build $root
+echo "done"
 
 echo "Cleaning up ..."
-rm libentity0/usr/lib/x86_64-linux-gnu/libentity.so.*
-rm -r libentity-dev/usr/include/entity
-rm libentity0/usr/share/doc/libentity0/changelog.gz
-rm libentity-dev/usr/share/doc/libentity-dev/changelog.gz
+rm -r $root/usr/include/entity
+rm $root/usr/share/doc/$root/changelog.gz
 rm changelog.gz
