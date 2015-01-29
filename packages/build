@@ -31,6 +31,8 @@ echo -n "  Building deb ... "
 	fakeroot dpkg-deb --build $root
 echo "done"
 
+mv ${root}.deb ${root}_${VERSION}.deb
+
 echo "Cleaning up ..."
 rm -r $root/usr/include/entity
 rm $root/usr/share/doc/$root/changelog.gz
