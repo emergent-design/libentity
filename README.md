@@ -4,19 +4,16 @@ libentity
 Entity is a C++11 library that provides object serialisation/deserialisation
 yet requires very little boilerplate code.
 
-
-A simple [tree](https://github.com/emergent-design/libentity/wiki/Tree)
-structure lies at the heart of libentity which eases the implementation
-of string-based emitters/parsers. This tree structure can be used directly but
-the higher level [entity](https://github.com/emergent-design/libentity/wiki/Entity)
-mapping will allow you to augment your classes and structs in a much cleaner way.
+It supports the serialisation of not only structs and classes but also `tree`
+which is a container class that supports dynamic storage of strings, numeric
+values, booleans, binary blobs, vectors and objects (other trees).
 
 
 Status
 ------
 
-This library has been used in a complex production system for some time now and despite
-the version number we consider it stable.
+This library has been used in a complex production system for some time now and
+we consider it stable.
 
 
 Codecs

@@ -1,3 +1,9 @@
+libentity0 (1.0.0) unstable; urgency=medium
+
+  * Initial release of the new API based around a direct parser rather than a tree-based one.
+
+ -- Dan Parnham <dan@emergent-design.co.uk>  Thu, 29 Jan 2015 19:09:29 +0000
+
 libentity0 (0.0.5) unstable; urgency=low
 
   * Bug fix - problem with long integers writing to the output stream as doubles.
