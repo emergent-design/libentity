@@ -72,3 +72,26 @@ TEST_CASE("a complex tree can be set using a fluent style interface", "[tree]")
 	REQUIRE(t["tree"]["name"].as_string()		== "child");
 	REQUIRE(t["boolean"].as_bool());
 }
+
+
+TEST_CASE("a complex tree can be created using an initialisation list", "[tree]")
+{
+	tree t = {
+		{ "string", "string value" },
+		{ "integer", 42 },
+		{ "floating", 3.14 },
+		{ "boolean", true },
+		{ "array", vector<tree> { 1, 2, 3 }},
+		{ "tree", {
+			{ "name", "child" }
+		}}
+	};
+
+	REQUIRE(t["string"].as_string()				== "string value");
+	REQUIRE(t["integer"].as_long()				== 42);
+	REQUIRE(t["floating"].as_double()			== 3.14);
+	REQUIRE(t["array"].as_array()[1].as_long()	== 2);
+	REQUIRE(t["tree"]["name"].as_string()		== "child");
+	REQUIRE(t["boolean"].as_bool());
+}
+
