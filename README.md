@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 If the above example was saved to "simple.cpp" then you would compile it as follows
 
 ```bash
-clang -std=c++11 simple.cpp
+clang++ -std=c++11 simple.cpp
 ```
 
 Any class or struct that descends from
