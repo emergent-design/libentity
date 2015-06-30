@@ -156,6 +156,17 @@ TEST_CASE("can cope with standard JSON number formats", "[json]")
 }
 
 
+TEST_CASE("converts NaN and infite values to null", "[json]")
+{
+	tree t = {
+		{ "infinity", INFINITY },
+		{ "nan", NAN }
+	};
+
+	REQUIRE(tree::encode<json>(t) == u8R"json({"infinity":null,"nan":null})json");
+}
+
+
 TEST_CASE("will ignore unicode encodings", "[json]")
 {
 	REQUIRE(tree::decode<json>(u8R"json({ "text":"\u2000\u20ff" })json")["text"].as_string() == "\\u2000\\u20ff");

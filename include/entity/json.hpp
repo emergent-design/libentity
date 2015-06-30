@@ -18,6 +18,13 @@ namespace ent
 			return dst;
 		}
 
+		template <class T> inline void write_number(os &dst, const T value) const
+		{
+			if (std::isnan(value) || std::isinf(value)) dst << "null";
+			else										dst << value;
+			// return std::isnan(value) || std::isinf(value) ? 0 : value;
+		}
+
 		virtual void separator(os &dst, bool last) const											{ if (!last) dst << ","; }
 		virtual void object_start(os &dst, const string &name, stack<int> &stack) const				{ write_name(dst, name, stack.size()) << '{'; }
 		virtual void object_end(os &dst, stack<int> &stack) const									{ dst << '}'; }
@@ -25,9 +32,9 @@ namespace ent
 		virtual void array_end(os &dst, stack<int> &stack) const									{ dst << ']'; }
 		virtual void item(os &dst, const string &name, int depth) const								{ write_name(dst, name, depth) << "null"; }
 		virtual void item(os &dst, const string &name, bool value, int depth) const					{ write_name(dst, name, depth) << (value ? "true" : "false"); }
-		virtual void item(os &dst, const string &name, int32_t value, int depth) const				{ write_name(dst, name, depth) << value; }
-		virtual void item(os &dst, const string &name, int64_t value, int depth) const				{ write_name(dst, name, depth) << value; }
-		virtual void item(os &dst, const string &name, double value, int depth) const				{ write_name(dst, name, depth) << value; }
+		virtual void item(os &dst, const string &name, int32_t value, int depth) const				{ write_name(dst, name, depth); write_number(dst, value); }
+		virtual void item(os &dst, const string &name, int64_t value, int depth) const				{ write_name(dst, name, depth); write_number(dst, value); }
+		virtual void item(os &dst, const string &name, double value, int depth) const				{ write_name(dst, name, depth); write_number(dst, value); }
 		virtual void item(os &dst, const string &name, const vector<byte> &value, int depth) const	{ write_name(dst, name, depth) << '"' << base64::encode(value) << '"'; }
 		virtual void item(os &dst, const string &name, const string &value, int depth) const
 		{
