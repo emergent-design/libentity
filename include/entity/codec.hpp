@@ -105,6 +105,14 @@ namespace ent
 		// Decode dynamic type
 		virtual tree item(const string &data, int &i, int type) const = 0;
 
+
+		bool is_object(const string &data)
+		{
+			int i = 0;
+			return this->object_start(data, i, -1);
+		}
+
+
 		tree object(const string &data, int &i, int type) const
 		{
 			string name;

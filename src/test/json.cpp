@@ -109,6 +109,23 @@ TEST_CASE("compact arrays can be parsed", "[json]")
 }
 
 
+TEST_CASE("top level arrays can be generated", "[json]")
+{
+	tree t = vector<tree> { 1, 2, 3, 4 };
+
+	REQUIRE(tree::encode<json>(t) == "[1,2,3,4]");
+}
+
+
+TEST_CASE("top level arrays can be parsed", "[json]")
+{
+	auto t = tree::decode<json>("[1,2,3,4]");
+
+	REQUIRE(t.get_type() == tree::Type::Array);
+	REQUIRE(t.as_array().size() == 4);
+}
+
+
 TEST_CASE("object trees can be parsed", "[json]")
 {
 	auto t = tree::decode<json>(u8R"json({

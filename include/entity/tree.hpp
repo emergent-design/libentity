@@ -190,7 +190,7 @@ namespace ent
 				os result(Codec::oflags);
 				stack<int> stack;
 
-				if (item.get_type() == tree::Type::Object)
+				if (item.get_type() == tree::Type::Object || item.get_type() == tree::Type::Array)
 				{
 					Codec().item(item, result, "", stack);
 				}
@@ -208,7 +208,7 @@ namespace ent
 
 				if (skipValidation || c.validate(data))
 				{
-					return c.object(data, position, -1);
+					return c.is_object(data) ? c.object(data, position, -1) : c.array(data, position, -1);
 				}
 
 				return {};
