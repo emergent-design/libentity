@@ -180,20 +180,18 @@ namespace ent
 						t->buffer = std::make_shared<std::vector<T>>();
 						for (T *i = p->start(p, true); i; i = p->next(p)) t->buffer->emplace_back(*i);
 
-						std::function<bool(const T&, const T&)> comparator = nullptr;
-
-						if (t->comparator)
+						if (descending)
 						{
-							if (descending) comparator = [&](const T &a, const T &b) { return selector(a) == selector(b) ? t->comparator(a, b) : selector(a) > selector(b); };
-							else			comparator = [&](const T &a, const T &b) { return selector(a) == selector(b) ? t->comparator(a, b) : selector(a) < selector(b); };
+							std::stable_sort(t->buffer->begin(), t->buffer->end(), [&](const T &a, const T &b) {
+								return t->comparator && selector(a) == selector(b) ? t->comparator(a, b) : selector(a) > selector(b);
+							});
 						}
 						else
 						{
-							if (descending) comparator = [&](const T &a, const T &b) { return selector(a) > selector(b); };
-							else			comparator = [&](const T &a, const T &b) { return selector(a) < selector(b); };
+							std::stable_sort(t->buffer->begin(), t->buffer->end(), [&](const T &a, const T &b) {
+								return t->comparator && selector(a) == selector(b) ? t->comparator(a, b) : selector(a) < selector(b);
+							});
 						}
-
-						std::stable_sort(t->buffer->begin(), t->buffer->end(), comparator);
 
 						if (forward)	t->it = std::make_shared<iterators<typename std::vector<T>::iterator>>(t->buffer->begin(), t->buffer->end());
 						else			t->it = std::make_shared<iterators<typename std::vector<T>::reverse_iterator>>(t->buffer->rbegin(), t->buffer->rend());
