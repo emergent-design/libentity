@@ -41,7 +41,7 @@ namespace ent
 
 			template <class T, class = typename std::enable_if<std::is_arithmetic<T>::value>::type> tree(const T &value) :
 				type(std::is_floating_point<T>::value ? Type::Floating : Type::Integer),
-				leaf(new container<typename std::conditional<std::is_floating_point<T>::value, double, long>::type>(value)) {}
+				leaf(new container<typename std::conditional<std::is_floating_point<T>::value, double, int64_t>::type>(value)) {}
 
 
 			tree &set(const string &name, tree &&value)
@@ -96,14 +96,14 @@ namespace ent
 			}
 
 
-			long as_long(const long def = 0) const
+			int64_t as_long(const int64_t def = 0) const
 			{
 				if (!this->leaf) return def;
 
 				switch (this->type)
 				{
 					case Type::String:		try { return stol(cast<string>()); } catch (...) { return def; }
-					case Type::Integer:		return cast<long>();
+					case Type::Integer:		return cast<int64_t>();
 					case Type::Floating:	return lrint(cast<double>());
 					case Type::Boolean:		return cast<bool>();
 					default:				return def;
@@ -118,7 +118,7 @@ namespace ent
 				switch (this->type)
 				{
 					case Type::String:		try { return stod(cast<string>()); } catch (...) { return def; }
-					case Type::Integer:		return cast<long>();
+					case Type::Integer:		return cast<int64_t>();
 					case Type::Floating:	return cast<double>();
 					case Type::Boolean:		return cast<bool>();
 					default:				return def;
@@ -133,7 +133,7 @@ namespace ent
 				switch (this->type)
 				{
 					case Type::String:		return cast<string>() == "true";
-					case Type::Integer:		return cast<long>() > 0;
+					case Type::Integer:		return cast<int64_t>() > 0;
 					case Type::Floating:	return cast<double>() > 0;
 					case Type::Boolean:		return cast<bool>();
 					default:				return def;
@@ -155,7 +155,7 @@ namespace ent
 				switch (this->type)
 				{
 					case Type::String:		return cast<string>();
-					case Type::Integer:		return std::to_string(cast<long>());
+					case Type::Integer:		return std::to_string(cast<int64_t>());
 					case Type::Floating:	return std::to_string(cast<double>());
 					case Type::Boolean:		return cast<bool>() ? "true" : "false";
 					case Type::Binary:		return base64::encode(cast<vector<byte>>());

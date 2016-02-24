@@ -8,11 +8,11 @@ using namespace ent;
 
 struct SimpleEntity : ent::entity
 {
-	string name		= "simple";
-	bool flag		= true;
-	int integer		= 42;
-	long bignumber	= 20349758;
-	double floating	= 3.142;
+	string name			= "simple";
+	bool flag			= true;
+	int integer			= 42;
+	int64_t bignumber	= 20349758;
+	double floating		= 3.142;
 
 	mapping describe()
 	{
