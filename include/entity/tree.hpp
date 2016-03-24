@@ -46,14 +46,14 @@ namespace ent
 
 			tree &set(const string &name, tree &&value)
 			{
-				this->children.emplace(name, std::move(value));
+				this->children[name] = std::move(value);
 				return *this;
 			}
 
 
 			tree &set(const string &name, const tree &value)
 			{
-				this->children.emplace(name, value);
+				this->children[name] = value;
 				return *this;
 			}
 
