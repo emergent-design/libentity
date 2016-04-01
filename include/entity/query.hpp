@@ -354,7 +354,7 @@ namespace ent
 
 			T aggregate(std::function<const T(const T&, const T&)> accumulator)
 			{
-				return std::accumulate(++this->begin(), this->end(), *this->begin(), accumulator);
+				return this->begin() == this->end() ? T() : std::accumulate(++this->begin(), this->end(), *this->begin(), accumulator);
 			}
 
 

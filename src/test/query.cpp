@@ -43,6 +43,13 @@ TEST_CASE("query brings LINQ-like features to STL containers", "[query]")
 	}
 
 
+	SECTION("can aggregate an empty vector")
+	{
+		vector<string> empty;
+		REQUIRE(from(empty).aggregate([](const string &acc, const string &i) { return acc + ", " + i; }) == "");
+	}
+
+
 	SECTION("can check if all items match the criteria")
 	{
 		REQUIRE(from(letters).all([](auto &i) { return !i.empty(); }));
