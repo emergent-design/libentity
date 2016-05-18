@@ -64,12 +64,6 @@ namespace ent
 			}
 
 
-			const tree &operator[](const string &name) const
-			{
-				return this->children.at(name);
-			}
-
-
 			tree &operator=(tree &&value)
 			{
 				this->type		= value.type;
