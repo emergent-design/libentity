@@ -104,13 +104,40 @@ namespace ent
 			// Comparison override
 			bool operator==(const tree &v) const
 			{
-				return v.type == this->type && (this->null() || (v.leaf && this->leaf && this->leaf->compare(v.leaf.get())));
+				if (v.type == this->type)
+				{
+					if (this->null())
+					{
+						return true;
+					}
+
+					if (this->leaf)
+					{
+						return v.leaf && this->leaf->compare(v.leaf.get());
+					}
+
+					return this->children == v.children;
+				}
+
+				return this->numeric() && v.numeric() && this->as_double() == v.as_double();
+			}
+
+
+			bool operator!=(const tree &v) const
+			{
+				return !(*this == v);
 			}
 
 
 			bool null() const
 			{
 				return this->type == Type::Null;
+			}
+
+
+			bool numeric() const
+			{
+				return this->type == Type::Integer || this->type == Type::Floating;
 			}
 
 

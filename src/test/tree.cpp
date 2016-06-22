@@ -30,6 +30,21 @@ TEST_CASE("setting a simple property permits it to be retrieved", "[tree]")
 }
 
 
+TEST_CASE("trees can be compared", "[tree]")
+{
+	REQUIRE(tree(42.0) == tree(42.0));
+	REQUIRE(tree(42.0) == tree(42));
+	REQUIRE(tree(42) != tree(13));
+	REQUIRE(tree("hello") == tree("hello"));
+	REQUIRE(tree("hello") != tree("world"));
+	REQUIRE(tree() == tree());
+	REQUIRE(tree().set("simple", 42) == tree().set("simple", 42));
+	REQUIRE(tree().set("simple", 42) != tree().set("simple", 41));
+	REQUIRE(tree().set("array", vector<tree> { 1, 2, 3 }) == tree().set("array", vector<tree> { 1, 2, 3 }));
+	REQUIRE(tree().set("array", vector<tree> { 1, 2, 3 }) != tree().set("array", vector<tree> { 1, 2, 3.1 }));
+}
+
+
 TEST_CASE("a property can be another tree", "[tree]")
 {
 	REQUIRE(tree().set("tree", tree().set("child", 42))["tree"]["child"].as_long() == 42);
