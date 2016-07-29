@@ -30,6 +30,13 @@ TEST_CASE("setting a simple property permits it to be retrieved", "[tree]")
 }
 
 
+TEST_CASE("a tree representing an array can be accessed by index", "[tree]")
+{
+	REQUIRE(tree(vector<tree> { 1, 2, 3 })[1].as_long() == 2);
+	REQUIRE(tree(vector<tree> { "a", "b", "c" })[2].as_string() == "c");
+}
+
+
 TEST_CASE("trees can be compared", "[tree]")
 {
 	REQUIRE(tree(42.0) == tree(42.0));

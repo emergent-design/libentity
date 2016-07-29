@@ -62,6 +62,18 @@ namespace ent
 			{
 				return this->children[name];
 			}
+// vector<tree> &as_array() const
+// 			{
+// 				static vector<tree> empty;
+
+// 				return this->type == Type::Array ? cast<vector<tree>>() : empty;
+// 			}
+
+			tree &operator[](int index)
+			{
+				static tree empty;
+				return this->type == Type::Array ? cast<vector<tree>>().at(index) : empty;
+			}
 
 
 			tree &at(const string &name)
