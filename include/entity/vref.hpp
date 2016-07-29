@@ -31,6 +31,9 @@ namespace ent
 	{
 		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack) = 0;
 		virtual int decode(const codec &c, const string &data, int position, int type) = 0;
+
+		virtual tree to_tree() = 0;
+		virtual void from_tree(const tree &data) = 0;
 	};
 
 
@@ -63,6 +66,10 @@ namespace ent
 			item = c.get(data, position, type, T()); return position;
 		};
 
+		virtual tree to_tree() 								{ return *this->reference; }
+		virtual void from_tree(const tree &data)			{ data.as(*this->reference); }
+		static tree to_tree(T &item)						{ return item; }
+		static void from_tree(T &item, const tree &data)	{ return data.as(item); }
 
 		T *reference;
 	};
@@ -96,6 +103,12 @@ namespace ent
 		{
 			item = (T)c.get(data, position, type, int()); return position;
 		};
+
+
+		virtual tree to_tree()								{ return (int)*this->reference; }
+		virtual void from_tree(const tree &data)			{ *this->reference = (T)data.as_long(); }
+		static tree to_tree(T &item)						{ return (int)item; }
+		static void from_tree(T &item, const tree &data)	{ item = (T)data.as_long(); }
 
 
 		T *reference;
@@ -160,6 +173,35 @@ namespace ent
 		}
 
 
+		virtual tree to_tree()						{ return to_tree(*this->reference); }
+		virtual void from_tree(const tree &data)	{ from_tree(*this->reference, data); }
+
+
+		static tree to_tree(T &item)
+		{
+			tree result;
+
+			for (auto &v : item.describe())
+			{
+				result.set(v.first, v.second->to_tree());
+			}
+
+			return result;
+		}
+
+
+		static void from_tree(T &item, const tree &data)
+		{
+			for (auto &v : item.describe())
+			{
+				if (data.contains(v.first))
+				{
+					v.second->from_tree(data.at(v.first));
+				}
+			}
+		}
+
+
 		T *reference;
 	};
 
@@ -220,6 +262,35 @@ namespace ent
 		}
 
 
+		virtual tree to_tree()						{ return to_tree(*this->reference); }
+		virtual void from_tree(const tree &data)	{ from_tree(*this->reference, data); }
+
+
+		static tree to_tree(T &item)
+		{
+			tree result;
+
+			for (auto &i : item)
+			{
+				result.set(i.first, vref<typename T::mapped_type>::to_tree(i.second));
+			}
+
+			return result;
+		}
+
+
+		static void from_tree(T &item, const tree &data)
+		{
+			typename T::mapped_type child;
+			item.clear();
+
+			for (auto &i : data.children)
+			{
+				vref<typename T::mapped_type>::from_tree(child, i.second);
+				item.emplace(i.first, child);
+			}
+		}
+
 		T *reference;
 	};
 
@@ -277,6 +348,39 @@ namespace ent
 			else c.skip(data, position, type);
 
 			return position;
+		}
+
+
+		virtual tree to_tree()						{ return to_tree(*this->reference); }
+		virtual void from_tree(const tree &data)	{ from_tree(*this->reference, data); }
+
+
+		static tree to_tree(T &item)
+		{
+			vector<tree> result;
+
+			for (auto &i : item)
+			{
+				result.push_back(vref<typename T::value_type>::to_tree(i));
+			}
+
+			return result;
+		}
+
+
+		static void from_tree(T &item, const tree &data)
+		{
+			typename T::value_type child;
+			item.clear();
+
+			if (data.get_type() == tree::Type::Array)
+			{
+				for (auto &i : data.as_array())
+				{
+					vref<typename T::value_type>::from_tree(child, i);
+					item.push_back(child);
+				}
+			}
 		}
 
 

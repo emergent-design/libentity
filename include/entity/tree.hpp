@@ -228,6 +228,17 @@ namespace ent
 			}
 
 
+			void as(bool &value) const			{ value = this->as_bool(); }
+			void as(string &value) const		{ value = this->as_string(); }
+			void as(vector<byte> &value) const	{ value = this->as_binary(); }
+
+			template <class T, class = typename std::enable_if<std::is_arithmetic<T>::value>::type> void as(T &value) const
+			{
+				value = std::is_floating_point<T>::value ? this->as_double() : this->as_long();
+			}
+
+
+
 			template <class Codec> static std::string encode(const tree &item)
 			{
 				//static_assert(std::is_base_of<codec, Codec>::value,	"Invalid codec specified");

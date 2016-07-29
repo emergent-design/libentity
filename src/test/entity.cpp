@@ -89,3 +89,50 @@ TEST_CASE("an entity can be deserialised", "[entity]")
 	REQUIRE(e.entities[0].name				== "simple 1");
 	REQUIRE(e.entities[1].integer			== 2);
 }
+
+
+TEST_CASE("an entity can be converted to a tree", "[entity]")
+{
+	SimpleEntity e;
+	auto t = entity::to_tree(e);
+
+	REQUIRE(t["name"].as_string() == "simple");
+	REQUIRE(t["flag"].as_bool());
+	REQUIRE(t["integer"].as_long() == 42);
+	REQUIRE(t["bignumber"].as_long() == 20349758);
+	REQUIRE(t["floating"].as_double() == 3.142);
+}
+
+
+TEST_CASE("an entity can be created from a tree", "[entity]")
+{
+	auto e = entity::from_tree<ComplexEntity>({
+		{ "name", "tree complex" },
+		{ "simple", {
+			{ "name", "tree simple" },
+			{ "flag", false },
+			{ "integer", 24816 }
+		}},
+		{ "collection", {
+			{ "strings", vector<tree> { "z", "x", "y" }},
+			{ "doubles", vector<tree> { 3.1, 4.1, 5.9 }},
+			{ "binary", vector<byte> { 0xaa, 0xbb, 0xcc }},
+			{ "dictionary", { { "a", "1" }, { "b", "2" }}}
+		}},
+		{ "entities", vector<tree> {
+			{{ "name", "simple 1" }, { "integer", 1 }},
+			{{ "name", "simple 2" }, { "integer", 2 }}
+		}}
+	});
+
+
+	REQUIRE(e.name							== "tree complex");
+	REQUIRE(e.simple.name					== "tree simple");
+	REQUIRE(e.simple.integer				== 24816 );
+	REQUIRE(e.collection.strings[1]			== "x");
+	REQUIRE(e.collection.doubles[2]			== 5.9);
+	REQUIRE(e.collection.binary[1]			== 0xbb);
+	REQUIRE(e.collection.dictionary["b"]	== "2");
+	REQUIRE(e.entities[0].name				== "simple 1");
+	REQUIRE(e.entities[1].integer			== 2);
+}

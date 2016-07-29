@@ -66,6 +66,32 @@ namespace ent
 				return item;
 			}
 
+
+			template <class T> static tree to_tree(T &item)
+			{
+				static_assert(std::is_base_of<entity, T>::value, "Item must be derived from entity");
+
+				return vref<T>::to_tree(item);
+			}
+
+
+			template <class T> static T from_tree(const tree &data)
+			{
+				T result;
+				return from_tree(data, result);
+			}
+
+
+			template <class T> static T &from_tree(const tree &data, T &item)
+			{
+				static_assert(std::is_base_of<entity, T>::value, "Item must be derived from entity");
+
+				vref<T>::from_tree(item, data);
+
+				return item;
+			}
+
+
 		protected:
 
 			// Abstract function that must be implemented by
