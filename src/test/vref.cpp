@@ -110,6 +110,20 @@ TEST_CASE("vref can map a reference to different types", "[vref]")
 	}
 
 
+	SECTION("can map to a set of simple types")
+	{
+		set<long> items = { 2, 4, 8 };
+		auto amap		= vref<decltype(items)>(items);
+
+		amap.encode(c, dst, "a", stack);
+		REQUIRE(dst.str() == "\"a\":[2,4,8]");
+
+		amap.decode(c, "[3,3,2,1]", 0, 0);
+		REQUIRE(items.size() == 3);
+		REQUIRE(items.count(2) == 1);
+	}
+
+
 	SECTION("can map to a dictionary of simple types")
 	{
 		map<string, int> items	= { { "one", 1 }, { "two", 2 } };

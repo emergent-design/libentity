@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <set>
 #include <stack>
 #include <vector>
 #include <memory>
@@ -14,6 +15,7 @@ namespace ent
 	using std::vector;
 	using std::stack;
 	using std::map;
+	using std::set;
 
 	// Forward declaration of entity
 	class entity;
@@ -25,6 +27,7 @@ namespace ent
 	template <typename T> using if_entity	= typename std::enable_if<std::is_base_of<entity, T>::value>::type;
 	template <typename T> using if_map		= typename std::enable_if<std::is_same<map<string, typename T::mapped_type>, T>::value>::type;
 	template <typename T> using if_vector	= typename std::enable_if<std::is_same<vector<typename T::value_type>, T>::value && !std::is_same<typename T::value_type, byte>::value>::type;
+	template <typename T> using if_set		= typename std::enable_if<std::is_same<set<typename T::value_type>, T>::value>::type;
 
 
 	struct vbase
@@ -379,6 +382,100 @@ namespace ent
 				{
 					vref<typename T::value_type>::from_tree(child, i);
 					item.push_back(child);
+				}
+			}
+		}
+
+
+		T *reference;
+	};
+
+
+	// Since this is almost identical to the vector implementation it can be merged into it when
+	// constexpr if becomes available (C++17 via clang 3.9).
+	template <class T> struct vref<T, if_set<T>> : vbase
+	{
+		vref(T &reference) : reference(&reference) {}
+
+
+		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
+		{
+			encode(*this->reference, c, dst, name, stack);
+		}
+
+
+		static void encode(T &item, const codec &c, os &dst, const string &name, stack<int> &stack)
+		{
+			int j = item.size() - 1;
+			int k = 0;
+
+			c.array_start(dst, name, stack);
+
+			for (auto &i : item)
+			{
+				vref<const typename T::value_type>::encode(i, c, dst, c.array_item_name(k++), stack);
+				c.separator(dst, !j--);
+			}
+
+			c.array_end(dst, stack);
+		}
+
+
+		virtual int decode(const codec &c, const string &data, int position, int type)
+		{
+			return decode(*this->reference, c, data, position, type);
+		}
+
+
+		static int decode(T &item, const codec &c, const string &data, int position, int type)
+		{
+			typename T::value_type child;
+			item.clear();
+
+			if (c.array_start(data, position, type))
+			{
+				while (c.array_item(data, position, type))
+				{
+					position = vref<typename T::value_type>::decode(child, c, data, position, type);
+					item.insert(child);
+				}
+
+				c.array_end(data, position);
+			}
+			else c.skip(data, position, type);
+
+			return position;
+		}
+
+
+		virtual tree to_tree()						{ return to_tree(*this->reference); }
+		virtual void from_tree(const tree &data)	{ from_tree(*this->reference, data); }
+
+
+		static tree to_tree(T &item)
+		{
+			vector<tree> result;
+
+			for (auto &i : item)
+			{
+				result.push_back(vref<const typename T::value_type>::to_tree(i));
+			}
+
+			return result;
+		}
+
+
+		static void from_tree(T &item, const tree &data)
+		{
+			typename T::value_type child;
+			item.clear();
+
+			if (data.get_type() == tree::Type::Array)
+			{
+				for (auto &i : data.as_array())
+				{
+					vref<typename T::value_type>::from_tree(child, i);
+					item.insert(child);
 				}
 			}
 		}

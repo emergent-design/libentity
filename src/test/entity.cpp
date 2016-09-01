@@ -26,11 +26,12 @@ struct CollectionEntity : ent::entity
 	vector<string> strings;
 	vector<double> doubles;
 	vector<byte> binary;
+	set<long> longs;
 	map<string, string> dictionary;
 
 	mapping describe()
 	{
-		return { eref(strings), eref(doubles), eref(binary), eref(dictionary) };
+		return { eref(strings), eref(doubles), eref(binary), eref(longs), eref(dictionary) };
 	}
 };
 
@@ -70,6 +71,7 @@ TEST_CASE("an entity can be deserialised", "[entity]")
 		"collection": {
 			"strings":		[ "a", "b", "c", "d" ],
 			"doubles":		[ 9, 8, 7, 6 ],
+			"longs":		[ 2, 4, 8 ],
 			"binary":		"AAECiP8=",
 			"dictionary":	{ "a": "1", "b": "2" }
 		},
@@ -86,6 +88,7 @@ TEST_CASE("an entity can be deserialised", "[entity]")
 	REQUIRE(e.collection.doubles[2]			== 7);
 	REQUIRE(e.collection.binary[3]			== 0x88);
 	REQUIRE(e.collection.dictionary["b"]	== "2");
+	REQUIRE(e.collection.longs.count(4)		== 1);
 	REQUIRE(e.entities[0].name				== "simple 1");
 	REQUIRE(e.entities[1].integer			== 2);
 }
@@ -117,7 +120,8 @@ TEST_CASE("an entity can be created from a tree", "[entity]")
 			{ "strings", vector<tree> { "z", "x", "y" }},
 			{ "doubles", vector<tree> { 3.1, 4.1, 5.9 }},
 			{ "binary", vector<byte> { 0xaa, 0xbb, 0xcc }},
-			{ "dictionary", { { "a", "1" }, { "b", "2" }}}
+			{ "dictionary", { { "a", "1" }, { "b", "2" }}},
+			{ "longs", vector<tree> { 2, 4, 8 }}
 		}},
 		{ "entities", vector<tree> {
 			{{ "name", "simple 1" }, { "integer", 1 }},
@@ -133,6 +137,7 @@ TEST_CASE("an entity can be created from a tree", "[entity]")
 	REQUIRE(e.collection.doubles[2]			== 5.9);
 	REQUIRE(e.collection.binary[1]			== 0xbb);
 	REQUIRE(e.collection.dictionary["b"]	== "2");
+	REQUIRE(e.collection.longs.count(4)		== 1);
 	REQUIRE(e.entities[0].name				== "simple 1");
 	REQUIRE(e.entities[1].integer			== 2);
 }
