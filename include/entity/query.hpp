@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <set>
 #include <list>
 #include <vector>
 #include <memory>
@@ -490,7 +491,8 @@ namespace ent
 			{
 				U result;
 
-				for (T *i = start(this, true); i; i = next(this)) result.emplace_back(*i);
+				// Using insert works for vectors, lists and sets.
+				for (T *i = start(this, true); i; i = next(this)) result.insert(result.end(), *i);
 
 				return result;
 			}
@@ -508,6 +510,7 @@ namespace ent
 
 			std::vector<T> vector()	{ return to<std::vector<T>>(); }
 			std::list<T> list()		{ return to<std::list<T>>(); }
+			std::set<T> set()		{ return to<std::set<T>>(); }
 
 
 			// Basic iterator that allows query to be used in a for( : ) each loop without

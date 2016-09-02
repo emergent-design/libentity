@@ -343,7 +343,8 @@ namespace ent
 				while (c.array_item(data, position, type))
 				{
 					position = vref<typename T::value_type>::decode(child, c, data, position, type);
-					item.push_back(child);
+					// item.push_back(child);
+					item.insert(item.end(), child);
 				}
 
 				c.array_end(data, position);
@@ -381,7 +382,8 @@ namespace ent
 				for (auto &i : data.as_array())
 				{
 					vref<typename T::value_type>::from_tree(child, i);
-					item.push_back(child);
+					// item.push_back(child);
+					item.insert(item.end(), child);
 				}
 			}
 		}

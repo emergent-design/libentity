@@ -181,6 +181,7 @@ TEST_CASE("query brings LINQ-like features to STL containers", "[query]")
 	SECTION("can transform items in a sequence")
 	{
 		REQUIRE(from(strings).select<int>([](auto &i) { return i.size(); }).vector() == vector<int>({ 3, 6, 1, 7 }));
+		REQUIRE(from(strings).select<int>([](auto &i) { return i.size(); }).set().count(6) == 1);
 	}
 
 
