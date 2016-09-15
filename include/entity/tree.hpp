@@ -37,6 +37,11 @@ namespace ent
 			tree(const vector<byte> &value)		: type(Type::Binary),	leaf(new container<vector<byte>>(value)) {}
 			tree(const vector<tree> &value) 	: type(Type::Array),	leaf(new container<vector<tree>>(value)) {}
 
+			tree(const map<string, string> &value)
+			{
+				for (auto &v : value) this->children[v.first] = v.second;
+			}
+
 			tree(std::initializer_list<std::pair<const string, tree>> value) : children(value) {}
 
 			template <class T, class = typename std::enable_if<std::is_arithmetic<T>::value>::type> tree(const T &value) :
@@ -62,12 +67,7 @@ namespace ent
 			{
 				return this->children[name];
 			}
-// vector<tree> &as_array() const
-// 			{
-// 				static vector<tree> empty;
 
-// 				return this->type == Type::Array ? cast<vector<tree>>() : empty;
-// 			}
 
 			tree &operator[](int index)
 			{
