@@ -97,5 +97,16 @@ namespace ent
 			// Abstract function that must be implemented by
 			// any objects to be serialised/deserialised.
 			virtual mapping describe() = 0;
+
+
+			// Helper function for merging mappings when deriving
+			// entities from other entities.
+			inline mapping &&merge(ent::mapping &&a, const ent::mapping &b)
+			{
+				a.insert(b.begin(), b.end());
+
+				return std::move(a);
+			}
 	};
 }
+
