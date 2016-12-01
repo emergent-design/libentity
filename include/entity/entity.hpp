@@ -43,6 +43,19 @@ namespace ent
 				return result.str();
 			}
 
+			template <class Codec, class T> static std::string encode(std::vector<T> &items)
+			{
+				static_assert(std::is_base_of<entity, T>::value,	"Item must be derived from entity");
+				static_assert(std::is_base_of<codec, Codec>::value,	"Invalid codec specified");
+
+				os result(Codec::oflags);
+				std::stack<int> stack;
+
+				vref<std::vector<T>>::encode(items, Codec(), result, "", stack);
+
+				return result.str();
+			}
+
 
 			template <class Codec, class T> static T decode(const std::string &data, bool skipValidation = false)
 			{

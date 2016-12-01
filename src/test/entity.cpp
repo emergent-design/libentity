@@ -59,6 +59,15 @@ TEST_CASE("an entity can be serialised", "[entity]")
 }
 
 
+TEST_CASE("a vector of entities can be serialised", "[entity]")
+{
+	vector<SimpleEntity> e = { SimpleEntity() };
+	string data = u8R"json([{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"}])json";
+
+	REQUIRE(entity::encode<json>(e) == data);
+}
+
+
 TEST_CASE("an entity can be deserialised", "[entity]")
 {
 	auto e = entity::decode<json, ComplexEntity>(u8R"json({
