@@ -50,6 +50,18 @@ struct ComplexEntity : ent::entity
 };
 
 
+struct TreeEntity : ent::entity
+{
+	string name;
+	tree parameters;
+
+	mapping describe()
+	{
+		return { eref(name), eref(parameters) };
+	}
+};
+
+
 TEST_CASE("an entity can be serialised", "[entity]")
 {
 	SimpleEntity e;
@@ -149,4 +161,64 @@ TEST_CASE("an entity can be created from a tree", "[entity]")
 	REQUIRE(e.collection.longs.count(4)		== 1);
 	REQUIRE(e.entities[0].name				== "simple 1");
 	REQUIRE(e.entities[1].integer			== 2);
+}
+
+
+TEST_CASE("an entity can contain a tree and be serialised", "[entity]")
+{
+	TreeEntity e;
+	e.name = "tree entity";
+	e.parameters = tree().set("name", "parameter").set("flag", true);
+
+	REQUIRE(entity::encode<json>(e) == "{\"name\":\"tree entity\",\"parameters\":{\"flag\":true,\"name\":\"parameter\"}}");
+}
+
+
+TEST_CASE("an entity can contain a tree and be deserialised", "[entity]")
+{
+	auto e = entity::decode<json, TreeEntity>(u8R"json({
+		"name":	"tree entity",
+		"parameters": {
+			"name":		"parameter",
+			"flag":		true,
+			"integer":	1234
+		}
+	})json");
+
+	REQUIRE(e.name == "tree entity");
+	REQUIRE(e.parameters["name"] == "parameter");
+	REQUIRE(e.parameters["flag"].as_bool());
+	REQUIRE(e.parameters["integer"].as_long() == 1234);
+}
+
+
+TEST_CASE("an entity containing a tree can be converted to a tree", "[entity]")
+{
+	TreeEntity e;
+	e.name = "tree entity";
+	e.parameters = tree().set("name", "parameter").set("flag", true);
+
+	auto t = entity::to_tree(e);
+
+	REQUIRE(t["name"] == "tree entity");
+	REQUIRE(t["parameters"]["name"] == "parameter");
+	REQUIRE(t["parameters"]["flag"].as_bool());
+}
+
+
+TEST_CASE("an entity containing a tree can be created from a tree")
+{
+	auto e = entity::from_tree<TreeEntity>({
+		{ "name", "tree entity" },
+		{ "parameters", {
+			{ "name", "parameter" },
+			{ "flag", true },
+			{ "integer", 1234 }
+		}}
+	});
+
+	REQUIRE(e.name == "tree entity");
+	REQUIRE(e.parameters["name"] == "parameter");
+	REQUIRE(e.parameters["flag"].as_bool());
+	REQUIRE(e.parameters["integer"].as_long() == 1234);
 }

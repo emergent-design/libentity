@@ -28,6 +28,7 @@ namespace ent
 	template <typename T> using if_map		= typename std::enable_if<std::is_same<map<string, typename T::mapped_type>, T>::value>::type;
 	template <typename T> using if_vector	= typename std::enable_if<std::is_same<vector<typename T::value_type>, T>::value && !std::is_same<typename T::value_type, byte>::value>::type;
 	template <typename T> using if_set		= typename std::enable_if<std::is_same<set<typename T::value_type>, T>::value>::type;
+	template <typename T> using if_tree		= typename std::enable_if<std::is_same<tree, T>::value>::type;
 
 
 	struct vbase
@@ -487,5 +488,36 @@ namespace ent
 	};
 
 
-}
+	template <class T> struct vref<T, if_tree<T>> : vbase
+	{
+		vref(T &reference) : reference(&reference) {}
 
+		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
+		{
+			encode(*this->reference, c, dst, name, stack);
+		}
+
+		static void encode(T &item, const codec &c, os &dst, const string &name, stack<int> &stack)
+		{
+			c.item(item, dst, name, stack);
+		}
+
+		virtual int decode(const codec &c, const string &data, int position, int type)
+		{
+			*this->reference = c.item(data, position, type); return position;
+		}
+
+		static int decode(T &item, const codec &c, const string &data, int position, int type)
+		{
+			item = c.item(data, position, type); return position;
+		}
+
+
+		virtual tree to_tree()								{ return *this->reference; }
+		virtual void from_tree(const tree &data)			{ *this->reference = data; }
+		static tree to_tree(T &item)						{ return item; }
+		static void from_tree(T &item, const tree &data)	{ return data.as(item); }
+
+		T *reference;
+	};
+}

@@ -176,5 +176,18 @@ TEST_CASE("vref can map a reference to different types", "[vref]")
 		bmap.decode(c, "\"Zm9vYmFy\"", 0, 0);
 		REQUIRE(binary == vector<byte>({ 0x66, 0x6f, 0x6f, 0x62, 0x61, 0x72 }));
 	}
+
+
+	SECTION("can map to a tree")
+	{
+		tree t = tree().set("name", "tree").set("number", 42);
+		auto tmap	= vref<tree>(t);
+
+		tmap.encode(c, dst, "t", stack);
+		REQUIRE(dst.str() == "\"t\":{\"name\":\"tree\",\"number\":42}");
+
+		tmap.decode(c, "{\"value\": 1234 }", 0, 0);
+		REQUIRE(t["value"].as_long() == 1234);
+	}
 }
 
