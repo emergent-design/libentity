@@ -298,7 +298,7 @@ namespace ent
 			bool quotes	= false;
 			bool ignore	= false;
 
-			for (i++; i<data.length() && count; i++)
+			for (i++; i<data.length() && count; count && i++)
 			{
 				c = data[i];
 

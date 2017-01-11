@@ -206,7 +206,7 @@ TEST_CASE("an entity containing a tree can be converted to a tree", "[entity]")
 }
 
 
-TEST_CASE("an entity containing a tree can be created from a tree")
+TEST_CASE("an entity containing a tree can be created from a tree", "[entity]")
 {
 	auto e = entity::from_tree<TreeEntity>({
 		{ "name", "tree entity" },
@@ -221,4 +221,14 @@ TEST_CASE("an entity containing a tree can be created from a tree")
 	REQUIRE(e.parameters["name"] == "parameter");
 	REQUIRE(e.parameters["flag"].as_bool());
 	REQUIRE(e.parameters["integer"].as_long() == 1234);
+}
+
+
+TEST_CASE("an entity can be decoded from JSON containing unused information", "[entity]")
+{
+	auto e = entity::decode<json, ComplexEntity>(u8R"json({
+		"entities":[{"a":{}}]
+	})json");
+
+	REQUIRE(e.entities.size() == 1);
 }
