@@ -4,6 +4,15 @@
 #include <entity/codec.hpp>
 
 
+#ifdef _WIN32
+	// Windows does not provide these functions but is always little-endian so they can be defined away
+	#define htole32(x) (x)
+	#define htole64(x) (x)
+	#define le32toh(x) (x)
+	#define le64toh(x) (x)
+#endif
+
+
 namespace ent
 {
 	struct bson : codec
