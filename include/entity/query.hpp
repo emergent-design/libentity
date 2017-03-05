@@ -5,6 +5,7 @@
 #include <list>
 #include <vector>
 #include <memory>
+#include <numeric>
 #include <algorithm>
 #include <functional>
 
@@ -537,9 +538,9 @@ namespace ent
 					return *this;
 				}
 
-				bool operator!=(const iterator &i) 	{ return i.current != this->current; }
-				bool operator==(const iterator &i)	{ return i.current == this->current; }
-				T &operator*()						{ return *this->current; }
+				bool operator!=(const iterator &i) const	{ return i.current != this->current; }
+				bool operator==(const iterator &i) const	{ return i.current == this->current; }
+				T &operator*()								{ return *this->current; }
 
 				private:
 					query<T> q;

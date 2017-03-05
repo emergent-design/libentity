@@ -13,7 +13,7 @@ solution "entity"
 		kind				"ConsoleApp"
 		targetdir			"bin"
 		targetname			"test"
-		buildoptions		{ "-D_GLIBCXX_DEBUG" } --To view strings in gdb
+		-- buildoptions		{ "-D_GLIBCXX_DEBUG" } --To view strings in gdb
 		files				{ "src/test/**.cpp" }
 		postbuildcommands	{ "./bin/test" }
 
