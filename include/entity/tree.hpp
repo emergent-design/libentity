@@ -250,6 +250,22 @@ namespace ent
 			}
 
 
+			// Recursively traverse the tree. The supplied function can perform
+			// operations on a child and if it returns true then this function
+			// will recurse into that child.
+			tree &walk(const std::function<bool(tree&)> &recurse)
+			{
+				for (auto &c : this->children)
+				{
+					if (recurse(c.second))
+					{
+						c.second.walk(recurse);
+					}
+				}
+
+				return *this;
+			}
+
 
 			template <class Codec> static std::string encode(const tree &item)
 			{
