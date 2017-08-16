@@ -40,12 +40,13 @@ struct ComplexEntity : ent::entity
 {
 	string name;
 	vector<SimpleEntity> entities;
+	array<SimpleEntity, 4> extras;
 	CollectionEntity collection;
 	SimpleEntity simple;
 
 	mapping describe()
 	{
-		return { eref(name), eref(entities), eref(collection), eref(simple) };
+		return { eref(name), eref(entities), eref(extras), eref(collection), eref(simple) };
 	}
 };
 
@@ -99,6 +100,9 @@ TEST_CASE("an entity can be deserialised", "[entity]")
 		"entities": [
 			{ "name": "simple 1", "integer": 1 },
 			{ "name": "simple 2", "integer": 2 },
+		],
+		"extras": [
+			{ "name": "extra 1", "integer": 4 }
 		]
 	})json");
 
@@ -112,6 +116,9 @@ TEST_CASE("an entity can be deserialised", "[entity]")
 	REQUIRE(e.collection.longs.count(4)		== 1);
 	REQUIRE(e.entities[0].name				== "simple 1");
 	REQUIRE(e.entities[1].integer			== 2);
+	REQUIRE(e.extras[0].name				== "extra 1");
+	REQUIRE(e.extras[0].integer				== 4);
+	REQUIRE(e.extras[1].name				== "simple");	// Unassigned array items are left with their original values
 }
 
 
@@ -147,6 +154,9 @@ TEST_CASE("an entity can be created from a tree", "[entity]")
 		{ "entities", vector<tree> {
 			{{ "name", "simple 1" }, { "integer", 1 }},
 			{{ "name", "simple 2" }, { "integer", 2 }}
+		}},
+		{ "extras", vector<tree> {
+			{{ "name", "extra 1" }, { "integer", 4 }}
 		}}
 	});
 
@@ -161,6 +171,8 @@ TEST_CASE("an entity can be created from a tree", "[entity]")
 	REQUIRE(e.collection.longs.count(4)		== 1);
 	REQUIRE(e.entities[0].name				== "simple 1");
 	REQUIRE(e.entities[1].integer			== 2);
+	REQUIRE(e.extras[0].name				== "extra 1");
+	REQUIRE(e.extras[0].integer				== 4);
 }
 
 

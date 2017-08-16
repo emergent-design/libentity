@@ -96,7 +96,7 @@ TEST_CASE("vref can map a reference to different types", "[vref]")
 	}
 
 
-	SECTION("can map to an array of simple types")
+	SECTION("can map to a vector of simple types")
 	{
 		vector<int> items 	= { 1, 1, 2, 3 };
 		auto amap			= vref<decltype(items)>(items);
@@ -138,7 +138,7 @@ TEST_CASE("vref can map a reference to different types", "[vref]")
 	}
 
 
-	SECTION("can map to an array of enums")
+	SECTION("can map to a vector of enums")
 	{
 		vector<EnumTest> items	= { EnumTest::Two, EnumTest::Zero };
 		auto amap				= vref<decltype(items)>(items);
@@ -188,6 +188,23 @@ TEST_CASE("vref can map a reference to different types", "[vref]")
 
 		tmap.decode(c, "{\"value\": 1234 }", 0, 0);
 		REQUIRE(t["value"].as_long() == 1234);
+	}
+
+
+	SECTION("can map to an array")
+	{
+		array<int, 4> a = {{ 2, 4, 5, 6 }};
+		auto amap		= vref<array<int, 4>>(a);
+
+		amap.encode(c, dst, "a", stack);
+		REQUIRE(dst.str() == "\"a\":[2,4,5,6]");
+
+		amap.decode(c, "[1,2,3,4]", 0, 0);
+		REQUIRE(a[3] == 4);
+
+		// If there are too many items in the JSON then only take the first N
+		amap.decode(c, "[8,7,6,5,4,3,2,1]", 0, 0);
+		REQUIRE(a[3] == 5);
 	}
 }
 

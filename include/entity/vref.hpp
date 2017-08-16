@@ -30,6 +30,10 @@ namespace ent
 	template <typename T> using if_set		= typename std::enable_if<std::is_same<set<typename T::value_type>, T>::value>::type;
 	template <typename T> using if_tree		= typename std::enable_if<std::is_same<tree, T>::value>::type;
 
+	template <typename T> struct is_array : std::false_type {};
+	template <typename T, std::size_t N> struct is_array<std::array<T, N>> : std::true_type {};
+	template <typename T> using if_array	= typename std::enable_if<ent::is_array<T>::value>::type;
+
 
 	struct vbase
 	{
@@ -486,6 +490,108 @@ namespace ent
 
 		T *reference;
 	};
+
+
+	// Reference to std::array
+	template <class T> struct vref<T, if_array<T>> : vbase
+	{
+		vref(T &reference) : reference(&reference) {}
+
+
+		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
+		{
+			encode(*this->reference, c, dst, name, stack);
+		}
+
+
+		static void encode(T &item, const codec &c, os &dst, const string &name, stack<int> &stack)
+		{
+			int j = item.size() - 1;
+			int k = 0;
+
+			c.array_start(dst, name, stack);
+
+			for (auto &i : item)
+			{
+				vref<typename T::value_type>::encode(i, c, dst, c.array_item_name(k++), stack);
+				c.separator(dst, !j--);
+			}
+
+			c.array_end(dst, stack);
+		}
+
+
+		virtual int decode(const codec &c, const string &data, int position, int type)
+		{
+			return decode(*this->reference, c, data, position, type);
+		}
+
+
+		static int decode(T &item, const codec &c, const string &data, int position, int type)
+		{
+			typename T::value_type child;
+
+			if (c.array_start(data, position, type))
+			{
+				for (int i=0; c.array_item(data, position, type); i++)
+				{
+					position = vref<typename T::value_type>::decode(child, c, data, position, type);
+
+					if (i < item.size())
+					{
+						item[i] = child;
+					}
+				}
+
+				c.array_end(data, position);
+			}
+			else c.skip(data, position, type);
+
+			return position;
+		}
+
+
+		virtual tree to_tree()						{ return to_tree(*this->reference); }
+		virtual void from_tree(const tree &data)	{ from_tree(*this->reference, data); }
+
+
+		static tree to_tree(T &item)
+		{
+			vector<tree> result;
+
+			for (auto &i : item)
+			{
+				result.push_back(vref<typename T::value_type>::to_tree(i));
+			}
+
+			return result;
+		}
+
+
+		static void from_tree(T &item, const tree &data)
+		{
+			typename T::value_type child;
+
+			if (data.get_type() == tree::Type::Array)
+			{
+				int i = 0;
+
+				for (auto &d : data.as_array())
+				{
+					vref<typename T::value_type>::from_tree(child, d);
+
+					if (i < item.size())
+					{
+						item[i++] = child;
+					}
+				}
+			}
+		}
+
+
+		T *reference;
+	};
+
 
 
 	template <class T> struct vref<T, if_tree<T>> : vbase
