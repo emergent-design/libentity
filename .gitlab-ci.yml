@@ -1,0 +1,24 @@
+#Test locally with `gitlab-runner exec docker --docker-pull-policy=never build-check`
+
+stages:
+  - build
+
+build-check:
+  image: emergent:xenial
+  stage: build
+  script:
+    - premake5 gmake
+    - make -j4
+
+xenial-package:
+  image: emergent:xenial
+  stage: build
+  only: tags
+  script:
+    - cd packages
+    - ./build
+    - mkdir -p /packages/xenial/oss/
+    - cp libentity-dev_*.deb /packages/xenial/oss/libentity-dev.deb
+  artifacts:
+    paths:
+      - packages/*.deb

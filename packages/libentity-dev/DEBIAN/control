@@ -4,7 +4,7 @@ Section: libdevel
 Priority: optional
 Architecture: all
 Maintainer: Dan Parnham <dan@emergent-design.co.uk>
-Installed-Size: 112
+Installed-Size: 124
 Description: Development headers for libentity
  Provides a C++11 libray for directly serialising/deserialising
  classes or structs to formats such as JSON.
