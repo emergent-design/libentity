@@ -1,3 +1,15 @@
+libentity0 (1.0.1) unstable; urgency=medium
+
+  * Updated unit tests.
+  * Parsing of top-level arrays.
+  * Const functions where appropriate.
+  * Conversion of entities to trees and vice versa.
+  * Entities can now contain trees!
+  * Recursive tree walking helper added.
+  * Support for std::array<> in an entity.
+
+ -- Dan Parnham <dan@emergent-design.co.uk>  Mon, 22 Jan 2018 15:20:48 +0000
+
 libentity0 (1.0.0) unstable; urgency=medium
 
   * Initial release of the new API based around a direct parser rather than a tree-based one.
