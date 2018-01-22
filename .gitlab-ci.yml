@@ -1,19 +1,20 @@
-#Test locally with `gitlab-runner exec docker --docker-pull-policy=never build-check`
-
 stages:
   - build
 
 build-check:
   image: emergent:xenial
   stage: build
+  only:
+    - master
   script:
     - premake5 gmake
     - make -j4
 
-xenial-package:
+package-xenial:
   image: emergent:xenial
   stage: build
-  only: tags
+  only:
+    - tags
   script:
     - cd packages
     - ./build
