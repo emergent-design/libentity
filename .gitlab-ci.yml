@@ -1,5 +1,6 @@
 stages:
   - build
+  - deploy
 
 build-check:
   image: emergent:xenial
