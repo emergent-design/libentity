@@ -11,6 +11,15 @@ build-check:
     - premake5 gmake
     - make -j4
 
+windows-check:
+  image: emergent:windows
+  stage: build
+  only:
+    - master
+  script:
+    - premake5 --os=windows gmake
+    - make CXX=x86_64-w64-mingw32-g++ -j4
+
 package-xenial:
   image: emergent:xenial
   stage: build

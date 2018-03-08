@@ -5,6 +5,7 @@
 #include <stack>
 #include <vector>
 #include <memory>
+#include <functional>
 #include <entity/utilities.hpp>
 
 
