@@ -25,17 +25,17 @@ namespace ent
 			// return std::isnan(value) || std::isinf(value) ? 0 : value;
 		}
 
-		virtual void separator(os &dst, bool last) const											{ if (!last) dst << ","; }
-		virtual void object_start(os &dst, const string &name, stack<int> &stack) const				{ write_name(dst, name, stack.size()) << '{'; }
-		virtual void object_end(os &dst, stack<int> &stack) const									{ dst << '}'; }
-		virtual void array_start(os &dst, const string &name, stack<int> &stack) const				{ write_name(dst, name, stack.size()) << '['; }
-		virtual void array_end(os &dst, stack<int> &stack) const									{ dst << ']'; }
-		virtual void item(os &dst, const string &name, int depth) const								{ write_name(dst, name, depth) << "null"; }
-		virtual void item(os &dst, const string &name, bool value, int depth) const					{ write_name(dst, name, depth) << (value ? "true" : "false"); }
-		virtual void item(os &dst, const string &name, int32_t value, int depth) const				{ write_name(dst, name, depth); write_number(dst, value); }
-		virtual void item(os &dst, const string &name, int64_t value, int depth) const				{ write_name(dst, name, depth); write_number(dst, value); }
-		virtual void item(os &dst, const string &name, double value, int depth) const				{ write_name(dst, name, depth); write_number(dst, value); }
-		virtual void item(os &dst, const string &name, const vector<byte> &value, int depth) const	{ write_name(dst, name, depth) << '"' << base64::encode(value) << '"'; }
+		virtual void separator(os &dst, bool last) const												{ if (!last) dst << ","; }
+		virtual void object_start(os &dst, const string &name, stack<int> &stack) const					{ write_name(dst, name, stack.size()) << '{'; }
+		virtual void object_end(os &dst, stack<int> &stack) const										{ dst << '}'; }
+		virtual void array_start(os &dst, const string &name, stack<int> &stack) const					{ write_name(dst, name, stack.size()) << '['; }
+		virtual void array_end(os &dst, stack<int> &stack) const										{ dst << ']'; }
+		virtual void item(os &dst, const string &name, int depth) const									{ write_name(dst, name, depth) << "null"; }
+		virtual void item(os &dst, const string &name, bool value, int depth) const						{ write_name(dst, name, depth) << (value ? "true" : "false"); }
+		virtual void item(os &dst, const string &name, int32_t value, int depth) const					{ write_name(dst, name, depth); write_number(dst, value); }
+		virtual void item(os &dst, const string &name, int64_t value, int depth) const					{ write_name(dst, name, depth); write_number(dst, value); }
+		virtual void item(os &dst, const string &name, double value, int depth) const					{ write_name(dst, name, depth); write_number(dst, value); }
+		virtual void item(os &dst, const string &name, const vector<uint8_t> &value, int depth) const	{ write_name(dst, name, depth) << '"' << base64::encode(value) << '"'; }
 		virtual void item(os &dst, const string &name, const string &value, int depth) const
 		{
 			write_name(dst, name, depth) << '"';
@@ -74,7 +74,7 @@ namespace ent
 			{
 				c = data[i];
 
-				if (!whitespace[(byte)c])
+				if (!whitespace[(uint8_t)c])
 				{
 					if (!quotes && (c == '}' || c == ']'))
 					{
@@ -110,7 +110,7 @@ namespace ent
 			int length = data.length();
 
 			// Swallow whitespace
-			for (; i<length && whitespace[(byte)data[i]]; i++);
+			for (; i<length && whitespace[(uint8_t)data[i]]; i++);
 
 			// An object should always start with an opening brace
 			return i<length && data[i] == '{';
@@ -127,7 +127,7 @@ namespace ent
 		{
 			int length = data.length();
 
-			for (i++; i<length && whitespace[(byte)data[i]]; i++);
+			for (i++; i<length && whitespace[(uint8_t)data[i]]; i++);
 
 			if (i < length)
 			{
@@ -145,11 +145,11 @@ namespace ent
 					// Look for the key/value separator
 					for (i++; i<length && data[i] != ':'; i++)
 					{
-						if (!whitespace[(byte)data[i]]) error("missing key/value separator", data, i);
+						if (!whitespace[(uint8_t)data[i]]) error("missing key/value separator", data, i);
 					}
 
 					// Swallow any whitespace
-					for (i++; i<length && whitespace[(byte)data[i]]; i++);
+					for (i++; i<length && whitespace[(uint8_t)data[i]]; i++);
 
 					return true;
 				}
@@ -165,7 +165,7 @@ namespace ent
 			int length = data.length();
 
 			// Swallow whitespace
-			for (; i<length && whitespace[(byte)data[i]]; i++);
+			for (; i<length && whitespace[(uint8_t)data[i]]; i++);
 
 			// An object should always start with an opening square brace
 			return i<length && data[i] == '[';
@@ -182,7 +182,7 @@ namespace ent
 		{
 			int length = data.length();
 
-			for (i++; i<length && whitespace[(byte)data[i]]; i++);
+			for (i++; i<length && whitespace[(uint8_t)data[i]]; i++);
 
 			return i < length && data[i] != ']';
 		}
@@ -278,7 +278,7 @@ namespace ent
 		}
 
 
-		virtual vector<byte> get(const string &data, int &i, int type, const vector<byte> def) const
+		virtual vector<uint8_t> get(const string &data, int &i, int type, const vector<uint8_t> def) const
 		{
 			if (data[i] == '"')
 			{
@@ -302,7 +302,7 @@ namespace ent
 			{
 				c = data[i];
 
-				if (!whitespace[(byte)c])
+				if (!whitespace[(uint8_t)c])
 				{
 					if (!quotes && c == open)	count++;
 					if (!quotes && c == close)	count--;
@@ -355,7 +355,7 @@ namespace ent
 		string parse_item(const string &data, int &i) const
 		{
 			int start = i;
-			for (i++; i<data.length() && !whitespace[(byte)data[i]] && data[i] != '}' && data[i] != ']'; i++);
+			for (i++; i<data.length() && !whitespace[(uint8_t)data[i]] && data[i] != '}' && data[i] != ']'; i++);
 
 			// Jump back a character since the parse_array and parse methods expect
 			// to swallow whitespace or opening character next so allow it to find

@@ -4,10 +4,6 @@
 #include <vector>
 #include <stdexcept>
 
-#ifndef byte
-	typedef unsigned char byte;
-#endif
-
 
 namespace ent
 {
@@ -17,7 +13,7 @@ namespace ent
 
 	struct base64
 	{
-		static std::string encode(const std::vector<byte> &value)
+		static std::string encode(const std::vector<uint8_t> &value)
 		{
 			const static char lookup[]	= "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 			const static char pad		= '=';
@@ -58,7 +54,7 @@ namespace ent
 		}
 
 
-		static std::vector<byte> decode(const std::string &value)
+		static std::vector<uint8_t> decode(const std::string &value)
 		{
 			const static char pad = '=';
 
@@ -70,7 +66,7 @@ namespace ent
 			int steps	= size / 4;
 			int padding	= size ? (value[size-1] == pad) + (value[size-2] == pad) : 0;
 
-			std::vector<byte> result(steps * 3 - padding);
+			std::vector<uint8_t> result(steps * 3 - padding);
 
 			auto *c = value.data();
 			auto *r = result.data();

@@ -167,14 +167,14 @@ TEST_CASE("vref can map a reference to different types", "[vref]")
 
 	SECTION("can map to a binary blob")
 	{
-		vector<byte> binary	= { 0x00, 0x01, 0x02, 0x88, 0xff };
-		auto bmap			= vref<vector<byte>>(binary);
+		vector<uint8_t> binary	= { 0x00, 0x01, 0x02, 0x88, 0xff };
+		auto bmap				= vref<vector<uint8_t>>(binary);
 
 		bmap.encode(c, dst, "a", stack);
 		REQUIRE(dst.str() == "\"a\":\"AAECiP8=\"");
 
 		bmap.decode(c, "\"Zm9vYmFy\"", 0, 0);
-		REQUIRE(binary == vector<byte>({ 0x66, 0x6f, 0x6f, 0x62, 0x61, 0x72 }));
+		REQUIRE(binary == vector<uint8_t>({ 0x66, 0x6f, 0x6f, 0x62, 0x61, 0x72 }));
 	}
 
 

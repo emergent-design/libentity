@@ -24,7 +24,7 @@ namespace ent
 		static const std::ios_base::openmode oflags = std::ios::out | std::ios::binary;
 		const int blank = 0;
 
-		enum Type : byte
+		enum Type : uint8_t
 		{
 			End			= 0x00,		Double		= 0x01,		String	= 0x02,		Object		= 0x03, 	Array	= 0x04,	// Supported
 			Binary		= 0x05,		Boolean		= 0x08,		Null	= 0x0a,		Int32		= 0x10,		Int64	= 0x12,
@@ -124,7 +124,7 @@ namespace ent
 			dst.write(value.data(), value.size()).put(0x00);
 		}
 
-		virtual void item(os &dst, const string &name, const std::vector<byte> &value, int depth) const
+		virtual void item(os &dst, const string &name, const std::vector<uint8_t> &value, int depth) const
 		{
 			dst.put(Binary).write(name.data(), name.size()).put(0x00);
 			write(dst, (int)value.size());
@@ -142,14 +142,14 @@ namespace ent
 		}
 
 
-		inline byte *increment(const string &s, int &i, int amount) const
+		inline uint8_t *increment(const string &s, int &i, int amount) const
 		{
-			byte *result = (byte *)s.data() + i;
+			uint8_t *result = (uint8_t *)s.data() + i;
 			i += amount;
 			return result;
 		}
 
-		inline byte next(const string &s, int &i) const			{ return i < s.size() ? s[i++] : error("could not read byte", i); }
+		inline uint8_t next(const string &s, int &i) const		{ return i < s.size() ? s[i++] : error("could not read byte", i); }
 		inline int32_t int32(const string &s, int &i) const		{ return i < s.size() - 3 ? le32toh(*(int32_t *)increment(s, i, 4)) : error("could not read 32-bit integer", i); }
 		inline int64_t int64(const string &s, int &i) const		{ return i < s.size() - 7 ? le64toh(*(int64_t *)increment(s, i, 8)) : error("could not read 64-bit integer", i); }
 		inline double floating(const string &s, int &i) const	{ return i < s.size() - 7 ? le64toh(*(double *)increment(s, i, 8))  : error("could not read floating-point value", i); }
@@ -174,14 +174,14 @@ namespace ent
 				: std::to_string(error("could not read string", i));
 		}
 
-		inline vector<byte> binary(const string &s, int &i) const
+		inline vector<uint8_t> binary(const string &s, int &i) const
 		{
-			int length 	= int32(s, i);
-			byte *end 	= (byte *)s.data() + i + 1 + length;
+			int length 		= int32(s, i);
+			uint8_t *end 	= (uint8_t *)s.data() + i + 1 + length;
 
 			if (i + length >= s.size() || next(s, i) > 0) error("could not read binary data", i);
 
-			return vector<byte>(increment(s, i, length), end);
+			return vector<uint8_t>(increment(s, i, length), end);
 		}
 
 
@@ -269,7 +269,7 @@ namespace ent
 				case String:	return get(data, i, type, string());
 				case Object:	return this->object(data, i, type);
 				case Array:		return this->array(data, i, type);
-				case Binary:	return this->get(data, i, type, vector<byte>());
+				case Binary:	return this->get(data, i, type, vector<uint8_t>());
 				case Boolean:	return this->get(data, i, type, false);
 				case Int32:		return this->get(data, i, type, int32_t());
 				case Int64:		return this->get(data, i, type, int64_t());
@@ -289,12 +289,12 @@ namespace ent
 			return {};
 		}
 
-		virtual bool get(const string &data, int &i, int type, bool def) const							{ return type == Boolean	? next(data, i) > 0	: skip(data, i, type); }
-		virtual int32_t get(const string &data, int &i, int type, int32_t def) const					{ return type == Int32		? int32(data, i)	: skip(data, i, type); }
-		virtual int64_t get(const string &data, int &i, int type, int64_t def) const					{ return type == Int64		? int64(data, i)	: type == Int32 ? int32(data, i) : skip(data, i, type); }
-		virtual double get(const string &data, int &i, int type, double def) const						{ return type == Double		? floating(data, i)	: skip(data, i, type); }
-		virtual string get(const string &data, int &i, int type, const string def) const				{ return type == String 	? sstring(data, i)	: string("", skip(data, i, type)); }
-		virtual vector<byte> get(const string &data, int &i, int type, const vector<byte> def) const	{ return type == Binary		? binary(data, i)	: vector<byte>(skip(data, i, type)); }
+		virtual bool get(const string &data, int &i, int type, bool def) const								{ return type == Boolean	? next(data, i) > 0	: skip(data, i, type); }
+		virtual int32_t get(const string &data, int &i, int type, int32_t def) const						{ return type == Int32		? int32(data, i)	: skip(data, i, type); }
+		virtual int64_t get(const string &data, int &i, int type, int64_t def) const						{ return type == Int64		? int64(data, i)	: type == Int32 ? int32(data, i) : skip(data, i, type); }
+		virtual double get(const string &data, int &i, int type, double def) const							{ return type == Double		? floating(data, i)	: skip(data, i, type); }
+		virtual string get(const string &data, int &i, int type, const string def) const					{ return type == String 	? sstring(data, i)	: string("", skip(data, i, type)); }
+		virtual vector<uint8_t> get(const string &data, int &i, int type, const vector<uint8_t> def) const	{ return type == Binary		? binary(data, i)	: vector<uint8_t>(skip(data, i, type)); }
 
 		int error(const string message, int i) const
 		{

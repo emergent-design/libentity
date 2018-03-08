@@ -25,7 +25,7 @@ struct CollectionEntity : ent::entity
 {
 	vector<string> strings;
 	vector<double> doubles;
-	vector<byte> binary;
+	vector<uint8_t> binary;
 	set<long> longs;
 	map<string, string> dictionary;
 
@@ -147,7 +147,7 @@ TEST_CASE("an entity can be created from a tree", "[entity]")
 		{ "collection", {
 			{ "strings", vector<tree> { "z", "x", "y" }},
 			{ "doubles", vector<tree> { 3.1, 4.1, 5.9 }},
-			{ "binary", vector<byte> { 0xaa, 0xbb, 0xcc }},
+			{ "binary", vector<uint8_t> { 0xaa, 0xbb, 0xcc }},
 			{ "dictionary", { { "a", "1" }, { "b", "2" }}},
 			{ "longs", vector<tree> { 2, 4, 8 }}
 		}},

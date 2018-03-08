@@ -58,9 +58,9 @@ TEST_CASE("a property can be another tree", "[tree]")
 }
 
 
-TEST_CASE("binary data can be set and retrieved as a vector<byte>", "[tree]")
+TEST_CASE("binary data can be set and retrieved as a vector<uint8_t>", "[tree]")
 {
-	REQUIRE(tree().set("binary", vector<byte> { 0x00, 0x01, 0x02, 0x88, 0xff })["binary"].as_binary()[3] == 0x88);
+	REQUIRE(tree().set("binary", vector<uint8_t> { 0x00, 0x01, 0x02, 0x88, 0xff })["binary"].as_binary()[3] == 0x88);
 }
 
 

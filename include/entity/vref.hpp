@@ -22,11 +22,11 @@ namespace ent
 
 	// Template conditionals
 	template <class T, class enable=void> struct vref;
-	template <typename T> using if_simple	= typename std::enable_if<std::is_arithmetic<T>::value || std::is_same<string, T>::value || std::is_same<vector<byte>, T>::value>::type;
+	template <typename T> using if_simple	= typename std::enable_if<std::is_arithmetic<T>::value || std::is_same<string, T>::value || std::is_same<vector<uint8_t>, T>::value>::type;
 	template <typename T> using if_enum		= typename std::enable_if<std::is_enum<T>::value>::type;
 	template <typename T> using if_entity	= typename std::enable_if<std::is_base_of<entity, T>::value>::type;
 	template <typename T> using if_map		= typename std::enable_if<std::is_same<map<string, typename T::mapped_type>, T>::value>::type;
-	template <typename T> using if_vector	= typename std::enable_if<std::is_same<vector<typename T::value_type>, T>::value && !std::is_same<typename T::value_type, byte>::value>::type;
+	template <typename T> using if_vector	= typename std::enable_if<std::is_same<vector<typename T::value_type>, T>::value && !std::is_same<typename T::value_type, uint8_t>::value>::type;
 	template <typename T> using if_set		= typename std::enable_if<std::is_same<set<typename T::value_type>, T>::value>::type;
 	template <typename T> using if_tree		= typename std::enable_if<std::is_same<tree, T>::value>::type;
 
@@ -45,7 +45,7 @@ namespace ent
 	};
 
 
-	// Reference to any simple types (bool, number, string, vector<byte>)
+	// Reference to any simple types (bool, number, string, vector<uint8_t>)
 	template <class T> struct vref<T, if_simple<T>> : vbase
 	{
 		vref(T &reference) : reference(&reference) {}

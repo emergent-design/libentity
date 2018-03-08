@@ -22,7 +22,7 @@ namespace ent
 			// The fundamental types that can be stored in the tree structure. These
 			// mirror those that are supported by JSON with an additional special
 			// case for binary data.
-			enum class Type : byte
+			enum class Type : uint8_t
 			{
 				Null, String, Integer, Floating, Boolean, Binary, Array, Object
 			};
@@ -34,7 +34,7 @@ namespace ent
 			tree(const bool value)				: type(Type::Boolean),	leaf(new container<bool>(value)) {}
 			tree(const char *value)				: type(Type::String),	leaf(new container<string>(string(value))) {}
 			tree(const string &value)			: type(Type::String),	leaf(new container<string>(value)) {}
-			tree(const vector<byte> &value)		: type(Type::Binary),	leaf(new container<vector<byte>>(value)) {}
+			tree(const vector<uint8_t> &value)	: type(Type::Binary),	leaf(new container<vector<uint8_t>>(value)) {}
 			tree(const vector<tree> &value) 	: type(Type::Array),	leaf(new container<vector<tree>>(value)) {}
 
 			tree(const map<string, string> &value)
@@ -215,17 +215,17 @@ namespace ent
 					case Type::Integer:		return std::to_string(cast<int64_t>());
 					case Type::Floating:	return std::to_string(cast<double>());
 					case Type::Boolean:		return cast<bool>() ? "true" : "false";
-					case Type::Binary:		return base64::encode(cast<vector<byte>>());
+					case Type::Binary:		return base64::encode(cast<vector<uint8_t>>());
 					default:				return def;
 				}
 			}
 
 
-			vector<byte> as_binary() const
+			vector<uint8_t> as_binary() const
 			{
 				switch (this->type)
 				{
-					case Type::Binary:	return cast<vector<byte>>();
+					case Type::Binary:	return cast<vector<uint8_t>>();
 					case Type::String:	return base64::decode(cast<string>());
 					default:			return {};
 				}
@@ -240,9 +240,9 @@ namespace ent
 			}
 
 
-			void as(bool &value) const			{ value = this->as_bool(); }
-			void as(string &value) const		{ value = this->as_string(); }
-			void as(vector<byte> &value) const	{ value = this->as_binary(); }
+			void as(bool &value) const				{ value = this->as_bool(); }
+			void as(string &value) const			{ value = this->as_string(); }
+			void as(vector<uint8_t> &value) const	{ value = this->as_binary(); }
 
 			template <class T, class = typename std::enable_if<std::is_arithmetic<T>::value>::type> void as(T &value) const
 			{
