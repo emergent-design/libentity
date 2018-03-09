@@ -1,3 +1,10 @@
+libentity0 (1.0.3) unstable; urgency=medium
+
+  * Updated to catch2 test library.
+  * Changes to fix cross-compilation with mingw.
+
+ -- Dan Parnham <dan@emergent-design.co.uk>  Fri, 09 Mar 2018 15:23:47 +0000
+
 libentity0 (1.0.2) unstable; urgency=medium
 
   * Switched byte to uint8_t to avoid future issues with C++17.
