@@ -380,7 +380,7 @@ namespace ent
 
 			try
 			{
-				if (item.find('.') == string::npos) return std::stol(item);
+				if (item.find('.') == string::npos) return std::stoll(item);
 				else								return std::stod(item);
 			}
 			catch (...)

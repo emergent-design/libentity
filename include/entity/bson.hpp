@@ -4,15 +4,6 @@
 #include <entity/codec.hpp>
 
 
-#ifdef _WIN32
-	// Windows does not provide these functions but is always little-endian so they can be defined away
-	#define htole32(x) (x)
-	#define htole64(x) (x)
-	#define le32toh(x) (x)
-	#define le64toh(x) (x)
-#endif
-
-
 namespace ent
 {
 	struct bson : codec
@@ -21,6 +12,7 @@ namespace ent
 		using codec::object;
 
 		static_assert(sizeof(int) == 4 && sizeof(long long) == 8 && sizeof(double) == 8, "Sizes of fundamental types are incompatible");
+		static_assert(__BYTE_ORDER == __LITTLE_ENDIAN, "Not supported on big-endian systems");
 		static const std::ios_base::openmode oflags = std::ios::out | std::ios::binary;
 		const int blank = 0;
 
@@ -131,9 +123,10 @@ namespace ent
 			dst.put(0x00).write((char *)value.data(), value.size());
 		}
 
-		void write(os &dst, int32_t value) const	{ value = htole32(value); dst.write((char *)&value, 4); }
-		void write(os &dst, int64_t value) const	{ value = htole64(value); dst.write((char *)&value, 8); }
-		void write(os &dst, double value) const		{ value = htole64(value); dst.write((char *)&value, 8); }
+
+		void write(os &dst, int32_t value) const	{ dst.write((char *)&value, 4); }
+		void write(os &dst, int64_t value) const	{ dst.write((char *)&value, 8); }
+		void write(os &dst, double value) const		{ dst.write((char *)&value, 8); }
 
 
 		virtual bool validate(const string &data) const
@@ -150,9 +143,9 @@ namespace ent
 		}
 
 		inline uint8_t next(const string &s, int &i) const		{ return i < s.size() ? s[i++] : error("could not read byte", i); }
-		inline int32_t int32(const string &s, int &i) const		{ return i < s.size() - 3 ? le32toh(*(int32_t *)increment(s, i, 4)) : error("could not read 32-bit integer", i); }
-		inline int64_t int64(const string &s, int &i) const		{ return i < s.size() - 7 ? le64toh(*(int64_t *)increment(s, i, 8)) : error("could not read 64-bit integer", i); }
-		inline double floating(const string &s, int &i) const	{ return i < s.size() - 7 ? le64toh(*(double *)increment(s, i, 8))  : error("could not read floating-point value", i); }
+		inline int32_t int32(const string &s, int &i) const		{ return i < s.size() - 3 ? *(int32_t *)increment(s, i, 4) : error("could not read 32-bit integer", i); }
+		inline int64_t int64(const string &s, int &i) const		{ return i < s.size() - 7 ? *(int64_t *)increment(s, i, 8) : error("could not read 64-bit integer", i); }
+		inline double floating(const string &s, int &i) const	{ return i < s.size() - 7 ? *(double *)increment(s, i, 8)  : error("could not read floating-point value", i); }
 
 		inline string cstring(const string &s, int &i) const
 		{

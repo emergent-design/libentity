@@ -112,7 +112,7 @@ TEST_CASE("vref can map a reference to different types", "[vref]")
 
 	SECTION("can map to a set of simple types")
 	{
-		set<long> items = { 2, 4, 8 };
+		set<int> items	= { 2, 4, 8 };
 		auto amap		= vref<decltype(items)>(items);
 
 		amap.encode(c, dst, "a", stack);
