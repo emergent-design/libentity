@@ -12,7 +12,7 @@ namespace ent
 		using codec::object;
 
 		static_assert(sizeof(int) == 4 && sizeof(long long) == 8 && sizeof(double) == 8, "Sizes of fundamental types are incompatible");
-		static_assert(__BYTE_ORDER == __LITTLE_ENDIAN, "Not supported on big-endian systems");
+		static_assert(__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__, "Not supported on big-endian systems");
 		static const std::ios_base::openmode oflags = std::ios::out | std::ios::binary;
 		const int blank = 0;
 

@@ -15,5 +15,6 @@ solution "entity"
 		targetname			"test"
 		-- buildoptions		{ "-D_GLIBCXX_DEBUG" } --To view strings in gdb
 		files				{ "src/test/**.cpp" }
-		postbuildcommands	{ "./bin/test" }
+		configuration "linux"
+			postbuildcommands	{ "./bin/test" }
 
