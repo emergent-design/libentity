@@ -1,7 +1,7 @@
 libentity
 =========
 
-Entity is a C++11 library that provides object serialisation/deserialisation
+Entity is a C++14 library that provides object serialisation/deserialisation
 yet requires very little boilerplate code.
 
 It supports the serialisation of not only structs and classes but also `tree`
@@ -35,20 +35,15 @@ Example
 #include <entity/json.hpp>
 
 using namespace std;
-using namespace ent;
 
-
-// A structure with simple members, derived from entity
-struct Simple : entity
+// A structure with simple members
+struct Simple
 {
 	string name	= "default";
 	bool flag	= false;
 	int integer = 0;
 
-	mapping describe()
-	{
-		return { eref(name), eref(flag), eref("int", integer) };
-	}
+	emap(eref(name), eref(flag), eref("int", integer))
 };
 
 
@@ -67,10 +62,10 @@ int main(int argc, char *argv[])
 
 	// Serialise the simple object to JSON (will contain the default
 	// values assigned above)
-	cout << entity::encode<json>(simple) << endl;
+	cout << ent::encode<json>(simple) << endl;
 
 	// Deserialise the simple object from a JSON string
-	simple = entity::decode<json>(JSON_TEXT);
+	simple = ent::decode<json>(JSON_TEXT);
 
 	// These values will now match those defined in JSON_TEXT
 	cout << "Name    = " << simple.name << endl;
@@ -84,19 +79,13 @@ int main(int argc, char *argv[])
 If the above example was saved to "simple.cpp" then you would compile it as follows
 
 ```bash
-clang++ -std=c++11 simple.cpp
+clang++ -std=c++14 simple.cpp
 ```
 
-Any class or struct that descends from
-[entity](https://github.com/emergent-design/libentity/wiki/Entity)
-must implement the
-[describe](https://github.com/emergent-design/libentity/wiki/Entity#describe)
-function which allows the library to do its magic without the need for a
-pre-compilation step. The macro ```eref``` simply expands to a
-mapping entry and if no name is provided it will automagically use the parameter
-name (so avoid using ```this->```).
-By allowing the name to be specified, as in the "int" example above, it can map a
-value from a third-party system where the names may differ.
+Any class or struct that requires serialisation must implement the `ent::mapping ent_describe()` function which allows the library to do its magic without the need for a pre-compilation step. 
+The macro `eref` simply expands to a mapping entry and if no name is provided it will automagically use the parameter name (so avoid using `this->`). By allowing the name to be specified, as in the "int" example above, it can map a value from a third-party system where the names may differ.
+The macro `emap` helps construct the `ent_describe` function.
+
 
 
 Installation
@@ -112,7 +101,7 @@ to ```/usr/include```.
 Requirements
 ------------
 
-A modern compiler that supports C++11 features. It should work with any recent version of g++, clang or msvc.
+A modern compiler that supports C++14 features. It should work with any recent version of g++, clang or msvc.
 
 
 ---
