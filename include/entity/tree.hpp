@@ -268,38 +268,6 @@ namespace ent
 			}
 
 
-			template <class Codec> static std::string encode(const tree &item)
-			{
-				//static_assert(std::is_base_of<codec, Codec>::value,	"Invalid codec specified");
-
-				os result(Codec::oflags);
-				stack<int> stack;
-
-				if (item.get_type() == tree::Type::Object || item.get_type() == tree::Type::Array)
-				{
-					Codec().item(item, result, "", stack);
-				}
-
-				return result.str();
-			}
-
-
-			template <class Codec> static tree decode(const std::string &data, bool skipValidation = false)
-			{
-				//static_assert(std::is_base_of<codec, Codec>::value,	"Invalid codec specified");
-
-				Codec c;
-				int position = 0;
-
-				if (skipValidation || c.validate(data))
-				{
-					return c.is_object(data) ? c.object(data, position, -1) : c.array(data, position, -1);
-				}
-
-				return {};
-			}
-
-
 			Type get_type() const { return this->type; }
 
 			// The map of property values

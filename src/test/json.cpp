@@ -17,13 +17,13 @@ TEST_CASE("compact JSON can be generated", "[json]")
 {
 	tree t = { {"name", "simple" }, { "integer", 42 }, { "flag", true} };
 
-	REQUIRE(tree::encode<json>(t) == u8R"json({"flag":true,"integer":42,"name":"simple"})json");
+	REQUIRE(encode<json>(t) == u8R"json({"flag":true,"integer":42,"name":"simple"})json");
 }
 
 
 TEST_CASE("compact JSON can be parsed", "[json]")
 {
-	auto t = tree::decode<json>(u8R"json({"flag":true,"name":"simple","integer":42})json");
+	auto t = decode<json>(u8R"json({"flag":true,"name":"simple","integer":42})json");
 
 	REQUIRE(t["name"].as_string() == "simple");
 	REQUIRE(t["integer"].as_long() == 42);
@@ -35,13 +35,13 @@ TEST_CASE("padded JSON can be generated", "[json]")
 {
 	tree t = { { "name", "simple" }, {"integer", 42}, {"flag", true} };
 
-	REQUIRE(tree::encode<prettyjson>(t) == PADDED_JSON);
+	REQUIRE(encode<prettyjson>(t) == PADDED_JSON);
 }
 
 
 TEST_CASE("padded JSON can be parsed", "[json]")
 {
-	auto t = tree::decode<json>(u8R"json({
+	auto t = decode<json>(u8R"json({
 		"flag": true,
 		"integer": 42
 		"name": "simple",
@@ -57,13 +57,13 @@ TEST_CASE("strings are escaped appropriately", "[json]")
 {
 	tree t = { {"text", "Must\tbe \"escaped\"\n"} };
 
-	REQUIRE(tree::encode<json>(t) == u8R"json({"text":"Must\tbe \"escaped\"\n"})json");
+	REQUIRE(encode<json>(t) == u8R"json({"text":"Must\tbe \"escaped\"\n"})json");
 }
 
 
 TEST_CASE("strings are unescaped appropriately", "[json]")
 {
-	auto t = tree::decode<json>(u8R"json({ "text": "Must\tbe \"escaped\"\n" })json");
+	auto t = decode<json>(u8R"json({ "text": "Must\tbe \"escaped\"\n" })json");
 
 	REQUIRE(t["text"].as_string() == "Must\tbe \"escaped\"\n");
 }
@@ -71,7 +71,7 @@ TEST_CASE("strings are unescaped appropriately", "[json]")
 
 TEST_CASE("simple types can be parsed", "[json]")
 {
-	auto t = tree::decode<json>(u8R"json({
+	auto t = decode<json>(u8R"json({
 		"name": "simple",
 		"integer": 42,
 		"double": 3.14,
@@ -89,7 +89,7 @@ TEST_CASE("simple types can be parsed", "[json]")
 
 TEST_CASE("arrays can be parsed", "[json]")
 {
-	auto t = tree::decode<json>(u8R"json({
+	auto t = decode<json>(u8R"json({
 		"array": [ 1, 2, 3, 4 ]
 	})json");
 
@@ -100,7 +100,7 @@ TEST_CASE("arrays can be parsed", "[json]")
 
 TEST_CASE("compact arrays can be parsed", "[json]")
 {
-	auto t = tree::decode<json>(u8R"json({
+	auto t = decode<json>(u8R"json({
 		"array": [1,2,3,4]
 	})json");
 
@@ -113,13 +113,13 @@ TEST_CASE("top level arrays can be generated", "[json]")
 {
 	tree t = vector<tree> { 1, 2, 3, 4 };
 
-	REQUIRE(tree::encode<json>(t) == "[1,2,3,4]");
+	REQUIRE(encode<json>(t) == "[1,2,3,4]");
 }
 
 
 TEST_CASE("top level arrays can be parsed", "[json]")
 {
-	auto t = tree::decode<json>("[1,2,3,4]");
+	auto t = decode<json>("[1,2,3,4]");
 
 	REQUIRE(t.get_type() == tree::Type::Array);
 	REQUIRE(t.as_array().size() == 4);
@@ -128,7 +128,7 @@ TEST_CASE("top level arrays can be parsed", "[json]")
 
 TEST_CASE("object trees can be parsed", "[json]")
 {
-	auto t = tree::decode<json>(u8R"json({
+	auto t = decode<json>(u8R"json({
 		"object": {
 			"name": "complex"
 		}
@@ -141,13 +141,13 @@ TEST_CASE("object trees can be parsed", "[json]")
 
 TEST_CASE("can cope with an empty object", "[json]")
 {
-	REQUIRE(tree::decode<json>("{}").children.size() == 0);
+	REQUIRE(decode<json>("{}").children.size() == 0);
 }
 
 
 TEST_CASE("can cope with alternative style line endings")
 {
-	REQUIRE(tree::decode<json>("{ \"a\": 1,\r\n\"b\": 2 }")["b"].as_long() == 2);
+	REQUIRE(decode<json>("{ \"a\": 1,\r\n\"b\": 2 }")["b"].as_long() == 2);
 }
 
 
@@ -155,7 +155,7 @@ TEST_CASE("can cope with standard JSON number formats", "[json]")
 {
 	// Largest exact integral size represented by JSON is 2^53 so anything bigger
 	// (like "big") must be handled as a double and therefore accuracy will be lost.
-	auto t = tree::decode<json>(u8R"json({
+	auto t = decode<json>(u8R"json({
 		"integer": 42,
 		"double": 3.14,
 		"scientific": 3.141e-10,
@@ -180,18 +180,18 @@ TEST_CASE("converts NaN and infite values to null", "[json]")
 		{ "nan", NAN }
 	};
 
-	REQUIRE(tree::encode<json>(t) == u8R"json({"infinity":null,"nan":null})json");
+	REQUIRE(encode<json>(t) == u8R"json({"infinity":null,"nan":null})json");
 }
 
 
 TEST_CASE("will ignore unicode encodings", "[json]")
 {
-	REQUIRE(tree::decode<json>(u8R"json({ "text":"\u2000\u20ff" })json")["text"].as_string() == "\\u2000\\u20ff");
+	REQUIRE(decode<json>(u8R"json({ "text":"\u2000\u20ff" })json")["text"].as_string() == "\\u2000\\u20ff");
 }
 
 TEST_CASE("supports arrays of objects", "[json]")
 {
-	auto t = tree::decode<json>(u8R"json({
+	auto t = decode<json>(u8R"json({
 		"coords":[{"x":0,"y":0},{"x":1,"y":1},{"x":2,"y":2}]
 	})json");
 
@@ -209,7 +209,7 @@ TEST_CASE("will support unprotected forward slashes", "[json]")
 {
 	string JSON = u8R"json({ "text":"http://something" })json";
 
-	REQUIRE(tree::decode<json>(JSON)["text"].as_string() == "http://something");
+	REQUIRE(decode<json>(JSON)["text"].as_string() == "http://something");
 }
 
 
@@ -228,6 +228,6 @@ TEST_CASE("parser will throw exception if the JSON is invalid", "[json]")
 
 	for (auto &i : invalid_vectors)
 	{
-		REQUIRE_THROWS(tree::decode<json>(i));
+		REQUIRE_THROWS(decode<json>(i));
 	}
 }

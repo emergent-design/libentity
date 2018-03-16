@@ -1,4 +1,5 @@
 #include "catch.hpp"
+#include <entity/entity.hpp>
 #include <entity/bson.hpp>
 #include <iostream>
 
@@ -30,7 +31,7 @@ TEST_CASE("simple types can be converted to/from BSON", "[bson]")
 	{
 		for (auto &i : test_vectors)
 		{
-			REQUIRE(tree::encode<bson>(i.second) == i.first);
+			REQUIRE( encode<bson>(i.second) == i.first );
 		}
 	}
 
@@ -39,7 +40,7 @@ TEST_CASE("simple types can be converted to/from BSON", "[bson]")
 	{
 		for (auto &i : test_vectors)
 		{
-			REQUIRE( (tree::decode<bson>(i.first)["a"] == i.second["a"]) );
+			REQUIRE( (decode<bson>(i.first)["a"] == i.second["a"]) );
 		}
 	}
 }
@@ -53,13 +54,13 @@ TEST_CASE("arrays can be converted to/from BSON", "[bson]")
 
 	SECTION("arrays can be serialised")
 	{
-		REQUIRE(tree::encode<bson>({{ "a", vector<tree> { 42 } }}) == array_tree);
+		REQUIRE(encode<bson>({{ "a", vector<tree> { 42 } }}) == array_tree);
 	}
 
 
 	SECTION("arrays can be deserialised")
 	{
-		REQUIRE(tree::decode<bson>(array_tree)["a"].as_array()[0].as_long() == 42);
+		REQUIRE(decode<bson>(array_tree)["a"].as_array()[0].as_long() == 42);
 	}
 }
 
@@ -72,13 +73,13 @@ TEST_CASE("object trees can be converted to/from BSON", "[bson]")
 
 	SECTION("object trees can be serialised")
 	{
-		REQUIRE(tree::encode<bson>({{ "a", {{ "b", 42 }} }}) == object_tree);
+		REQUIRE(encode<bson>({{ "a", {{ "b", 42 }} }}) == object_tree);
 	}
 
 
 	SECTION("object trees can be deserialised")
 	{
-		REQUIRE(tree::decode<bson>(object_tree)["a"]["b"].as_long() == 42);
+		REQUIRE(decode<bson>(object_tree)["a"]["b"].as_long() == 42);
 	}
 }
 
@@ -102,6 +103,6 @@ TEST_CASE("parser will throw exception if the BSON is invalid", "[bson]")
 
 	for (auto &i : invalid_vectors)
 	{
-		REQUIRE_THROWS(tree::decode<bson>(i));
+		REQUIRE_THROWS(decode<bson>(i));
 	}
 }

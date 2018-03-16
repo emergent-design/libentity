@@ -17,14 +17,28 @@ namespace ent
 	using std::map;
 	using std::set;
 
+
+	struct vbase
+	{
+		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack) = 0;
+		virtual int decode(const codec &c, const string &data, int position, int type) = 0;
+
+		virtual tree to_tree() = 0;
+		virtual void from_tree(const tree &data) = 0;
+	};
+
+
 	// Forward declaration of entity
-	class entity;
+	// class entity;
+	typedef std::map<std::string, std::shared_ptr<vbase>> mapping;
+
 
 	// Template conditionals
-	template <class T, class enable=void> struct vref;
+	template <typename T> struct fail : std::false_type {};
+	template <class T, class enable=void> struct vref { static_assert(fail<T>::value, "Item must contain a description, have you missed a public 'emap()' definition in your entity?"); };
 	template <typename T> using if_simple	= typename std::enable_if<std::is_arithmetic<T>::value || std::is_same<string, T>::value || std::is_same<vector<uint8_t>, T>::value>::type;
 	template <typename T> using if_enum		= typename std::enable_if<std::is_enum<T>::value>::type;
-	template <typename T> using if_entity	= typename std::enable_if<std::is_base_of<entity, T>::value>::type;
+	template <typename T> using if_entity	= typename std::enable_if<std::is_same<mapping, decltype(T().ent_describe())>::value>::type;
 	template <typename T> using if_map		= typename std::enable_if<std::is_same<map<string, typename T::mapped_type>, T>::value>::type;
 	template <typename T> using if_vector	= typename std::enable_if<std::is_same<vector<typename T::value_type>, T>::value && !std::is_same<typename T::value_type, uint8_t>::value>::type;
 	template <typename T> using if_set		= typename std::enable_if<std::is_same<set<typename T::value_type>, T>::value>::type;
@@ -35,14 +49,6 @@ namespace ent
 	template <typename T> using if_array	= typename std::enable_if<ent::is_array<T>::value>::type;
 
 
-	struct vbase
-	{
-		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack) = 0;
-		virtual int decode(const codec &c, const string &data, int position, int type) = 0;
-
-		virtual tree to_tree() = 0;
-		virtual void from_tree(const tree &data) = 0;
-	};
 
 
 	// Reference to any simple types (bool, number, string, vector<uint8_t>)
@@ -81,6 +87,7 @@ namespace ent
 
 		T *reference;
 	};
+
 
 
 	/// Reference to enums (converted to/from int)
@@ -123,6 +130,7 @@ namespace ent
 	};
 
 
+
 	// Reference to derived entities
 	template <class T> struct vref<T, if_entity<T>> : vbase
 	{
@@ -135,7 +143,7 @@ namespace ent
 
 		static void encode(T &item, const codec &c, os &dst, const string &name, stack<int> &stack)
 		{
-			auto map	= item.describe();
+			auto map	= item.ent_describe();
 			int i		= map.size() - 1;
 
 			c.object_start(dst, name, stack);
@@ -159,7 +167,7 @@ namespace ent
 
 		static int decode(T &item, const codec &c, const string &data, int position, int type)
 		{
-			auto map 			= item.describe();
+			auto map 			= item.ent_describe();
 			std::string name	= "";
 
 			if (c.object_start(data, position, type))
@@ -189,7 +197,7 @@ namespace ent
 		{
 			tree result;
 
-			for (auto &v : item.describe())
+			for (auto &v : item.ent_describe())
 			{
 				result.set(v.first, v.second->to_tree());
 			}
@@ -200,7 +208,7 @@ namespace ent
 
 		static void from_tree(T &item, const tree &data)
 		{
-			for (auto &v : item.describe())
+			for (auto &v : item.ent_describe())
 			{
 				if (data.contains(v.first))
 				{
@@ -212,6 +220,7 @@ namespace ent
 
 		T *reference;
 	};
+
 
 
 	// Reference to std::map
@@ -301,6 +310,7 @@ namespace ent
 
 		T *reference;
 	};
+
 
 
 	// Reference to std::vector (except vector<byte>)
@@ -398,6 +408,7 @@ namespace ent
 	};
 
 
+
 	// Since this is almost identical to the vector implementation it can be merged into it when
 	// constexpr if becomes available (C++17 via clang 3.9).
 	template <class T> struct vref<T, if_set<T>> : vbase
@@ -490,6 +501,7 @@ namespace ent
 
 		T *reference;
 	};
+
 
 
 	// Reference to std::array

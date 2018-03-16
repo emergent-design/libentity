@@ -1,3 +1,14 @@
+libentity0 (1.1.0) unstable; urgency=medium
+
+  * Breaking API changes
+  * No entity class anymore.
+  * Top-level encode/decode/to_tree/from_tree functions.
+  * Entities no longer need to be derived from entity.
+  * Extra helper macro for generating the mapping description function.
+  * Extra helper macro for merging mappings when dealing with derived structs.
+
+ -- Dan Parnham <dan@emergent-design.co.uk>  Fri, 16 Mar 2018 00:16:58 +0000
+
 libentity0 (1.0.3) unstable; urgency=medium
 
   * Updated to catch2 test library.

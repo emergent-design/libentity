@@ -6,7 +6,8 @@ using namespace std;
 using namespace ent;
 
 
-struct SimpleEntity : ent::entity
+
+struct SimpleEntity
 {
 	string name			= "simple";
 	bool flag			= true;
@@ -14,14 +15,19 @@ struct SimpleEntity : ent::entity
 	int64_t bignumber	= 20349758;
 	double floating		= 3.142;
 
-	mapping describe()
-	{
-		return { eref(name), eref(flag), eref(integer), eref(bignumber), eref(floating) };
-	}
+	emap(eref(name),eref(flag), eref(integer), eref(bignumber), eref(floating))
 };
 
 
-struct CollectionEntity : ent::entity
+struct DerivedEntity : SimpleEntity
+{
+	string extra = "field";
+
+	emerge(SimpleEntity, eref(extra))
+};
+
+
+struct CollectionEntity
 {
 	vector<string> strings;
 	vector<double> doubles;
@@ -29,14 +35,11 @@ struct CollectionEntity : ent::entity
 	set<int> ints;
 	map<string, string> dictionary;
 
-	mapping describe()
-	{
-		return { eref(strings), eref(doubles), eref(binary), eref(ints), eref(dictionary) };
-	}
+	emap(eref(strings), eref(doubles), eref(binary), eref(ints), eref(dictionary))
 };
 
 
-struct ComplexEntity : ent::entity
+struct ComplexEntity
 {
 	string name;
 	vector<SimpleEntity> entities;
@@ -44,22 +47,16 @@ struct ComplexEntity : ent::entity
 	CollectionEntity collection;
 	SimpleEntity simple;
 
-	mapping describe()
-	{
-		return { eref(name), eref(entities), eref(extras), eref(collection), eref(simple) };
-	}
+	emap(eref(name), eref(entities), eref(extras), eref(collection), eref(simple))
 };
 
 
-struct TreeEntity : ent::entity
+struct TreeEntity
 {
 	string name;
 	tree parameters;
 
-	mapping describe()
-	{
-		return { eref(name), eref(parameters) };
-	}
+	emap(eref(name), eref(parameters))
 };
 
 
@@ -68,7 +65,16 @@ TEST_CASE("an entity can be serialised", "[entity]")
 	SimpleEntity e;
 	string data = u8R"json({"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"})json";
 
-	REQUIRE(entity::encode<json>(e) == data);
+	REQUIRE(encode<json>(e) == data);
+}
+
+
+TEST_CASE("a derived entity can use a merge helper", "[entity]")
+{
+	DerivedEntity e;
+	string data = u8R"json({"bignumber":20349758,"extra":"field","flag":true,"floating":3.142,"integer":42,"name":"simple"})json";
+
+	REQUIRE(encode<json>(e) == data);
 }
 
 
@@ -77,13 +83,13 @@ TEST_CASE("a vector of entities can be serialised", "[entity]")
 	vector<SimpleEntity> e = { SimpleEntity() };
 	string data = u8R"json([{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"}])json";
 
-	REQUIRE(entity::encode<json>(e) == data);
+	REQUIRE(encode<json>(e) == data);
 }
 
 
 TEST_CASE("an entity can be deserialised", "[entity]")
 {
-	auto e = entity::decode<json, ComplexEntity>(u8R"json({
+	auto e = decode<json, ComplexEntity>(u8R"json({
 		"name":	"parsed complex",
 		"simple": {
 			"name":		"parsed simple",
@@ -125,7 +131,7 @@ TEST_CASE("an entity can be deserialised", "[entity]")
 TEST_CASE("an entity can be converted to a tree", "[entity]")
 {
 	SimpleEntity e;
-	auto t = entity::to_tree(e);
+	auto t = to_tree(e);
 
 	REQUIRE(t["name"].as_string() == "simple");
 	REQUIRE(t["flag"].as_bool());
@@ -137,7 +143,7 @@ TEST_CASE("an entity can be converted to a tree", "[entity]")
 
 TEST_CASE("an entity can be created from a tree", "[entity]")
 {
-	auto e = entity::from_tree<ComplexEntity>({
+	auto e = from_tree<ComplexEntity>({
 		{ "name", "tree complex" },
 		{ "simple", {
 			{ "name", "tree simple" },
@@ -182,13 +188,13 @@ TEST_CASE("an entity can contain a tree and be serialised", "[entity]")
 	e.name = "tree entity";
 	e.parameters = tree().set("name", "parameter").set("flag", true);
 
-	REQUIRE(entity::encode<json>(e) == "{\"name\":\"tree entity\",\"parameters\":{\"flag\":true,\"name\":\"parameter\"}}");
+	REQUIRE(encode<json>(e) == "{\"name\":\"tree entity\",\"parameters\":{\"flag\":true,\"name\":\"parameter\"}}");
 }
 
 
 TEST_CASE("an entity can contain a tree and be deserialised", "[entity]")
 {
-	auto e = entity::decode<json, TreeEntity>(u8R"json({
+	auto e = decode<json, TreeEntity>(u8R"json({
 		"name":	"tree entity",
 		"parameters": {
 			"name":		"parameter",
@@ -210,7 +216,7 @@ TEST_CASE("an entity containing a tree can be converted to a tree", "[entity]")
 	e.name = "tree entity";
 	e.parameters = tree().set("name", "parameter").set("flag", true);
 
-	auto t = entity::to_tree(e);
+	auto t = to_tree(e);
 
 	REQUIRE(t["name"] == "tree entity");
 	REQUIRE(t["parameters"]["name"] == "parameter");
@@ -220,7 +226,7 @@ TEST_CASE("an entity containing a tree can be converted to a tree", "[entity]")
 
 TEST_CASE("an entity containing a tree can be created from a tree", "[entity]")
 {
-	auto e = entity::from_tree<TreeEntity>({
+	auto e = from_tree<TreeEntity>({
 		{ "name", "tree entity" },
 		{ "parameters", {
 			{ "name", "parameter" },
@@ -238,7 +244,7 @@ TEST_CASE("an entity containing a tree can be created from a tree", "[entity]")
 
 TEST_CASE("an entity can be decoded from JSON containing unused information", "[entity]")
 {
-	auto e = entity::decode<json, ComplexEntity>(u8R"json({
+	auto e = decode<json, ComplexEntity>(u8R"json({
 		"entities":[{"a":{}}]
 	})json");
 

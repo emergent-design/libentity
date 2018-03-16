@@ -13,113 +13,93 @@ namespace ent
 		#define ent_man_ref(name, item)		std::make_pair(name, std::make_shared<ent::vref<typename std::remove_reference<decltype(item)>::type>>(item))
 		#define ent_auto_ref(item)			ent_man_ref(#item, item)
 		#define ent_ref(...)				ent_get_ref(__VA_ARGS__, ent_man_ref, ent_auto_ref)(__VA_ARGS__)
+		#define ent_map(...)				ent::mapping ent_describe() { return { __VA_ARGS__ }; }
+		#define ent_merge(base, ...)		ent::mapping ent_describe() { auto a = base::ent_describe(); a.insert({ __VA_ARGS__ });	return a; }
 
-		// Concise call to ent_ref, disable if it conflicts and use ent_ref instead
+		// Concise call to ent_ref and ent_map, disable if they conflict
 		#define eref ent_ref
+		#define emap ent_map
+		#define emerge ent_merge
 	#endif
 
-	typedef std::map<std::string, std::shared_ptr<vbase>> mapping;
 
 
-	// The abstract base class for serialisable objects.
-	// Inherit from this, implement the describe function correctly,
-	// and your class will become serialisable.
-	class entity
+	// Encode an entity
+	template <class Codec, class T> std::string encode(T &item)
 	{
-		template <class T, class U> friend struct vref;
+		static_assert(std::is_base_of<codec, Codec>::value,	"Invalid codec specified");
 
-		public:
+		stack<int> stack;
+		os result(Codec::oflags);
 
-			template <class Codec, class T> static std::string encode(T &item)
-			{
-				static_assert(std::is_base_of<entity, T>::value,	"Item must be derived from entity");
-				static_assert(std::is_base_of<codec, Codec>::value,	"Invalid codec specified");
+		vref<T>::encode(item, Codec(), result, "", stack);
 
-				os result(Codec::oflags);
-				std::stack<int> stack;
-
-				vref<T>::encode(item, Codec(), result, "", stack);
-
-				return result.str();
-			}
-
-			template <class Codec, class T> static std::string encode(std::vector<T> &items)
-			{
-				static_assert(std::is_base_of<entity, T>::value,	"Item must be derived from entity");
-				static_assert(std::is_base_of<codec, Codec>::value,	"Invalid codec specified");
-
-				os result(Codec::oflags);
-				std::stack<int> stack;
-
-				vref<std::vector<T>>::encode(items, Codec(), result, "", stack);
-
-				return result.str();
-			}
+		return result.str();
+	}
 
 
-			template <class Codec, class T> static T decode(const std::string &data, bool skipValidation = false)
-			{
-				T result;
-				return decode<Codec>(data, result, skipValidation);
-			}
+	// Decode an entity
+	template <class Codec, class T> T decode(const std::string &data, T &item, bool skipValidation = false)
+	{
+		static_assert(std::is_base_of<codec, Codec>::value,	"Invalid codec specified");
+
+		Codec c;
+
+		if (skipValidation || c.validate(data))
+		{
+			vref<T>::decode(item, c, data, 0, -1);
+		}
+
+		return item;
+	}
 
 
-			template <class Codec, class T> static T &decode(const std::string &data, T &item, bool skipValidation = false)
-			{
-				static_assert(std::is_base_of<entity, T>::value,	"Item must be derived from entity");
-				static_assert(std::is_base_of<codec, Codec>::value,	"Invalid codec specified");
+	// Decode and create an entity
+	template <class Codec, class T> T decode(const std::string &data, bool skipValidation = false)
+	{
+		static_assert(std::is_base_of<codec, Codec>::value,	"Invalid codec specified");
 
-				Codec c;
-
-				if (skipValidation || c.validate(data))
-				{
-					vref<T>::decode(item, c, data, 0, -1);
-				}
-
-				return item;
-			}
+		T result;
+		return decode<Codec>(data, result, skipValidation);
+	}
 
 
-			template <class T> static tree to_tree(T &item)
-			{
-				static_assert(std::is_base_of<entity, T>::value, "Item must be derived from entity");
+	// Encode a tree
+	template <class Codec> static std::string encode(const tree &item)
+	{
+		static_assert(std::is_base_of<codec, Codec>::value,	"Invalid codec specified");
 
-				return vref<T>::to_tree(item);
-			}
+		os result(Codec::oflags);
+		stack<int> stack;
 
+		if (item.get_type() == tree::Type::Object || item.get_type() == tree::Type::Array)
+		{
+			Codec().item(item, result, "", stack);
+		}
 
-			template <class T> static T from_tree(const tree &data)
-			{
-				T result;
-				return from_tree(data, result);
-			}
-
-
-			template <class T> static T &from_tree(const tree &data, T &item)
-			{
-				static_assert(std::is_base_of<entity, T>::value, "Item must be derived from entity");
-
-				vref<T>::from_tree(item, data);
-
-				return item;
-			}
+		return result.str();
+	}
 
 
-		protected:
+	// Decode to a tree
+	template <class Codec> static tree decode(const std::string &data, bool skipValidation = false)
+	{
+		static_assert(std::is_base_of<codec, Codec>::value,	"Invalid codec specified");
 
-			// Abstract function that must be implemented by
-			// any objects to be serialised/deserialised.
-			virtual mapping describe() = 0;
+		Codec c;
+		int position = 0;
+
+		if (skipValidation || c.validate(data))
+		{
+			return c.is_object(data) ? c.object(data, position, -1) : c.array(data, position, -1);
+		}
+
+		return {};
+	}
 
 
-			// Helper function for merging mappings when deriving
-			// entities from other entities.
-			inline mapping &&merge(ent::mapping &&a, const ent::mapping &b)
-			{
-				a.insert(b.begin(), b.end());
-
-				return std::move(a);
-			}
-	};
+	// Convert entities to/from a tree
+	template <class T> static tree to_tree(T &item)						{ return vref<T>::to_tree(item); }
+	template <class T> static T &from_tree(const tree &data, T &item)	{ vref<T>::from_tree(item, data);	return item; }
+	template <class T> static T from_tree(const tree &data)				{ T result; 						return from_tree(data, result); }
 }
-
