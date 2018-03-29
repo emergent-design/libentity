@@ -39,40 +39,40 @@ using namespace std;
 // A structure with simple members
 struct Simple
 {
-	string name	= "default";
-	bool flag	= false;
-	int integer = 0;
+    string name	= "default";
+    bool flag	= false;
+    int integer = 0;    
 
-	emap(eref(name), eref(flag), eref("int", integer))
+    emap(eref(name), eref(flag), eref("int", integer))
 };
 
 
 const string JSON_TEXT = u8R"json(
-	{
-		"name": "simple",
-		"flag": true,
-		"int":  42
-	}
+    {
+        "name": "simple",
+        "flag": true,
+        "int":  42
+    }
 )json";
 
 
 int main(int argc, char *argv[])
 {
-	Simple simple;
-
-	// Serialise the simple object to JSON (will contain the default
-	// values assigned above)
-	cout << ent::encode<json>(simple) << endl;
-
-	// Deserialise the simple object from a JSON string
-	simple = ent::decode<json>(JSON_TEXT);
-
-	// These values will now match those defined in JSON_TEXT
-	cout << "Name    = " << simple.name << endl;
-	cout << "Flag    = " << simple.flag << endl;
-	cout << "Integer = " << simple.integer << endl;
-
-	return 0;
+    Simple simple;
+    
+    // Serialise the simple object to JSON (will contain the default
+    // values assigned above)
+    cout << ent::encode<ent::json>(simple) << endl;
+    
+    // Deserialise the simple object from a JSON string
+    simple = ent::decode<ent::json, Simple>(JSON_TEXT);
+    
+    // These values will now match those defined in JSON_TEXT
+    cout << "Name    = " << simple.name << endl;
+    cout << "Flag    = " << simple.flag << endl;
+    cout << "Integer = " << simple.integer << endl;
+    
+    return 0;
 }
 ```
 
@@ -86,6 +86,8 @@ Any class or struct that requires serialisation must implement the `ent::mapping
 The macro `eref` simply expands to a mapping entry and if no name is provided it will automagically use the parameter name (so avoid using `this->`). By allowing the name to be specified, as in the "int" example above, it can map a value from a third-party system where the names may differ.
 The macro `emap` helps construct the `ent_describe` function.
 
+To use a class/struct with libentity it must have a default constructor, either implicitly as in
+the example above or explicitly if you have declared a non-default constructor.
 
 
 Installation

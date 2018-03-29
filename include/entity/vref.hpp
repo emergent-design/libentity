@@ -28,14 +28,13 @@ namespace ent
 	};
 
 
-	// Forward declaration of entity
-	// class entity;
+	// Structure for storing the entity description
 	typedef std::map<std::string, std::shared_ptr<vbase>> mapping;
 
 
 	// Template conditionals
 	template <typename T> struct fail : std::false_type {};
-	template <class T, class enable=void> struct vref { static_assert(fail<T>::value, "Item must contain a description, have you missed a public 'emap()' definition in your entity?"); };
+	template <class T, class enable=void> struct vref { static_assert(fail<T>::value, "Item must contain a description and have a default constructor, have you missed a public 'emap()' definition in your entity?"); };
 	template <typename T> using if_simple	= typename std::enable_if<std::is_arithmetic<T>::value || std::is_same<string, T>::value || std::is_same<vector<uint8_t>, T>::value>::type;
 	template <typename T> using if_enum		= typename std::enable_if<std::is_enum<T>::value>::type;
 	template <typename T> using if_entity	= typename std::enable_if<std::is_same<mapping, decltype(T().ent_describe())>::value>::type;

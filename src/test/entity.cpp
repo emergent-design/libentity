@@ -60,6 +60,18 @@ struct TreeEntity
 };
 
 
+class ClassEntity
+{
+	public:
+		emap(eref(name))
+
+		string GetName() { return this->name; }
+
+	private:
+		string name = "class";
+};
+
+
 TEST_CASE("an entity can be serialised", "[entity]")
 {
 	SimpleEntity e;
@@ -249,4 +261,23 @@ TEST_CASE("an entity can be decoded from JSON containing unused information", "[
 	})json");
 
 	REQUIRE(e.entities.size() == 1);
+}
+
+
+TEST_CASE("a class with private members can be serialised", "[entity]")
+{
+	ClassEntity e;
+	string data = u8R"json({"name":"class"})json";
+
+	REQUIRE(encode<json>(e) == data);
+}
+
+
+TEST_CASE("a class with private members can be deserialised", "[entity]")
+{
+	auto e = decode<json, ClassEntity>(u8R"json({
+		"name": "parsed class"
+	})json");
+
+	REQUIRE(e.GetName() == "parsed class");
 }
