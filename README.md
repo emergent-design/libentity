@@ -7,6 +7,7 @@ yet requires very little boilerplate code.
 It supports the serialisation of not only structs and classes but also `tree`
 which is a container class that supports dynamic storage of strings, numeric
 values, booleans, binary blobs, vectors and objects (other trees).
+Classes must explicitly implement the default constructor.
 
 
 Status
@@ -62,10 +63,10 @@ int main(int argc, char *argv[])
 
 	// Serialise the simple object to JSON (will contain the default
 	// values assigned above)
-	cout << ent::encode<json>(simple) << endl;
+	cout << ent::encode<ent::json>(simple) << endl;
 
 	// Deserialise the simple object from a JSON string
-	simple = ent::decode<json>(JSON_TEXT);
+	simple = ent::decode<ent::json>(JSON_TEXT);
 
 	// These values will now match those defined in JSON_TEXT
 	cout << "Name    = " << simple.name << endl;
