@@ -27,6 +27,7 @@ namespace ent
 	// Encode an entity
 	template <class Codec, class T> std::string encode(T &item)
 	{
+		static_assert(!std::is_const<T>::value, "Cannot encode a const entity");
 		static_assert(std::is_base_of<codec, Codec>::value,	"Invalid codec specified");
 
 		stack<int> stack;
@@ -41,6 +42,7 @@ namespace ent
 	// Decode an entity
 	template <class Codec, class T> T decode(const std::string &data, T &item, bool skipValidation = false)
 	{
+		static_assert(!std::is_const<T>::value, "Cannot decode to a const entity");
 		static_assert(std::is_base_of<codec, Codec>::value,	"Invalid codec specified");
 
 		Codec c;
@@ -57,6 +59,7 @@ namespace ent
 	// Decode and create an entity
 	template <class Codec, class T> T decode(const std::string &data, bool skipValidation = false)
 	{
+		static_assert(!std::is_const<T>::value, "Cannot decode to a const entity");
 		static_assert(std::is_base_of<codec, Codec>::value,	"Invalid codec specified");
 
 		T result;
