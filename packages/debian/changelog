@@ -1,3 +1,9 @@
+libentity0 (1.1.1) unstable; urgency=medium
+
+  * Additional static asserts to provide more useful error messages.
+
+ -- Dan Parnham <dan@emergent-design.co.uk>  Tue, 17 Apr 2018 22:53:07 +0100
+
 libentity0 (1.1.0) unstable; urgency=medium
 
   * Breaking API changes

@@ -20,7 +20,8 @@ windows-check:
     - premake5 --os=windows gmake
     - make CXX=x86_64-w64-mingw32-g++ -j4
 
-package-xenial:
+# Header-only library so package is the same for each distribution
+package-all:
   image: emergent:xenial
   stage: build
   only:
@@ -29,7 +30,9 @@ package-xenial:
     - cd packages
     - ./build
     - mkdir -p /packages/xenial/oss/
+    - mkdir -p /packages/bionic/oss/
     - cp libentity-dev_*.deb /packages/xenial/oss/libentity-dev.deb
+    - cp libentity-dev_*.deb /packages/bionic/oss/libentity-dev.deb
   artifacts:
     paths:
       - packages/*.deb
@@ -41,7 +44,7 @@ deploy-packages:
   only:
     - tags
   dependencies:
-    - package-xenial
+    - package-all
   before_script:
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
