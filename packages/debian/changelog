@@ -1,3 +1,9 @@
+libentity0 (1.1.2) unstable; urgency=medium
+
+  * Fixed issue with default values in objects and arrays.
+
+ -- Dan <dan@kryten>  Sat, 07 Jul 2018 06:32:41 +0100
+
 libentity0 (1.1.1) unstable; urgency=medium
 
   * Additional static asserts to provide more useful error messages.
