@@ -20,6 +20,7 @@ namespace ent
 
 	struct vbase
 	{
+		virtual ~vbase() {}
 		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack) = 0;
 		virtual int decode(const codec &c, const string &data, int position, int type) = 0;
 
@@ -258,7 +259,7 @@ namespace ent
 
 		static int decode(T &item, const codec &c, const string &data, int position, int type)
 		{
-			typename T::mapped_type child;
+
 			string name = "";
 			item.clear();
 
@@ -266,6 +267,7 @@ namespace ent
 			{
 				while (c.item(data, position, name, type))
 				{
+					typename T::mapped_type child;
 					position = vref<typename T::mapped_type>::decode(child, c, data, position, type);
 					item.emplace(name, child);
 				}
@@ -349,13 +351,13 @@ namespace ent
 
 		static int decode(T &item, const codec &c, const string &data, int position, int type)
 		{
-			typename T::value_type child;
 			item.clear();
 
 			if (c.array_start(data, position, type))
 			{
 				while (c.array_item(data, position, type))
 				{
+					typename T::value_type child;
 					position = vref<typename T::value_type>::decode(child, c, data, position, type);
 					// item.push_back(child);
 					item.insert(item.end(), child);
@@ -446,13 +448,13 @@ namespace ent
 
 		static int decode(T &item, const codec &c, const string &data, int position, int type)
 		{
-			typename T::value_type child;
 			item.clear();
 
 			if (c.array_start(data, position, type))
 			{
 				while (c.array_item(data, position, type))
 				{
+					typename T::value_type child;
 					position = vref<typename T::value_type>::decode(child, c, data, position, type);
 					item.insert(child);
 				}
@@ -540,12 +542,11 @@ namespace ent
 
 		static int decode(T &item, const codec &c, const string &data, int position, int type)
 		{
-			typename T::value_type child;
-
 			if (c.array_start(data, position, type))
 			{
 				for (int i=0; c.array_item(data, position, type); i++)
 				{
+					typename T::value_type child;
 					position = vref<typename T::value_type>::decode(child, c, data, position, type);
 
 					if (i < item.size())

@@ -281,3 +281,15 @@ TEST_CASE("a class with private members can be deserialised", "[entity]")
 
 	REQUIRE(e.GetName() == "parsed class");
 }
+
+
+TEST_CASE("entities should always revert to default values", "[entity]")
+{
+	auto e = decode<json, std::vector<SimpleEntity>>(u8R"json([
+		{ "integer": 101 },
+		{}
+	])json");
+
+	REQUIRE(e.front().integer == 101);
+	REQUIRE(e.back().integer == 42);
+}
