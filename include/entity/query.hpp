@@ -557,6 +557,7 @@ namespace ent
 
 			struct ibase
 			{
+				virtual ~ibase() {}
 				virtual T *next() = 0;
 			};
 
