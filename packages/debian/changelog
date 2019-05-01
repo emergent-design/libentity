@@ -1,3 +1,9 @@
+libentity0 (1.1.3) unstable; urgency=medium
+
+  * Fix issue with std::stod handling very small doubles.
+
+ -- Dan <dan@kryten>  Wed, 01 May 2019 10:51:40 +0100
+
 libentity0 (1.1.2) unstable; urgency=medium
 
   * Fixed issue with default values in objects and arrays.
