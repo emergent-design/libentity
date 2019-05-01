@@ -25,6 +25,13 @@ namespace ent
 			// return std::isnan(value) || std::isinf(value) ? 0 : value;
 		}
 
+		inline void write_number(os &dst, const double value) const
+		{
+			if (std::isnan(value) || std::isinf(value))		dst << "null";
+			else if (std::fabs(value) < 1.0e-300)			dst << "0";
+			else											dst << value;
+		}
+
 		virtual void separator(os &dst, bool last) const												{ if (!last) dst << ","; }
 		virtual void object_start(os &dst, const string &name, stack<int> &stack) const					{ write_name(dst, name, stack.size()) << '{'; }
 		virtual void object_end(os &dst, stack<int> &stack) const										{ dst << '}'; }
@@ -233,8 +240,8 @@ namespace ent
 		{
 			if (!check_simple(data[i], data, i, type)) return false;
 
-			try 		{ return stod(parse_item(data, i)); }
-			catch (...)	{ error("value is not a valid number", data, i); }
+			try 			{ return stod(parse_item(data, i)); }
+			catch (...)		{ error("value is not a valid number", data, i); }
 			return 0.0;
 		}
 
