@@ -161,7 +161,8 @@ TEST_CASE("can cope with standard JSON number formats", "[json]")
 		"scientific": 3.141e-10,
 		"upper": 3.141E-10,
 		"long": 12345123456789,
-		"big": 123456789123456789123456789.0
+		"big": 123456789123456789123456789.0,
+		"tiny": 1.0e-300
 	})json");
 
 	REQUIRE(t["integer"].as_long()		== 42);
@@ -170,6 +171,8 @@ TEST_CASE("can cope with standard JSON number formats", "[json]")
 	REQUIRE(t["upper"].as_double()		== 3.141e-10);
 	REQUIRE(t["long"].as_long()			== 12345123456789);
 	REQUIRE(t["big"].as_double()		== 123456789123456789123456789.0);
+	REQUIRE(t["tiny"].as_double()		== 1.0e-300);
+
 }
 
 

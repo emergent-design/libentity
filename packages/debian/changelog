@@ -1,9 +1,15 @@
-libentity0 (1.1.3) unstable; urgency=medium
+libentity0 (1.1.4) unstable; urgency=medium
 
   * Top-level arrays now supported in BSON
   * Tree walking updated to support arrays
 
  -- Dan Parnham <dan@emergent-design.co.uk>  Fri, 27 Sep 2019 17:26:14 +0100
+
+libentity0 (1.1.3) unstable; urgency=medium
+
+  * Fix issue with std::stod handling very small doubles.
+
+ -- Dan <dan@kryten>  Wed, 01 May 2019 10:51:40 +0100
 
 libentity0 (1.1.2) unstable; urgency=medium
 
@@ -83,19 +89,19 @@ libentity0 (0.0.2) unstable; urgency=low
 
   * Underlying value structure refactored with templating. Now faster and less overhead.
   * Added "automap" macro to allow mapping using the parameter name.
-  * Implemented BSON emitter/serialiser. 
+  * Implemented BSON emitter/serialiser.
   * The value structure can now be compared (== operator override).
 
  -- Dan Parnham <dan@emergent-design.co.uk>  Thu, 01 Aug 2013 15:56:47 +0100
 
 libentity0 (0.0.1) unstable; urgency=low
 
-  * Added the ability to map enums. 
+  * Added the ability to map enums.
 
  -- Dan Parnham <dan@emergent-design.co.uk>  Fri, 26 Jul 2013 13:20:12 +0100
 
 libentity0 (0.0.0) unstable; urgency=low
-  
+
   * First release
-  
+
  -- Dan Parnham <dan@emergent-design.co.uk>  Tue, 23 Jul 2013 18:00:00 +0100
