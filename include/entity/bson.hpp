@@ -54,7 +54,11 @@ namespace ent
 
 		virtual void array_start(os &dst, const string &name, stack<int> &stack) const
 		{
-			dst.put(Array).write(name.data(), name.size()).put(0x00);
+			// The top-level array has no name
+			if (!name.empty())
+			{
+				dst.put(Array).write(name.data(), name.size()).put(0x00);
+			}
 
 			// The stack is used to store the starting position of this array
 			stack.push(dst.tellp());

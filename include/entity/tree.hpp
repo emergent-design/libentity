@@ -256,11 +256,24 @@ namespace ent
 			// will recurse into that child.
 			tree &walk(const std::function<bool(tree&)> &recurse)
 			{
-				for (auto &c : this->children)
+				if (this->type == Type::Array)
 				{
-					if (recurse(c.second))
+					for (auto &c : cast<vector<tree>>())
 					{
-						c.second.walk(recurse);
+						if (recurse(c))
+						{
+							c.walk(recurse);
+						}
+					}
+				}
+				else
+				{
+					for (auto &c : this->children)
+					{
+						if (recurse(c.second))
+						{
+							c.second.walk(recurse);
+						}
 					}
 				}
 

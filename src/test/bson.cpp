@@ -64,6 +64,23 @@ TEST_CASE("arrays can be converted to/from BSON", "[bson]")
 	}
 }
 
+// TEST_CASE("arrays can be top-level documents", "[bson]")
+// {							//   |      Length       |Type|  Name   |      Value        |Foot|
+// 	string array_top = convert({  0x0c,0x00,0x00,0x00,0x10,0x30,0x00,0x2a,0x00,0x00,0x00,0x00 });
+
+// 	SECTION("top-level arrays can be serialised")
+// 	{
+// 		REQUIRE(encode<bson>(vector<tree> { 42 }) == array_top);
+// 	}
+
+
+// 	SECTION("top-level arrays can be deserialised")
+// 	{
+// 		REQUIRE(decode<bson>(array_top).get_type() == tree::Type::Array);
+// 		// REQUIRE(decode<bson>(array_top).as_array()[0].as_long() == 42);
+// 	}
+// }
+
 
 TEST_CASE("object trees can be converted to/from BSON", "[bson]")
 {
