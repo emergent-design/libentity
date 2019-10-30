@@ -104,6 +104,7 @@ TEST_CASE("vref can map a reference to different types", "[vref]")
 		amap.encode(c, dst, "a", stack);
 		REQUIRE(dst.str() == "\"a\":[1,1,2,3]");
 
+		items.clear();
 		amap.decode(c, "[3,2,1]", 0, 0);
 		REQUIRE(items.size() == 3);
 		REQUIRE(items[2] == 1);
@@ -132,6 +133,7 @@ TEST_CASE("vref can map a reference to different types", "[vref]")
 		mmap.encode(c, dst, "a", stack);
 		REQUIRE(dst.str() == "\"a\":{\"one\":1,\"two\":2}");
 
+		items.clear();
 		mmap.decode(c, "{\"three\":3}", 0, 0);
 		REQUIRE(items.size() == 1);
 		REQUIRE(items["three"] == 3);
@@ -159,6 +161,7 @@ TEST_CASE("vref can map a reference to different types", "[vref]")
 		mmap.encode(c, dst, "a", stack);
 		REQUIRE(dst.str() == "\"a\":{\"one\":1,\"two\":2}");
 
+		items.clear();
 		mmap.decode(c, "{\"zero\":0}", 0, 0);
 		REQUIRE(items.size() == 1);
 		REQUIRE(items["zero"] == EnumTest::Zero);

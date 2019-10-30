@@ -259,17 +259,13 @@ namespace ent
 
 		static int decode(T &item, const codec &c, const string &data, int position, int type)
 		{
-
 			string name = "";
-			item.clear();
 
 			if (c.object_start(data, position, type))
 			{
 				while (c.item(data, position, name, type))
 				{
-					typename T::mapped_type child;
-					position = vref<typename T::mapped_type>::decode(child, c, data, position, type);
-					item.emplace(name, child);
+					position = vref<typename T::mapped_type>::decode(item[name], c, data, position, type);
 				}
 
 				c.object_end(data, position);
@@ -299,13 +295,9 @@ namespace ent
 
 		static void from_tree(T &item, const tree &data)
 		{
-			typename T::mapped_type child;
-			item.clear();
-
 			for (auto &i : data.children)
 			{
-				vref<typename T::mapped_type>::from_tree(child, i.second);
-				item.emplace(i.first, child);
+				vref<typename T::mapped_type>::from_tree(item[i.first], i.second);
 			}
 		}
 
@@ -351,16 +343,24 @@ namespace ent
 
 		static int decode(T &item, const codec &c, const string &data, int position, int type)
 		{
-			item.clear();
+			// item.clear();
+			const auto length = item.size();
 
 			if (c.array_start(data, position, type))
 			{
-				while (c.array_item(data, position, type))
+				// while (c.array_item(data, position, type))
+				for (int i=0; c.array_item(data, position, type); i++)
 				{
-					typename T::value_type child;
-					position = vref<typename T::value_type>::decode(child, c, data, position, type);
-					// item.push_back(child);
-					item.insert(item.end(), child);
+					if (i < length)
+					{
+						position = vref<typename T::value_type>::decode(item[i], c, data, position, type);
+					}
+					else
+					{
+						typename T::value_type child;
+						position = vref<typename T::value_type>::decode(child, c, data, position, type);
+						item.insert(item.end(), child);
+					}
 				}
 
 				c.array_end(data, position);
@@ -390,17 +390,32 @@ namespace ent
 
 		static void from_tree(T &item, const tree &data)
 		{
-			typename T::value_type child;
-			item.clear();
+			const auto length = item.size();
+			// item.clear();
 
 			if (data.get_type() == tree::Type::Array)
 			{
-				for (auto &i : data.as_array())
+				int i = 0;
+
+				for (auto &d : data.as_array())
 				{
-					vref<typename T::value_type>::from_tree(child, i);
-					// item.push_back(child);
-					item.insert(item.end(), child);
+					if (i < length)
+					{
+						vref<typename T::value_type>::from_tree(item[i++], d);
+					}
+					else
+					{
+						typename T::value_type child;
+						vref<typename T::value_type>::from_tree(child, d);
+						item.insert(item.end(), child);
+					}
 				}
+
+				// for (auto &i : data.as_array())
+				// {
+				// 	vref<typename T::value_type>::from_tree(child, i);
+				// 	item.insert(item.end(), child);
+				// }
 			}
 		}
 
@@ -410,8 +425,6 @@ namespace ent
 
 
 
-	// Since this is almost identical to the vector implementation it can be merged into it when
-	// constexpr if becomes available (C++17 via clang 3.9).
 	template <class T> struct vref<T, if_set<T>> : vbase
 	{
 		vref(T &reference) : reference(&reference) {}
@@ -546,12 +559,9 @@ namespace ent
 			{
 				for (int i=0; c.array_item(data, position, type); i++)
 				{
-					typename T::value_type child;
-					position = vref<typename T::value_type>::decode(child, c, data, position, type);
-
 					if (i < item.size())
 					{
-						item[i] = child;
+						position = vref<typename T::value_type>::decode(item[i], c, data, position, type);
 					}
 				}
 
@@ -582,19 +592,15 @@ namespace ent
 
 		static void from_tree(T &item, const tree &data)
 		{
-			typename T::value_type child;
-
 			if (data.get_type() == tree::Type::Array)
 			{
 				int i = 0;
 
 				for (auto &d : data.as_array())
 				{
-					vref<typename T::value_type>::from_tree(child, d);
-
 					if (i < item.size())
 					{
-						item[i++] = child;
+						vref<typename T::value_type>::from_tree(item[i++], d);
 					}
 				}
 			}
