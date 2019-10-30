@@ -1,3 +1,9 @@
+libentity0 (1.1.5) unstable; urgency=medium
+
+  * Decoding by reference is now less destructive for maps, vectors and arrays.
+
+ -- Dan Parnham <dan@emergent-design.co.uk>  Wed, 30 Oct 2019 15:42:16 +0000
+
 libentity0 (1.1.4) unstable; urgency=medium
 
   * Top-level arrays now supported in BSON
