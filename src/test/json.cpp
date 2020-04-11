@@ -43,7 +43,7 @@ TEST_CASE("padded JSON can be parsed", "[json]")
 {
 	auto t = decode<json>(u8R"json({
 		"flag": true,
-		"integer": 42
+		"integer": 42,
 		"name": "simple",
 	})json");
 
@@ -233,4 +233,65 @@ TEST_CASE("parser will throw exception if the JSON is invalid", "[json]")
 	{
 		REQUIRE_THROWS(decode<json>(i));
 	}
+}
+
+
+TEST_CASE("parser supports single line comments", "[json]")
+{
+	auto t = decode<json>(u8R"json(
+		{
+			"name": "simple",
+			"integer": 42,		// end of line comment
+			"double": 3.14,
+			// "flag": true,
+			"nothing"//: something
+				: null// adjacent
+		}
+	)json");
+
+
+	REQUIRE(t["name"].get_type()	== tree::Type::String);
+	REQUIRE(t["integer"].get_type()	== tree::Type::Integer);
+	REQUIRE(t["double"].get_type()	== tree::Type::Floating);
+	REQUIRE(t["nothing"].get_type()	== tree::Type::Null);
+	REQUIRE(!t.contains("flag"));
+}
+
+
+TEST_CASE("parser supports block comments", "[json]")
+{
+	auto t = decode<json>(u8R"json(
+		{
+			"name": "simple",
+			/* "integer": 42,
+			"double": {,
+			"flag": true, */
+			"nothing": /*something*/null
+		}
+	)json");
+
+	REQUIRE(t["name"].get_type()	== tree::Type::String);
+	REQUIRE(t["nothing"].get_type()	== tree::Type::Null);
+	REQUIRE(!t.contains("integer"));
+	REQUIRE(!t.contains("double"));
+	REQUIRE(!t.contains("flag"));
+}
+
+
+TEST_CASE("parser supports trailing commas", "[json]")
+{
+	// It actually appears that the decoder doesn't care whether or not
+	// there are any commas since it treats commas as just another form
+	// of whitespace.
+	auto t = decode<json>(u8R"json({
+		"object": {
+			"name": "complex",
+		},
+		"array": [ 1, 2, 3, 4, ]
+	})json");
+
+	REQUIRE(t["object"].get_type() == tree::Type::Object);
+	REQUIRE(t["object"]["name"].as_string() == "complex");
+	REQUIRE(t["array"].get_type() == tree::Type::Array);
+	REQUIRE(t["array"].as_array().size() == 4);
 }

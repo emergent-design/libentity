@@ -79,10 +79,15 @@ namespace ent
 
 			for (int i=0; i<length; i++)
 			{
-				c = data[i];
-
-				if (!whitespace[(uint8_t)c])
+				if (!quotes)
 				{
+					skip_whitespace(data, i);
+				}
+
+				if (i < length)
+				{
+					c = data[i];
+
 					if (!quotes && (c == '}' || c == ']'))
 					{
 						if (levels.size())
@@ -114,13 +119,10 @@ namespace ent
 
 		virtual bool object_start(const string &data, int &i, int type) const
 		{
-			int length = data.length();
-
-			// Swallow whitespace
-			for (; i<length && whitespace[(uint8_t)data[i]]; i++);
+			skip_whitespace(data, i);
 
 			// An object should always start with an opening brace
-			return i<length && data[i] == '{';
+			return i<data.length() && data[i] == '{';
 		}
 
 
@@ -132,9 +134,9 @@ namespace ent
 
 		virtual bool item(const string &data, int &i, string &name, int &type) const
 		{
-			int length = data.length();
+			const int length = data.length();
 
-			for (i++; i<length && whitespace[(uint8_t)data[i]]; i++);
+			skip_whitespace(data, ++i);
 
 			if (i < length)
 			{
@@ -150,13 +152,15 @@ namespace ent
 					name = parse_key(data, i);
 
 					// Look for the key/value separator
-					for (i++; i<length && data[i] != ':'; i++)
+					skip_whitespace(data, ++i);
+
+					if (i < length && data[i] != ':')
 					{
-						if (!whitespace[(uint8_t)data[i]]) error("missing key/value separator", data, i);
+						error("missing key/value separator", data, i);
 					}
 
 					// Swallow any whitespace
-					for (i++; i<length && whitespace[(uint8_t)data[i]]; i++);
+					skip_whitespace(data, ++i);
 
 					return true;
 				}
@@ -169,13 +173,10 @@ namespace ent
 
 		virtual bool array_start(const string &data, int &i, int type) const
 		{
-			int length = data.length();
-
-			// Swallow whitespace
-			for (; i<length && whitespace[(uint8_t)data[i]]; i++);
+			skip_whitespace(data, i);
 
 			// An object should always start with an opening square brace
-			return i<length && data[i] == '[';
+			return i<data.length() && data[i] == '[';
 		}
 
 
@@ -187,11 +188,9 @@ namespace ent
 
 		virtual bool array_item(const string &data, int &i, int &type) const
 		{
-			int length = data.length();
+			skip_whitespace(data, ++i);
 
-			for (i++; i<length && whitespace[(uint8_t)data[i]]; i++);
-
-			return i < length && data[i] != ']';
+			return i < data.length() && data[i] != ']';
 		}
 
 
@@ -321,9 +320,59 @@ namespace ent
 		}
 
 
+		void skip_whitespace(const string &data, int &i) const
+		{
+			for (; i < data.length(); i++)
+			{
+				if (!whitespace[(uint8_t)data[i]])
+				{
+					if (data[i] == '/' && ++i < data.length())
+					{
+						skip_comment(data, i);
+					}
+					else
+					{
+						return;
+					}
+				}
+			}
+		}
+
+
+		void skip_comment(const string &data, int &i) const
+		{
+			// Skip to the end of the line
+			if (data[i] == '/')
+			{
+				for (i++; i<data.length(); i++)
+				{
+					if (data[i] == '\n' || data[i] == '\r')
+					{
+						return;
+					}
+				}
+			}
+			else if (data[i] == '*')
+			{
+				for (i++; i<data.length() - 1; i++)
+				{
+					if (data[i] == '*' && data[i+1] == '/')
+					{
+						i++;
+						return;
+					}
+				}
+			}
+			else
+			{
+				error("invalid comment type", data, i);
+			}
+		}
+
+
 		virtual int skip(const string &data, int &i, int type) const
 		{
-			auto c = data[i];
+			const char c = data[i];
 
 			if (c == '{')		skip(data, i, '{', '}');
 			else if (c == '[')	skip(data, i, '[', ']');
@@ -336,7 +385,7 @@ namespace ent
 
 		string parse_key(const string &data, int &i) const
 		{
-			int start = ++i;
+			const int start = ++i;
 
 			for (; i<data.length() && data[i] != '"'; i++);
 
@@ -346,7 +395,7 @@ namespace ent
 
 		std::pair<int, int> parse_string(const string &data, int &i) const
 		{
-			int start	= ++i;
+			const int start	= ++i;
 			bool ignore = false;	// Flag to ensure escaped quotes within the string are ignored
 
 			for (; i<data.length(); i++)
@@ -361,8 +410,17 @@ namespace ent
 
 		string parse_item(const string &data, int &i) const
 		{
-			int start = i;
-			for (i++; i<data.length() && !whitespace[(uint8_t)data[i]] && data[i] != '}' && data[i] != ']'; i++);
+			const int start = i;
+
+			for (i++; i<data.length(); i++)
+			{
+				const char c = data[i];
+
+				if (whitespace[(uint8_t)c] || c == '}' || c == ']' || c == '/')
+				{
+					break;
+				}
+			}
 
 			// Jump back a character since the parse_array and parse methods expect
 			// to swallow whitespace or opening character next so allow it to find
