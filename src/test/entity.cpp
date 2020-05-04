@@ -293,3 +293,15 @@ TEST_CASE("entities should always revert to default values", "[entity]")
 	REQUIRE(e.front().integer == 101);
 	REQUIRE(e.back().integer == 42);
 }
+
+
+TEST_CASE("maps of entities can be decoded from JSON", "[entity]")
+{
+	auto e = decode<json, std::map<string, SimpleEntity>>(u8R"json({
+		"first": { "integer": 101 },
+		"second": { "integer": 42 }
+	})json");
+
+	REQUIRE(e["first"].integer == 101);
+	REQUIRE(e["second"].integer == 42);
+}
