@@ -125,6 +125,20 @@ TEST_CASE("vref can map a reference to different types", "[vref]")
 	}
 
 
+	// SECTION("can map to a set of strings")
+	// {
+	// 	set<string> items	= { "2", "4", "8" };
+	// 	auto amap			= vref<decltype(items)>(items);
+
+	// 	amap.encode(c, dst, "a", stack);
+	// 	REQUIRE(dst.str() == R"json("a":["2","4","8"])json");
+
+	// 	amap.decode(c, R"json(["3","3","2","1"])json", 0, 0);
+	// 	REQUIRE(items.size() == 3);
+	// 	REQUIRE(items.count("2") == 1);
+	// }
+
+
 	SECTION("can map to a dictionary of simple types")
 	{
 		map<string, int> items	= { { "one", 1 }, { "two", 2 } };
