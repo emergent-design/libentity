@@ -31,8 +31,10 @@ package-all:
     - ./build
     - mkdir -p /packages/xenial/oss/
     - mkdir -p /packages/bionic/oss/
+    - mkdir -p /packages/focal/oss/
     - cp libentity-dev_*.deb /packages/xenial/oss/libentity-dev.deb
     - cp libentity-dev_*.deb /packages/bionic/oss/libentity-dev.deb
+    - cp libentity-dev_*.deb /packages/focal/oss/libentity-dev.deb
   artifacts:
     paths:
       - packages/*.deb
