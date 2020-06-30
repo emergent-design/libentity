@@ -1,3 +1,9 @@
+libentity0 (1.1.7) unstable; urgency=medium
+
+  * Added a focal package output
+
+ -- Dan Parnham <dan@emergent-design.co.uk>  Tue, 30 Jun 2020 16:58:08 +0100
+
 libentity0 (1.1.6) unstable; urgency=medium
 
   * Added support for comments in the JSON parser.
