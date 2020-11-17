@@ -3,7 +3,7 @@ stages:
   - deploy
 
 build-check:
-  image: emergent:xenial
+  image: emergent:bionic
   stage: build
   only:
     - master
@@ -22,7 +22,7 @@ windows-check:
 
 # Header-only library so package is the same for each distribution
 package-all:
-  image: emergent:xenial
+  image: emergent:bionic
   stage: build
   only:
     - tags

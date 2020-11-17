@@ -19,9 +19,10 @@ Makefile
 bin/
 lib/
 obj/
+build/
 .directory
 .build-*/
-.codelite/
+
 
 entity.workspace.dan
 compilation.db

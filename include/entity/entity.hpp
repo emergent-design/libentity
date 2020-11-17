@@ -23,7 +23,6 @@ namespace ent
 	#endif
 
 
-
 	// Encode an entity
 	template <class Codec, class T> std::string encode(T &item)
 	{

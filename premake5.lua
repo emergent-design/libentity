@@ -17,4 +17,3 @@ solution "entity"
 		files				{ "src/test/**.cpp" }
 		configuration "linux"
 			postbuildcommands	{ "./bin/test" }
-
