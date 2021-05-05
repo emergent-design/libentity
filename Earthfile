@@ -19,7 +19,7 @@ package:
 	FROM +code
 	RUN cd packages && ./build
 	SAVE ARTIFACT packages/libentity-dev_*.deb libentity-dev.deb
-	#AS LOCAL build/
+	SAVE ARTIFACT packages/libentity-dev_*.deb AS LOCAL ./
 
 #deploy:
 #	FROM +package
