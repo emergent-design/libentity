@@ -25,3 +25,5 @@ deploy-packages:
   dependencies: [ package-all ]
   script:
     - scp libentity-dev_*.deb $DEPLOY_DOWNLOADS/libentity/
+    - phi-deploy libentity-dev_*.deb bionic oss
+    - phi-deploy libentity-dev_*.deb focal oss
