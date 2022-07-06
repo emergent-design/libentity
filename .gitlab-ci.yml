@@ -24,6 +24,6 @@ deploy-packages:
   only: [ tags ]
   dependencies: [ package-all ]
   script:
-    - for REPO in bionic focal; do
+    - for REPO in bionic focal jammy; do
         phi-deploy build/libentity-dev_*.deb $REPO oss;
       done
