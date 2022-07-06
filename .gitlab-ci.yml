@@ -16,7 +16,7 @@ package-all:
     - earthly +package
   artifacts:
     paths:
-      - libentity-dev_*.deb
+      - build/**.deb
 
 deploy-packages:
   stage: deploy
@@ -24,7 +24,6 @@ deploy-packages:
   only: [ tags ]
   dependencies: [ package-all ]
   script:
-    # - scp libentity-dev_*.deb $DEPLOY_DOWNLOADS/libentity/
     - for REPO in bionic focal; do
         phi-deploy build/libentity-dev_*.deb $REPO oss;
       done
