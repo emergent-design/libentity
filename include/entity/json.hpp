@@ -99,9 +99,9 @@ namespace ent
 					}
 					else switch (c)
 					{
-						case '"':	if (!ignore) quotes = !quotes;			break;
-						case '{':	if (!quotes) levels.emplace('}', i);	break;	// Each time a new object or array is started push the end
-						case '[':	if (!quotes) levels.emplace(']', i);	break;	// symbol and position in the string onto a stack.
+						case '"':	if (!ignore) { quotes = !quotes; }			break;
+						case '{':	if (!quotes) { levels.emplace('}', i); }	break;	// Each time a new object or array is started push the end
+						case '[':	if (!quotes) { levels.emplace(']', i); }	break;	// symbol and position in the string onto a stack.
 					}
 
 					// If a backslash is found within a string then ignore the next
@@ -219,7 +219,7 @@ namespace ent
 		{
 			if (!check_simple(data[i], data, i, type)) return false;
 
-			try 		{ return stoi(parse_item(data, i)); }
+			try 		{ return stoi(parse_item(data, i), nullptr, 0); }
 			catch (...)	{ error("value is not a valid number", data, i); }
 			return 0;
 		}
@@ -229,7 +229,7 @@ namespace ent
 		{
 			if (!check_simple(data[i], data, i, type)) return false;
 
-			try 		{ return stoll(parse_item(data, i)); }
+			try 		{ return stoll(parse_item(data, i), nullptr, 0); }
 			catch (...)	{ error("value is not a valid number", data, i); }
 			return 0;
 		}
@@ -437,16 +437,25 @@ namespace ent
 			if (data[i] == '}') error("missing object value", data, i);
 			if (data[i] == '"') return this->get(data, i, type, string());
 
-			auto item = parse_item(data, i);
+			const auto item = parse_item(data, i);
 
-			if (item == "true")		return true;
-			if (item == "false")	return false;
-			if (item == "null")		return nullptr;
+			if (item == "true")			return true;
+			if (item == "false")		return false;
+			if (item == "null")			return nullptr;
+			// if (item == "Infinity")		return std::numeric_limits<double>::infinity();
+			// if (item == "-Infinity")	return -std::numeric_limits<double>::infinity();
+			// if (item == "NaN")			return std::numeric_limits<double>::quiet_NaN();
 
 			try
 			{
-				if (item.find('.') == string::npos) return std::stoll(item);
-				else								return std::stod(item);
+				if (item.find('.') == string::npos)
+				{
+					return std::stoll(item, nullptr, 0);
+				}
+				else
+				{
+					return std::stod(item);
+				}
 			}
 			catch (...)
 			{

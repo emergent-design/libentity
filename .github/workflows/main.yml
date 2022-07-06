@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: earthly/actions/setup-earthly@v1
+        with:
+          version: v0.6.17
+
+      - uses: actions/checkout@v2
+
+      - name: Run build
+        run: earthly +package
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/**.deb

@@ -172,7 +172,6 @@ TEST_CASE("can cope with standard JSON number formats", "[json]")
 	REQUIRE(t["long"].as_long()			== 12345123456789);
 	REQUIRE(t["big"].as_double()		== 123456789123456789123456789.0);
 	REQUIRE(t["tiny"].as_double()		== 1.0e-300);
-
 }
 
 
@@ -236,6 +235,8 @@ TEST_CASE("parser will throw exception if the JSON is invalid", "[json]")
 }
 
 
+//---------------- JSON5 extended syntax
+
 TEST_CASE("parser supports single line comments", "[json]")
 {
 	auto t = decode<json>(u8R"json(
@@ -294,4 +295,65 @@ TEST_CASE("parser supports trailing commas", "[json]")
 	REQUIRE(t["object"]["name"].as_string() == "complex");
 	REQUIRE(t["array"].get_type() == tree::Type::Array);
 	REQUIRE(t["array"].as_array().size() == 4);
+}
+
+
+TEST_CASE("parser supports single quoted string", "[json]")
+{
+
+}
+
+// TEST_CASE("parser supports multiline strings", "[json]")
+// {
+
+// }
+
+// Strings may include character escapes?
+
+TEST_CASE("parser supports hexadecimal numbers", "[json]")
+{
+	auto t = decode<json>(u8R"json({
+		"positive": 0xff,
+		"negative": -0xff
+	})json");
+
+	REQUIRE(t["positive"].as_long() == 255);
+	REQUIRE(t["negative"].as_long() == -255);
+}
+
+
+TEST_CASE("parser supports leading or trailing decimal points in numbers", "[json]")
+{
+	auto t = decode<json>(u8R"json({
+		"leading": .25,
+		"trailing": 42.
+	})json");
+
+	REQUIRE(t["leading"].as_double() == 0.25);
+	REQUIRE(t["trailing"].as_double() == 42.0);
+}
+
+TEST_CASE("parser supports IEEE 754 positive/negative infinity and NaN")
+{
+	// auto t = decode<json>(u8R"json({
+	// 	"positive": Infinity,
+	// 	"negative": -Infinity,
+	// 	"nan": NaN
+	// })json");
+
+	// REQUIRE(t["positive"].as_double() == INFINITY);
+	// REQUIRE(t["negative"].as_double() == -INFINITY);
+	// REQUIRE(std::isnan(t["nan"].as_double()));
+
+	// REQUIRE(encode<json>(t) == "");
+}
+
+TEST_CASE("parser supports numbers starting with a plus sign", "[json]")
+{
+
+}
+
+TEST_CASE("parser ignores all forms of whitespace", "[json]")
+{
+
 }

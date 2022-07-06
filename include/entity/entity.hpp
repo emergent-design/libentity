@@ -10,11 +10,14 @@ namespace ent
 	// If two arguments are passed then the supplied name is used as the mapping key
 	#ifndef ent_ref
 		#define ent_get_ref(_1, _2, name, ...) name
-		#define ent_man_ref(name, item)		std::make_pair(name, std::make_shared<ent::vref<typename std::remove_reference<decltype(item)>::type>>(item))
+		// #define ent_man_ref(name, item)		std::make_pair(name, std::make_shared<ent::vref<typename std::remove_reference<decltype(item)>::type>>(item))
+		#define ent_man_ref(name, item)		std::make_pair(name, std::make_unique<ent::vref<typename std::remove_reference<decltype(item)>::type>>(item))
 		#define ent_auto_ref(item)			ent_man_ref(#item, item)
 		#define ent_ref(...)				ent_get_ref(__VA_ARGS__, ent_man_ref, ent_auto_ref)(__VA_ARGS__)
-		#define ent_map(...)				ent::mapping ent_describe() { return { __VA_ARGS__ }; }
-		#define ent_merge(base, ...)		ent::mapping ent_describe() { auto a = base::ent_describe(); a.insert({ __VA_ARGS__ });	return a; }
+		#define ent_map(...)				ent::mapping ent_describe() { return { __VA_ARGS__ }; } //\
+											// const ent::mapping ent_describe() const { return __VA_ARGS__ };
+		#define ent_merge(base, ...)		ent::mapping ent_describe() { auto a = base::ent_describe(); a.insert({ __VA_ARGS__ });	return a; } //\
+											// const ent::mapping ent_describe() const { auto a = base::ent_describe(); a.insert({ __VA_ARGS__ }); return a; }
 
 		// Concise call to ent_ref and ent_map, disable if they conflict
 		#define eref ent_ref

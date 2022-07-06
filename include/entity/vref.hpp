@@ -28,6 +28,18 @@ namespace ent
 		virtual void from_tree(const tree &data) = 0;
 	};
 
+	// struct venc
+	// {
+	// 	virtual ~venc() {}
+	// 	virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack) const = 0;
+	// 	virtual tree to_tree() const = 0;
+	// };
+	// struct vdec
+	// {
+	// 	virtual int decode(const codec &c, const string &data, int position, int type) = 0;
+	// 	virtual void from_tree(const tree &data) = 0;
+	// };
+
 
 	// Structure for storing the entity description
 	typedef std::map<std::string, std::shared_ptr<vbase>> mapping;
@@ -55,6 +67,7 @@ namespace ent
 	template <class T> struct vref<T, if_simple<T>> : vbase
 	{
 		vref(T &reference) : reference(&reference) {}
+		// vref(const T &reference) : reference(&reference) {}
 
 
 		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
@@ -94,6 +107,7 @@ namespace ent
 	template <class T> struct vref<T, if_enum<T>> : vbase
 	{
 		vref(T &reference) : reference(&reference) {}
+		// vref(const T &reference) : reference(&reference) {}
 
 
 		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
@@ -120,7 +134,7 @@ namespace ent
 		};
 
 
-		virtual tree to_tree()								{ return (int)*this->reference; }
+		virtual tree to_tree() 								{ return (int)*this->reference; }
 		virtual void from_tree(const tree &data)			{ *this->reference = (T)data.as_long(); }
 		static tree to_tree(T &item)						{ return (int)item; }
 		static void from_tree(T &item, const tree &data)	{ item = (T)data.as_long(); }
@@ -135,6 +149,7 @@ namespace ent
 	template <class T> struct vref<T, if_entity<T>> : vbase
 	{
 		vref(T &reference) : reference(&reference) {}
+		// vref(const T &reference) : reference(&reference) {}
 
 		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
 		{
@@ -189,7 +204,7 @@ namespace ent
 		}
 
 
-		virtual tree to_tree()						{ return to_tree(*this->reference); }
+		virtual tree to_tree() 						{ return to_tree(*this->reference); }
 		virtual void from_tree(const tree &data)	{ from_tree(*this->reference, data); }
 
 
@@ -227,6 +242,7 @@ namespace ent
 	template <class T> struct vref<T, if_map<T>> : vbase
 	{
 		vref(T &reference) : reference(&reference) {}
+		// vref(const T &reference) : reference(&reference) {}
 
 
 		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
@@ -276,7 +292,7 @@ namespace ent
 		}
 
 
-		virtual tree to_tree()						{ return to_tree(*this->reference); }
+		virtual tree to_tree() 						{ return to_tree(*this->reference); }
 		virtual void from_tree(const tree &data)	{ from_tree(*this->reference, data); }
 
 
@@ -310,6 +326,7 @@ namespace ent
 	template <class T> struct vref<T, if_vector<T>> : vbase
 	{
 		vref(T &reference) : reference(&reference) {}
+		// vref(const T &reference) : reference(&reference) {}
 
 
 		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
@@ -371,7 +388,7 @@ namespace ent
 		}
 
 
-		virtual tree to_tree()						{ return to_tree(*this->reference); }
+		virtual tree to_tree() 						{ return to_tree(*this->reference); }
 		virtual void from_tree(const tree &data)	{ from_tree(*this->reference, data); }
 
 
@@ -428,6 +445,7 @@ namespace ent
 	template <class T> struct vref<T, if_set<T>> : vbase
 	{
 		vref(T &reference) : reference(&reference) {}
+		// vref(const T &reference) : reference(&reference) {}
 
 
 		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
@@ -480,7 +498,7 @@ namespace ent
 		}
 
 
-		virtual tree to_tree()						{ return to_tree(*this->reference); }
+		virtual tree to_tree() 						{ return to_tree(*this->reference); }
 		virtual void from_tree(const tree &data)	{ from_tree(*this->reference, data); }
 
 
@@ -522,6 +540,7 @@ namespace ent
 	template <class T> struct vref<T, if_array<T>> : vbase
 	{
 		vref(T &reference) : reference(&reference) {}
+		// vref(const T &reference) : reference(&reference) {}
 
 
 		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
@@ -573,7 +592,7 @@ namespace ent
 		}
 
 
-		virtual tree to_tree()						{ return to_tree(*this->reference); }
+		virtual tree to_tree() 						{ return to_tree(*this->reference); }
 		virtual void from_tree(const tree &data)	{ from_tree(*this->reference, data); }
 
 
@@ -615,6 +634,7 @@ namespace ent
 	template <class T> struct vref<T, if_tree<T>> : vbase
 	{
 		vref(T &reference) : reference(&reference) {}
+		// vref(const T &reference) : reference(&reference) {}
 
 		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
 		{
@@ -637,7 +657,7 @@ namespace ent
 		}
 
 
-		virtual tree to_tree()								{ return *this->reference; }
+		virtual tree to_tree() 								{ return *this->reference; }
 		virtual void from_tree(const tree &data)			{ *this->reference = data; }
 		static tree to_tree(T &item)						{ return item; }
 		static void from_tree(T &item, const tree &data)	{ return data.as(item); }

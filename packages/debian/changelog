@@ -1,3 +1,10 @@
+libentity0 (1.1.10) unstable; urgency=medium
+
+  * Added hexadecimal and leading decimal point support to JSON parser
+  * Package building now uses debhelper
+
+ -- Dan Parnham <dan@emergent-design.co.uk>  Wed, 06 Jul 2022 14:02:17 +0100
+
 libentity0 (1.1.9) unstable; urgency=medium
 
   * Update to the deployment process
