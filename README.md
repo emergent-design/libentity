@@ -95,7 +95,7 @@ Installation
 
 Entity is a header-only library, so simply include the entity headers in your
 project or copy them to somewhere on the include path (such as ```/usr/local/include```).
-Alternatively you could [download](http://downloads.emergent-design.co.uk/libentity)
+Alternatively you could [download](https://github.com/emergent-design/libentity/releases)
 a package for any recent debian-based distribution which will install the headers
 to ```/usr/include```.
 
