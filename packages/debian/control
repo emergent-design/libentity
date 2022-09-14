@@ -8,5 +8,5 @@ Package: libentity-dev
 Section: libdevel
 Architecture: all
 Description: Development headers for libentity
- Provides a C++11 libray for directly serialising/deserialising
+ Provides a C++11 library for directly serialising/deserialising
  classes or structs to formats such as JSON.
