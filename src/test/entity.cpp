@@ -305,3 +305,20 @@ TEST_CASE("maps of entities can be decoded from JSON", "[entity]")
 	REQUIRE(e["first"].integer == 101);
 	REQUIRE(e["second"].integer == 42);
 }
+
+
+TEST_CASE("entities with uint values lower than 64-bit can be handled")
+{
+	struct UnsignedEntity
+	{
+		uint16_t little = std::numeric_limits<uint16_t>::max();
+		uint32_t medium = std::numeric_limits<uint32_t>::max();
+
+		emap(eref(little), eref(medium))
+	};
+	UnsignedEntity uns;
+	auto e = ent::to_tree(uns);
+
+	REQUIRE(e["little"].as_long() == std::numeric_limits<uint16_t>::max());
+	REQUIRE(e["medium"].as_long() == std::numeric_limits<uint32_t>::max());
+}

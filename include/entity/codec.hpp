@@ -32,6 +32,9 @@ namespace ent
 		virtual void item(os &dst, const string &name, const string &value, int depth) const = 0;
 		virtual void item(os &dst, const string &name, const vector<uint8_t> &value, int depth) const = 0;
 
+		// To avoid ambiguity and retain positive values cast unsigned integers to 64-bit longs
+		void item(os &dst, const string &name, uint32_t value, int depth) const { this->item(dst, name, (int64_t)value, depth); }
+
 
 		// Decoding functions
 		virtual bool validate(const string &data) const = 0;
@@ -49,6 +52,9 @@ namespace ent
 		virtual double get(const string &data, int &i, int type, double def) const = 0;
 		virtual string get(const string &data, int &i, int type, const string def) const = 0;
 		virtual vector<uint8_t> get(const string &data, int &i, int type, const vector<uint8_t> def) const = 0;
+
+		// To avoid ambiguity and retain positive values cast unsigned integers to 64-bit longs
+		uint32_t get(const string &data, int &i, int type, uint32_t def) const { return this->get(data, i, type, (int64_t)def); }
 
 
 		// Encode dynamic type

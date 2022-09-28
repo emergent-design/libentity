@@ -1,3 +1,9 @@
+libentity0 (1.1.11) unstable; urgency=medium
+
+  * Handle uint32 values
+
+ -- Dan Parnham <dan@emergent-design.co.uk>  Wed, 28 Sep 2022 14:27:53 +0100
+
 libentity0 (1.1.10) unstable; urgency=medium
 
   * Added hexadecimal and leading decimal point support to JSON parser
