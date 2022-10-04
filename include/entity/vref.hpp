@@ -6,11 +6,13 @@
 #include <vector>
 #include <memory>
 #include <sstream>
+#include <entity/any.hpp>
 #include <entity/codec.hpp>
 
 
 namespace ent
 {
+	using namespace std::string_literals;
 	using std::string;
 	using std::vector;
 	using std::stack;
@@ -26,6 +28,14 @@ namespace ent
 
 		virtual tree to_tree() = 0;
 		virtual void from_tree(const tree &data) = 0;
+
+		// Modify the underlying value with the supplied function. The function is reponsible
+		// for handling the type safely based on the type_info. The recurse option gives specific
+		// concrete vrefs the option of recursing into containers instead of passing the container
+		// to the function. This removes the need for the modification function to handle object
+		// traversal. Since this uses any_ref to provide access to the underlying value great care
+		// must be taken to handle the type properly.
+		virtual void modify(std::function<void(any_ref)> modifier, const bool recurse = true) = 0;
 	};
 
 	// struct venc
@@ -60,8 +70,8 @@ namespace ent
 	template <typename T, std::size_t N> struct is_array<std::array<T, N>> : std::true_type {};
 	template <typename T> using if_array	= typename std::enable_if<ent::is_array<T>::value>::type;
 
-
-
+	// Helper function to create a vref with automatic type detection
+	template <typename T> vref<T> make_vref(T &value) { return vref<T>(value); }
 
 	// Reference to any simple types (bool, number, string, vector<uint8_t>)
 	template <class T> struct vref<T, if_simple<T>> : vbase
@@ -70,7 +80,7 @@ namespace ent
 		// vref(const T &reference) : reference(&reference) {}
 
 
-		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
+		void encode(const codec &c, os &dst, const string &name, stack<int> &stack) override
 		{
 			c.item(dst, name, *this->reference, stack.size());
 		};
@@ -82,7 +92,7 @@ namespace ent
 		}
 
 
-		virtual int decode(const codec &c, const string &data, int position, int type)
+		int decode(const codec &c, const string &data, int position, int type) override
 		{
 			*this->reference = c.get(data, position, type, T()); return position;
 		};
@@ -93,10 +103,20 @@ namespace ent
 			item = c.get(data, position, type, T()); return position;
 		};
 
-		virtual tree to_tree() 								{ return *this->reference; }
-		virtual void from_tree(const tree &data)			{ data.as(*this->reference); }
+		tree to_tree() override 							{ return *this->reference; }
+		void from_tree(const tree &data) override			{ data.as(*this->reference); }
 		static tree to_tree(T &item)						{ return item; }
 		static void from_tree(T &item, const tree &data)	{ return data.as(item); }
+
+		void modify(std::function<void(any_ref)> modifier, const bool = true) override
+		{
+			modifier(*this->reference);
+		}
+
+		static void modify(T &item, std::function<void(any_ref)> modifier, const bool = true)
+		{
+			modifier(item);
+		}
 
 		T *reference;
 	};
@@ -110,7 +130,7 @@ namespace ent
 		// vref(const T &reference) : reference(&reference) {}
 
 
-		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
+		void encode(const codec &c, os &dst, const string &name, stack<int> &stack) override
 		{
 			c.item(dst, name, (int)*this->reference, stack.size());
 		};
@@ -122,7 +142,7 @@ namespace ent
 		}
 
 
-		virtual int decode(const codec &c, const string &data, int position, int type)
+		int decode(const codec &c, const string &data, int position, int type) override
 		{
 			*this->reference = (T)c.get(data, position, type, int()); return position;
 		};
@@ -134,11 +154,19 @@ namespace ent
 		};
 
 
-		virtual tree to_tree() 								{ return (int)*this->reference; }
-		virtual void from_tree(const tree &data)			{ *this->reference = (T)data.as_long(); }
+		tree to_tree() override 							{ return (int)*this->reference; }
+		void from_tree(const tree &data) override			{ *this->reference = (T)data.as_long(); }
 		static tree to_tree(T &item)						{ return (int)item; }
 		static void from_tree(T &item, const tree &data)	{ item = (T)data.as_long(); }
 
+		void modify(std::function<void(any_ref)> modifier, const bool = true) override
+		{
+			modifier(*this->reference);
+		}
+		static void modify(T &item, std::function<void(any_ref)> modifier, const bool = true)
+		{
+			modifier(item);
+		}
 
 		T *reference;
 	};
@@ -151,7 +179,7 @@ namespace ent
 		vref(T &reference) : reference(&reference) {}
 		// vref(const T &reference) : reference(&reference) {}
 
-		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
+		void encode(const codec &c, os &dst, const string &name, stack<int> &stack) override
 		{
 			encode(*this->reference, c, dst, name, stack);
 		}
@@ -174,7 +202,7 @@ namespace ent
 		}
 
 
-		virtual int decode(const codec &c, const string &data, int position, int type)
+		int decode(const codec &c, const string &data, int position, int type) override
 		{
 			return decode(*this->reference, c, data, position, type);
 		}
@@ -204,8 +232,8 @@ namespace ent
 		}
 
 
-		virtual tree to_tree() 						{ return to_tree(*this->reference); }
-		virtual void from_tree(const tree &data)	{ from_tree(*this->reference, data); }
+		tree to_tree() override 						{ return to_tree(*this->reference); }
+		void from_tree(const tree &data) override	{ from_tree(*this->reference, data); }
 
 
 		static tree to_tree(T &item)
@@ -233,6 +261,27 @@ namespace ent
 		}
 
 
+		void modify(std::function<void(any_ref)> modifier, const bool recurse = true) override
+		{
+			modify(*this->reference, modifier, recurse);
+		}
+
+		static void modify(T &item, std::function<void(any_ref)> modifier, const bool recurse = true)
+		{
+			if (recurse)
+			{
+				for (auto &i : item.ent_describe())
+				{
+					i.second->modify(modifier, recurse);
+				}
+			}
+			else
+			{
+				modifier(item);
+			}
+		}
+
+
 		T *reference;
 	};
 
@@ -245,7 +294,7 @@ namespace ent
 		// vref(const T &reference) : reference(&reference) {}
 
 
-		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
+		void encode(const codec &c, os &dst, const string &name, stack<int> &stack) override
 		{
 			encode(*this->reference, c, dst, name, stack);
 		}
@@ -267,7 +316,7 @@ namespace ent
 		}
 
 
-		virtual int decode(const codec &c, const string &data, int position, int type)
+		int decode(const codec &c, const string &data, int position, int type) override
 		{
 			return decode(*this->reference, c, data, position, type);
 		}
@@ -292,8 +341,8 @@ namespace ent
 		}
 
 
-		virtual tree to_tree() 						{ return to_tree(*this->reference); }
-		virtual void from_tree(const tree &data)	{ from_tree(*this->reference, data); }
+		tree to_tree() override 					{ return to_tree(*this->reference); }
+		void from_tree(const tree &data) override	{ from_tree(*this->reference, data); }
 
 
 		static tree to_tree(T &item)
@@ -317,6 +366,27 @@ namespace ent
 			}
 		}
 
+
+		void modify(std::function<void(any_ref)> modifier, const bool recurse = true) override
+		{
+			modify(*this->reference, modifier, recurse);
+		}
+
+		static void modify(T &item, std::function<void(any_ref)> modifier, const bool recurse = true)
+		{
+			if (recurse)
+			{
+				for (auto &i : item)
+				{
+					vref<typename T::mapped_type>::modify(i.second, modifier, recurse);
+				}
+			}
+			else
+			{
+				modifier(item);
+			}
+		}
+
 		T *reference;
 	};
 
@@ -329,7 +399,7 @@ namespace ent
 		// vref(const T &reference) : reference(&reference) {}
 
 
-		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
+		void encode(const codec &c, os &dst, const string &name, stack<int> &stack) override
 		{
 			encode(*this->reference, c, dst, name, stack);
 		}
@@ -352,7 +422,7 @@ namespace ent
 		}
 
 
-		virtual int decode(const codec &c, const string &data, int position, int type)
+		int decode(const codec &c, const string &data, int position, int type) override
 		{
 			return decode(*this->reference, c, data, position, type);
 		}
@@ -388,8 +458,8 @@ namespace ent
 		}
 
 
-		virtual tree to_tree() 						{ return to_tree(*this->reference); }
-		virtual void from_tree(const tree &data)	{ from_tree(*this->reference, data); }
+		tree to_tree() override 					{ return to_tree(*this->reference); }
+		void from_tree(const tree &data) override	{ from_tree(*this->reference, data); }
 
 
 		static tree to_tree(T &item)
@@ -437,6 +507,27 @@ namespace ent
 		}
 
 
+		void modify(std::function<void(any_ref)> modifier, const bool recurse = true) override
+		{
+			modify(*this->reference, modifier, recurse);
+		}
+
+		static void modify(T &item, std::function<void(any_ref)> modifier, const bool recurse = true)
+		{
+			if (recurse)
+			{
+				for (auto &i : item)
+				{
+					vref<typename T::value_type>::modify(i, modifier, recurse);
+				}
+			}
+			else
+			{
+				modifier(item);
+			}
+		}
+
+
 		T *reference;
 	};
 
@@ -448,7 +539,7 @@ namespace ent
 		// vref(const T &reference) : reference(&reference) {}
 
 
-		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
+		void encode(const codec &c, os &dst, const string &name, stack<int> &stack) override
 		{
 			encode(*this->reference, c, dst, name, stack);
 		}
@@ -471,7 +562,7 @@ namespace ent
 		}
 
 
-		virtual int decode(const codec &c, const string &data, int position, int type)
+		int decode(const codec &c, const string &data, int position, int type) override
 		{
 			return decode(*this->reference, c, data, position, type);
 		}
@@ -498,8 +589,8 @@ namespace ent
 		}
 
 
-		virtual tree to_tree() 						{ return to_tree(*this->reference); }
-		virtual void from_tree(const tree &data)	{ from_tree(*this->reference, data); }
+		tree to_tree() override 					{ return to_tree(*this->reference); }
+		void from_tree(const tree &data) override	{ from_tree(*this->reference, data); }
 
 
 		static tree to_tree(T &item)
@@ -531,6 +622,18 @@ namespace ent
 		}
 
 
+		// You can't modify the items within a set so do not try recursing
+		void modify(std::function<void(any_ref)> modifier, const bool = true) override
+		{
+			modifier(*this->reference);
+		}
+
+		static void modify(T &item, std::function<void(any_ref)> modifier, const bool = true)
+		{
+			modifier(item);
+		}
+
+
 		T *reference;
 	};
 
@@ -543,7 +646,7 @@ namespace ent
 		// vref(const T &reference) : reference(&reference) {}
 
 
-		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
+		void encode(const codec &c, os &dst, const string &name, stack<int> &stack) override
 		{
 			encode(*this->reference, c, dst, name, stack);
 		}
@@ -566,7 +669,7 @@ namespace ent
 		}
 
 
-		virtual int decode(const codec &c, const string &data, int position, int type)
+		int decode(const codec &c, const string &data, int position, int type) override
 		{
 			return decode(*this->reference, c, data, position, type);
 		}
@@ -592,8 +695,8 @@ namespace ent
 		}
 
 
-		virtual tree to_tree() 						{ return to_tree(*this->reference); }
-		virtual void from_tree(const tree &data)	{ from_tree(*this->reference, data); }
+		tree to_tree() override 					{ return to_tree(*this->reference); }
+		void from_tree(const tree &data) override	{ from_tree(*this->reference, data); }
 
 
 		static tree to_tree(T &item)
@@ -626,6 +729,27 @@ namespace ent
 		}
 
 
+		void modify(std::function<void(any_ref)> modifier, const bool recurse = true) override
+		{
+			modify(*this->reference, modifier, recurse);
+		}
+
+		static void modify(T &item, std::function<void(any_ref)> modifier, const bool recurse = true)
+		{
+			if (recurse)
+			{
+				for (auto &i : item)
+				{
+					vref<typename T::value_type>::modify(i, modifier, recurse);
+				}
+			}
+			else
+			{
+				modifier(item);
+			}
+		}
+
+
 		T *reference;
 	};
 
@@ -636,7 +760,7 @@ namespace ent
 		vref(T &reference) : reference(&reference) {}
 		// vref(const T &reference) : reference(&reference) {}
 
-		virtual void encode(const codec &c, os &dst, const string &name, stack<int> &stack)
+		void encode(const codec &c, os &dst, const string &name, stack<int> &stack) override
 		{
 			encode(*this->reference, c, dst, name, stack);
 		}
@@ -646,7 +770,7 @@ namespace ent
 			c.item(item, dst, name, stack);
 		}
 
-		virtual int decode(const codec &c, const string &data, int position, int type)
+		int decode(const codec &c, const string &data, int position, int type) override
 		{
 			*this->reference = c.item(data, position, type); return position;
 		}
@@ -657,10 +781,23 @@ namespace ent
 		}
 
 
-		virtual tree to_tree() 								{ return *this->reference; }
-		virtual void from_tree(const tree &data)			{ *this->reference = data; }
+		tree to_tree() override								{ return *this->reference; }
+		void from_tree(const tree &data) override			{ *this->reference = data; }
 		static tree to_tree(T &item)						{ return item; }
 		static void from_tree(T &item, const tree &data)	{ return data.as(item); }
+
+
+		// Traversing the tree is the responsibility of the modifier function and so
+		// the recurse option is ignored.
+		void modify(std::function<void(any_ref)> modifier, const bool = true) override
+		{
+			modifier(*this->reference);
+		}
+
+		static void modify(T &item, std::function<void(any_ref)> modifier, const bool = true)
+		{
+			modifier(item);
+		}
 
 		T *reference;
 	};

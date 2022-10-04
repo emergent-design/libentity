@@ -1,3 +1,10 @@
+libentity0 (1.1.12) unstable; urgency=medium
+
+  * Helper structure any_ref for holding a generic reference
+  * Added a recursive modifier function to vref
+
+ -- Dan Parnham <dan@emergent-design.co.uk>  Tue, 04 Oct 2022 09:24:34 +0100
+
 libentity0 (1.1.11) unstable; urgency=medium
 
   * Handle uint32 values

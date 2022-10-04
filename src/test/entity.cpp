@@ -75,7 +75,7 @@ class ClassEntity
 TEST_CASE("an entity can be serialised", "[entity]")
 {
 	SimpleEntity e;
-	string data = u8R"json({"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"})json";
+	string data = R"json({"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"})json";
 
 	REQUIRE(encode<json>(e) == data);
 }
@@ -84,7 +84,7 @@ TEST_CASE("an entity can be serialised", "[entity]")
 TEST_CASE("a derived entity can use a merge helper", "[entity]")
 {
 	DerivedEntity e;
-	string data = u8R"json({"bignumber":20349758,"extra":"field","flag":true,"floating":3.142,"integer":42,"name":"simple"})json";
+	string data = R"json({"bignumber":20349758,"extra":"field","flag":true,"floating":3.142,"integer":42,"name":"simple"})json";
 
 	REQUIRE(encode<json>(e) == data);
 }
@@ -93,7 +93,7 @@ TEST_CASE("a derived entity can use a merge helper", "[entity]")
 TEST_CASE("a vector of entities can be serialised", "[entity]")
 {
 	vector<SimpleEntity> e = { SimpleEntity() };
-	string data = u8R"json([{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"}])json";
+	string data = R"json([{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"}])json";
 
 	REQUIRE(encode<json>(e) == data);
 }
@@ -101,7 +101,7 @@ TEST_CASE("a vector of entities can be serialised", "[entity]")
 
 TEST_CASE("an entity can be deserialised", "[entity]")
 {
-	auto e = decode<json, ComplexEntity>(u8R"json({
+	auto e = decode<json, ComplexEntity>(R"json({
 		"name":	"parsed complex",
 		"simple": {
 			"name":		"parsed simple",
@@ -206,7 +206,7 @@ TEST_CASE("an entity can contain a tree and be serialised", "[entity]")
 
 TEST_CASE("an entity can contain a tree and be deserialised", "[entity]")
 {
-	auto e = decode<json, TreeEntity>(u8R"json({
+	auto e = decode<json, TreeEntity>(R"json({
 		"name":	"tree entity",
 		"parameters": {
 			"name":		"parameter",
@@ -256,7 +256,7 @@ TEST_CASE("an entity containing a tree can be created from a tree", "[entity]")
 
 TEST_CASE("an entity can be decoded from JSON containing unused information", "[entity]")
 {
-	auto e = decode<json, ComplexEntity>(u8R"json({
+	auto e = decode<json, ComplexEntity>(R"json({
 		"entities":[{"a":{}}]
 	})json");
 
@@ -267,7 +267,7 @@ TEST_CASE("an entity can be decoded from JSON containing unused information", "[
 TEST_CASE("a class with private members can be serialised", "[entity]")
 {
 	ClassEntity e;
-	string data = u8R"json({"name":"class"})json";
+	string data = R"json({"name":"class"})json";
 
 	REQUIRE(encode<json>(e) == data);
 }
@@ -275,7 +275,7 @@ TEST_CASE("a class with private members can be serialised", "[entity]")
 
 TEST_CASE("a class with private members can be deserialised", "[entity]")
 {
-	auto e = decode<json, ClassEntity>(u8R"json({
+	auto e = decode<json, ClassEntity>(R"json({
 		"name": "parsed class"
 	})json");
 
@@ -285,7 +285,7 @@ TEST_CASE("a class with private members can be deserialised", "[entity]")
 
 TEST_CASE("entities should always revert to default values", "[entity]")
 {
-	auto e = decode<json, std::vector<SimpleEntity>>(u8R"json([
+	auto e = decode<json, std::vector<SimpleEntity>>(R"json([
 		{ "integer": 101 },
 		{}
 	])json");
@@ -297,7 +297,7 @@ TEST_CASE("entities should always revert to default values", "[entity]")
 
 TEST_CASE("maps of entities can be decoded from JSON", "[entity]")
 {
-	auto e = decode<json, std::map<string, SimpleEntity>>(u8R"json({
+	auto e = decode<json, std::map<string, SimpleEntity>>(R"json({
 		"first": { "integer": 101 },
 		"second": { "integer": 42 }
 	})json");
@@ -322,3 +322,17 @@ TEST_CASE("entities with uint values lower than 64-bit can be handled")
 	REQUIRE(e["little"].as_long() == std::numeric_limits<uint16_t>::max());
 	REQUIRE(e["medium"].as_long() == std::numeric_limits<uint32_t>::max());
 }
+
+
+// TEST_CASE("a terser mapping syntax can be used")
+// {
+// 	struct TerseEntity
+// 	{
+// 		string name			= "simple";
+// 		bool flag			= true;
+// 		int integer			= 42;
+// 		double floating		= 3.142;
+
+// 		ent_map_terse(name, flag, integer, floating)
+// 	};
+// }

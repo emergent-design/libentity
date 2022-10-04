@@ -6,7 +6,7 @@ using namespace std;
 using namespace ent;
 
 
-string PADDED_JSON	= u8R"json({
+const string PADDED_JSON = R"json({
   "flag": true,
   "integer": 42,
   "name": "simple"
@@ -17,13 +17,13 @@ TEST_CASE("compact JSON can be generated", "[json]")
 {
 	tree t = { {"name", "simple" }, { "integer", 42 }, { "flag", true} };
 
-	REQUIRE(encode<json>(t) == u8R"json({"flag":true,"integer":42,"name":"simple"})json");
+	REQUIRE(encode<json>(t) == R"json({"flag":true,"integer":42,"name":"simple"})json");
 }
 
 
 TEST_CASE("compact JSON can be parsed", "[json]")
 {
-	auto t = decode<json>(u8R"json({"flag":true,"name":"simple","integer":42})json");
+	auto t = decode<json>(R"json({"flag":true,"name":"simple","integer":42})json");
 
 	REQUIRE(t["name"].as_string() == "simple");
 	REQUIRE(t["integer"].as_long() == 42);
@@ -41,7 +41,7 @@ TEST_CASE("padded JSON can be generated", "[json]")
 
 TEST_CASE("padded JSON can be parsed", "[json]")
 {
-	auto t = decode<json>(u8R"json({
+	auto t = decode<json>(R"json({
 		"flag": true,
 		"integer": 42,
 		"name": "simple",
@@ -57,13 +57,13 @@ TEST_CASE("strings are escaped appropriately", "[json]")
 {
 	tree t = { {"text", "Must\tbe \"escaped\"\n"} };
 
-	REQUIRE(encode<json>(t) == u8R"json({"text":"Must\tbe \"escaped\"\n"})json");
+	REQUIRE(encode<json>(t) == R"json({"text":"Must\tbe \"escaped\"\n"})json");
 }
 
 
 TEST_CASE("strings are unescaped appropriately", "[json]")
 {
-	auto t = decode<json>(u8R"json({ "text": "Must\tbe \"escaped\"\n" })json");
+	auto t = decode<json>(R"json({ "text": "Must\tbe \"escaped\"\n" })json");
 
 	REQUIRE(t["text"].as_string() == "Must\tbe \"escaped\"\n");
 }
@@ -71,7 +71,7 @@ TEST_CASE("strings are unescaped appropriately", "[json]")
 
 TEST_CASE("simple types can be parsed", "[json]")
 {
-	auto t = decode<json>(u8R"json({
+	auto t = decode<json>(R"json({
 		"name": "simple",
 		"integer": 42,
 		"double": 3.14,
@@ -89,7 +89,7 @@ TEST_CASE("simple types can be parsed", "[json]")
 
 TEST_CASE("arrays can be parsed", "[json]")
 {
-	auto t = decode<json>(u8R"json({
+	auto t = decode<json>(R"json({
 		"array": [ 1, 2, 3, 4 ]
 	})json");
 
@@ -100,7 +100,7 @@ TEST_CASE("arrays can be parsed", "[json]")
 
 TEST_CASE("compact arrays can be parsed", "[json]")
 {
-	auto t = decode<json>(u8R"json({
+	auto t = decode<json>(R"json({
 		"array": [1,2,3,4]
 	})json");
 
@@ -128,7 +128,7 @@ TEST_CASE("top level arrays can be parsed", "[json]")
 
 TEST_CASE("object trees can be parsed", "[json]")
 {
-	auto t = decode<json>(u8R"json({
+	auto t = decode<json>(R"json({
 		"object": {
 			"name": "complex"
 		}
@@ -155,7 +155,7 @@ TEST_CASE("can cope with standard JSON number formats", "[json]")
 {
 	// Largest exact integral size represented by JSON is 2^53 so anything bigger
 	// (like "big") must be handled as a double and therefore accuracy will be lost.
-	auto t = decode<json>(u8R"json({
+	auto t = decode<json>(R"json({
 		"integer": 42,
 		"double": 3.14,
 		"scientific": 3.141e-10,
@@ -182,18 +182,18 @@ TEST_CASE("converts NaN and infite values to null", "[json]")
 		{ "nan", NAN }
 	};
 
-	REQUIRE(encode<json>(t) == u8R"json({"infinity":null,"nan":null})json");
+	REQUIRE(encode<json>(t) == R"json({"infinity":null,"nan":null})json");
 }
 
 
 TEST_CASE("will ignore unicode encodings", "[json]")
 {
-	REQUIRE(decode<json>(u8R"json({ "text":"\u2000\u20ff" })json")["text"].as_string() == "\\u2000\\u20ff");
+	REQUIRE(decode<json>(R"json({ "text":"\u2000\u20ff" })json")["text"].as_string() == "\\u2000\\u20ff");
 }
 
 TEST_CASE("supports arrays of objects", "[json]")
 {
-	auto t = decode<json>(u8R"json({
+	auto t = decode<json>(R"json({
 		"coords":[{"x":0,"y":0},{"x":1,"y":1},{"x":2,"y":2}]
 	})json");
 
@@ -209,7 +209,7 @@ TEST_CASE("supports arrays of objects", "[json]")
 
 TEST_CASE("will support unprotected forward slashes", "[json]")
 {
-	string JSON = u8R"json({ "text":"http://something" })json";
+	string JSON = R"json({ "text":"http://something" })json";
 
 	REQUIRE(decode<json>(JSON)["text"].as_string() == "http://something");
 }
@@ -218,14 +218,14 @@ TEST_CASE("will support unprotected forward slashes", "[json]")
 TEST_CASE("parser will throw exception if the JSON is invalid", "[json]")
 {
 	vector<string> invalid_vectors = {
-		u8R"json({)json",						// Missing top-level brace
-		u8R"json({ "a": { "b": 42 })json",		// Missing brace
-		u8R"json({ "a: 42 })json",				// Missing quotes in key
-		u8R"json({ "a": "value })json",			// Missing quotes in value
-		u8R"json({ "a" "value" })json",			// Missing key/value separator
-		u8R"json({ "a": 1 b: 2 })json",			// Missing item separator
-		u8R"json({ "a": [ 1, 2, b: 42 })json",	// Missing square bracket
-		u8R"json({ "a": invalid })json"			// Invalid value type
+		R"json({)json",						// Missing top-level brace
+		R"json({ "a": { "b": 42 })json",		// Missing brace
+		R"json({ "a: 42 })json",				// Missing quotes in key
+		R"json({ "a": "value })json",			// Missing quotes in value
+		R"json({ "a" "value" })json",			// Missing key/value separator
+		R"json({ "a": 1 b: 2 })json",			// Missing item separator
+		R"json({ "a": [ 1, 2, b: 42 })json",	// Missing square bracket
+		R"json({ "a": invalid })json"			// Invalid value type
 	};
 
 	for (auto &i : invalid_vectors)
@@ -239,7 +239,7 @@ TEST_CASE("parser will throw exception if the JSON is invalid", "[json]")
 
 TEST_CASE("parser supports single line comments", "[json]")
 {
-	auto t = decode<json>(u8R"json(
+	auto t = decode<json>(R"json(
 		{
 			"name": "simple",
 			"integer": 42,		// end of line comment
@@ -261,7 +261,7 @@ TEST_CASE("parser supports single line comments", "[json]")
 
 TEST_CASE("parser supports block comments", "[json]")
 {
-	auto t = decode<json>(u8R"json(
+	auto t = decode<json>(R"json(
 		{
 			"name": "simple",
 			/* "integer": 42,
@@ -284,7 +284,7 @@ TEST_CASE("parser supports trailing commas", "[json]")
 	// It actually appears that the decoder doesn't care whether or not
 	// there are any commas since it treats commas as just another form
 	// of whitespace.
-	auto t = decode<json>(u8R"json({
+	auto t = decode<json>(R"json({
 		"object": {
 			"name": "complex",
 		},
@@ -312,7 +312,7 @@ TEST_CASE("parser supports single quoted string", "[json]")
 
 TEST_CASE("parser supports hexadecimal numbers", "[json]")
 {
-	auto t = decode<json>(u8R"json({
+	auto t = decode<json>(R"json({
 		"positive": 0xff,
 		"negative": -0xff
 	})json");
@@ -324,7 +324,7 @@ TEST_CASE("parser supports hexadecimal numbers", "[json]")
 
 TEST_CASE("parser supports leading or trailing decimal points in numbers", "[json]")
 {
-	auto t = decode<json>(u8R"json({
+	auto t = decode<json>(R"json({
 		"leading": .25,
 		"trailing": 42.
 	})json");
@@ -335,7 +335,7 @@ TEST_CASE("parser supports leading or trailing decimal points in numbers", "[jso
 
 TEST_CASE("parser supports IEEE 754 positive/negative infinity and NaN")
 {
-	// auto t = decode<json>(u8R"json({
+	// auto t = decode<json>(R"json({
 	// 	"positive": Infinity,
 	// 	"negative": -Infinity,
 	// 	"nan": NaN

@@ -10,14 +10,24 @@ namespace ent
 	// If two arguments are passed then the supplied name is used as the mapping key
 	#ifndef ent_ref
 		#define ent_get_ref(_1, _2, name, ...) name
-		// #define ent_man_ref(name, item)		std::make_pair(name, std::make_shared<ent::vref<typename std::remove_reference<decltype(item)>::type>>(item))
-		#define ent_man_ref(name, item)		std::make_pair(name, std::make_unique<ent::vref<typename std::remove_reference<decltype(item)>::type>>(item))
-		#define ent_auto_ref(item)			ent_man_ref(#item, item)
-		#define ent_ref(...)				ent_get_ref(__VA_ARGS__, ent_man_ref, ent_auto_ref)(__VA_ARGS__)
-		#define ent_map(...)				ent::mapping ent_describe() { return { __VA_ARGS__ }; } //\
-											// const ent::mapping ent_describe() const { return __VA_ARGS__ };
-		#define ent_merge(base, ...)		ent::mapping ent_describe() { auto a = base::ent_describe(); a.insert({ __VA_ARGS__ });	return a; } //\
-											// const ent::mapping ent_describe() const { auto a = base::ent_describe(); a.insert({ __VA_ARGS__ }); return a; }
+		#define ent_man_ref(name, item)	std::make_pair(name, std::make_unique<ent::vref<typename std::remove_reference<decltype(item)>::type>>(item))
+		#define ent_auto_ref(item)		ent_man_ref(#item, item)
+		#define ent_ref(...)			ent_get_ref(__VA_ARGS__, ent_man_ref, ent_auto_ref)(__VA_ARGS__)
+		#define ent_map(...)			ent::mapping ent_describe() { return { __VA_ARGS__ }; }
+		#define ent_merge(base, ...)	ent::mapping ent_describe() { auto a = base::ent_describe(); a.insert({ __VA_ARGS__ });	return a; }
+
+		// #if __cplusplus >= 202002L
+		// 	#define ent_parens ()	// Note space before (), so object-like macro
+		// 	#define ent_expand(arg) ent_expand1(ent_expand1(ent_expand1(ent_expand1(arg))))
+		// 	#define ent_expand1(arg) ent_expand2(ent_expand2(ent_expand2(ent_expand2(arg))))
+		// 	#define ent_expand2(arg) ent_expand3(ent_expand3(ent_expand3(ent_expand3(arg))))
+		// 	#define ent_expand3(arg) arg
+
+		// 	#define ent_for_each(macro, ...)	__VA_OPT__(ent_expand(ent_helper(macro, __VA_ARGS__)))
+		// 	#define ent_helper(macro, a1, ...)	macro(a1) __VA_OPT__(ent_again ent_parens (macro, __VA_ARGS__))
+		// 	#define ent_again()					ent_helper
+		// 	#define ent_map_terse(...)			ent::mapping ent_describe() { return { ent_for_each(ent_auto_ref, __VA_ARGS__) }; }
+		// #endif
 
 		// Concise call to ent_ref and ent_map, disable if they conflict
 		#define eref ent_ref

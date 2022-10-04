@@ -1,6 +1,7 @@
 #include "catch.hpp"
 #include <entity/vref.hpp>
 #include <entity/json.hpp>
+#include <entity/entity.hpp>
 
 using namespace std;
 using namespace ent;
@@ -222,6 +223,116 @@ TEST_CASE("vref can map a reference to different types", "[vref]")
 		// If there are too many items in the JSON then only take the first N
 		amap.decode(c, "[8,7,6,5,4,3,2,1]", 0, 0);
 		REQUIRE(a[3] == 5);
+	}
+
+
+	SECTION("can modify simple values via vref")
+	{
+		auto modifier = [](ent::any_ref ref) {
+			if (ref.is<int64_t>())
+			{
+				ref.cast<int64_t>() += 1;
+			}
+			else if (ref.is<uint16_t>())
+			{
+				ref.cast<uint16_t>()--;
+			}
+			else if (ref.is<string>())
+			{
+				ref.cast<string>() += "thing";
+			}
+			else if (ref.is<double>())
+			{
+				ref.cast<double>() = M_PI;
+			}
+		};
+
+		int a		= 8;
+		int64_t b	= 42;
+		uint16_t c	= 0;
+		string d	= "some";
+		double e	= 0;
+
+		ent::make_vref(a).modify(modifier);
+		ent::make_vref(b).modify(modifier);
+		ent::make_vref(c).modify(modifier);
+		ent::make_vref(d).modify(modifier);
+		ent::make_vref(e).modify(modifier);
+
+		REQUIRE(a == 8);
+		REQUIRE(b == 43);
+		REQUIRE(c == 0xffff);
+		REQUIRE(d == "something");
+		REQUIRE(e == M_PI);
+	}
+
+
+	SECTION("can modify a vector of values")
+	{
+		vector<int32_t> values = { 0, 1, 2, 3 };
+
+		ent::make_vref(values).modify([](any_ref r) {
+			auto &v = r.cast<int32_t>();
+			v = be32toh(v);
+		});
+
+		REQUIRE(values == std::vector<int32_t> {
+			0x00000000,
+			0x01000000,
+			0x02000000,
+			0x03000000
+		});
+	}
+
+
+	SECTION("casting an any_ref to the wrong type will throw")
+	{
+		int a = 0;
+		REQUIRE_THROWS(
+			ent::make_vref(a).modify(
+				[](any_ref r) { r.cast<int64_t>()++; }
+			)
+		);
+	}
+
+
+	SECTION("can recursively modify an entity via vrefs")
+	{
+		struct Test
+		{
+			struct Sub
+			{
+				uint8_t a = 0;
+				emap(eref(a));
+			};
+
+			int a		= 8;
+			int64_t b	= 42;
+			uint16_t c	= 0;
+			string d	= "some";
+			Sub sub;
+
+			emap(eref(a), eref(b), eref(c), eref(d), eref(sub))
+		};
+
+		Test test;
+
+		ent::make_vref(test).modify([](any_ref ref) {
+			if (ref.is<int64_t>())
+			{
+				ref.cast<int64_t>()++;
+			}
+			else if (ref.is<uint8_t>())
+			{
+				ref.cast<uint8_t>()--;
+			}
+		});
+
+		REQUIRE(test.a == 8);
+		REQUIRE(test.b == 43);
+		REQUIRE(test.c == 0);
+		REQUIRE(test.d == "some");
+		REQUIRE(test.sub.a == 0xff);
 	}
 }
 
