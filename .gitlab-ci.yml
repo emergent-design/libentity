@@ -1,29 +1,16 @@
-stages:
-  - build
-  - deploy
+include:
+  - project: 'core/common'
+    file: '/templates/ci.yml'
 
-build-check:
-  stage: build
-  only: [ master ]
-  script:
-    - earthly +build
+variables:
+  COMPONENT: oss
 
 # Header-only library so package is the same for each distribution
-package-all:
-  stage: build
-  only: [ tags ]
-  script:
-    - earthly +package
-  artifacts:
-    paths:
-      - build/**.deb
+package-entity:
+  extends: [ .build-packages ]
+  variables: { MODULE: entity, MATCH: /^v.*$/ }
 
-deploy-packages:
-  stage: deploy
-  when: on_success
-  only: [ tags ]
-  dependencies: [ package-all ]
-  script:
-    - for REPO in bionic focal jammy; do
-        phi-deploy build/libentity-dev_*.deb $REPO oss;
-      done
+deploy-entity:
+  needs: [ package-entity ]
+  extends: [ .deploy-simple ]
+  variables: { MATCH: /^v.*$/ }

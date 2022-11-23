@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 code:
 	COPY --dir include packages src premake5.lua .
 
-build:
+check:
 	ARG PREMAKE=5.0.0-alpha16
 
 	FROM +code
@@ -25,4 +25,5 @@ package:
 	SAVE ARTIFACT libentity-dev_*.deb libentity-dev.deb
 	SAVE ARTIFACT libentity-dev_*.deb AS LOCAL build/
 
-
+entity-all:
+	BUILD +package
