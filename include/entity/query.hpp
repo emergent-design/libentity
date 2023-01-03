@@ -8,6 +8,7 @@
 #include <numeric>
 #include <algorithm>
 #include <functional>
+#include <stdexcept>
 
 
 namespace ent
@@ -516,8 +517,14 @@ namespace ent
 
 			// Basic iterator that allows query to be used in a for( : ) each loop without
 			// needing to first convert to a vector (avoids unnecessary memory allocation).
-			struct iterator : std::iterator<std::input_iterator_tag, T>
+			struct iterator
 			{
+				using iterator_category = std::input_iterator_tag;
+				using value_type		= T;
+				using difference_type	= std::ptrdiff_t;
+				using pointer			= T*;
+				using reference			= T&;
+
 				iterator() {}
 
 				iterator(const query<T> &q, bool forward) : q(q)

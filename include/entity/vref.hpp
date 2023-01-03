@@ -431,7 +431,7 @@ namespace ent
 		static int decode(T &item, const codec &c, const string &data, int position, int type)
 		{
 			// item.clear();
-			const auto length = item.size();
+			const int length = item.size();
 
 			if (c.array_start(data, position, type))
 			{
@@ -477,7 +477,7 @@ namespace ent
 
 		static void from_tree(T &item, const tree &data)
 		{
-			const auto length = item.size();
+			const int length = item.size();
 			// item.clear();
 
 			if (data.get_type() == tree::Type::Array)
@@ -681,7 +681,7 @@ namespace ent
 			{
 				for (int i=0; c.array_item(data, position, type); i++)
 				{
-					if (i < item.size())
+					if (i < (int)item.size())
 					{
 						position = vref<typename T::value_type>::decode(item[i], c, data, position, type);
 					}
@@ -720,7 +720,7 @@ namespace ent
 
 				for (auto &d : data.as_array())
 				{
-					if (i < item.size())
+					if (i < (int)item.size())
 					{
 						vref<typename T::value_type>::from_tree(item[i++], d);
 					}

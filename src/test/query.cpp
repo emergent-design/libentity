@@ -212,7 +212,7 @@ TEST_CASE("query brings LINQ-like features to STL containers", "[query]")
 	{
 		REQUIRE(from(ints).skip(3).first()										== 2);	// first N
 		REQUIRE(from(ints).skip_while([](auto &i) { return i < 10; }).count()	== 5);	// with predicate
-		REQUIRE(from(ints).skip_while([](auto &i) { return true; }).count()		== 0);	// with predicate
+		REQUIRE(from(ints).skip_while([](auto &)  { return true; }).count()		== 0);	// with predicate
 	}
 
 

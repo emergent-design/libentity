@@ -18,8 +18,8 @@ namespace ent
 		static const std::ios_base::openmode oflags = std::ios::out;
 
 		// Encoding functions
-		virtual string array_item_name(int index) const 	{ return {}; }
-		virtual void separator(os &dst, bool last) const	{}	// Item separator
+		virtual string array_item_name([[maybe_unused]] int index) const 	{ return {}; }
+		virtual void separator([[maybe_unused]] os &dst, [[maybe_unused]] bool last) const	{}	// Item separator
 		virtual void object_start(os &dst, const string &name, stack<int> &stack) const = 0;
 		virtual void object_end(os &dst, stack<int> &stack) const = 0;
 		virtual void array_start(os &dst, const string &name, stack<int> &stack) const = 0;

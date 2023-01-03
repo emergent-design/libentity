@@ -4,7 +4,7 @@ solution "entity"
 	configurations	"default"
 	platforms		"native"
 	toolset			"clang"
-	buildoptions	{ "-Wall", "-Wno-sign-compare", "-std=c++17" }
+	buildoptions	{ "-Wall", "-Wextra", "-Wpedantic", "-std=c++17" }
 	includedirs		{ "include" }
 	libdirs 		{ "lib" }
 	excludes		{ "**.bak", "**~" }

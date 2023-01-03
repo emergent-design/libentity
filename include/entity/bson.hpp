@@ -81,22 +81,22 @@ namespace ent
 
 		virtual string array_item_name(int index) const { return std::to_string(index); }
 
-		virtual void item(os &dst, const string &name, int depth) const
+		virtual void item(os &dst, const string &name, int) const
 		{
 			dst.put(Null).write(name.data(), name.size()).put(0x00);
 		}
 
-		virtual void item(os &dst, const string &name, bool value, int depth) const
+		virtual void item(os &dst, const string &name, bool value, int) const
 		{
 			dst.put(Boolean).write(name.data(), name.size()).put(0x00).put(value);
 		}
 
-		virtual void item(os &dst, const string &name, int32_t value, int depth) const
+		virtual void item(os &dst, const string &name, int32_t value, int) const
 		{
 			dst.put(Int32).write(name.data(), name.size()).put(0x00); write(dst, value);
 		}
 
-		virtual void item(os &dst, const string &name, int64_t value, int depth) const
+		virtual void item(os &dst, const string &name, int64_t value, int) const
 		{
 			if (value >= std::numeric_limits<int32_t>::min() && value <= std::numeric_limits<int32_t>::max())
 			{
@@ -108,19 +108,19 @@ namespace ent
 			}
 		}
 
-		virtual void item(os &dst, const string &name, double value, int depth) const
+		virtual void item(os &dst, const string &name, double value, int) const
 		{
 			dst.put(Double).write(name.data(), name.size()).put(0x00); write(dst, value);
 		}
 
-		virtual void item(os &dst, const string &name, const string &value, int depth) const
+		virtual void item(os &dst, const string &name, const string &value, int) const
 		{
 			dst.put(String).write(name.data(), name.size()).put(0x00);
 			write(dst, (int)value.size() + 1);
 			dst.write(value.data(), value.size()).put(0x00);
 		}
 
-		virtual void item(os &dst, const string &name, const std::vector<uint8_t> &value, int depth) const
+		virtual void item(os &dst, const string &name, const std::vector<uint8_t> &value, int) const
 		{
 			dst.put(Binary).write(name.data(), name.size()).put(0x00);
 			write(dst, (int)value.size());
@@ -133,7 +133,7 @@ namespace ent
 		void write(os &dst, double value) const		{ dst.write((char *)&value, 8); }
 
 
-		virtual bool validate(const string &data) const
+		virtual bool validate(const string &) const
 		{
 			return true;
 		}
@@ -146,10 +146,10 @@ namespace ent
 			return result;
 		}
 
-		inline uint8_t next(const string &s, int &i) const		{ return i < s.size() ? s[i++] : error("could not read byte", i); }
-		inline int32_t int32(const string &s, int &i) const		{ return i < s.size() - 3 ? *(int32_t *)increment(s, i, 4) : error("could not read 32-bit integer", i); }
-		inline int64_t int64(const string &s, int &i) const		{ return i < s.size() - 7 ? *(int64_t *)increment(s, i, 8) : error("could not read 64-bit integer", i); }
-		inline double floating(const string &s, int &i) const	{ return i < s.size() - 7 ? *(double *)increment(s, i, 8)  : error("could not read floating-point value", i); }
+		inline uint8_t next(const string &s, int &i) const		{ return i < (int)s.size() ? s[i++] : error("could not read byte", i); }
+		inline int32_t int32(const string &s, int &i) const		{ return i < (int)s.size() - 3 ? *(int32_t *)increment(s, i, 4) : error("could not read 32-bit integer", i); }
+		inline int64_t int64(const string &s, int &i) const		{ return i < (int)s.size() - 7 ? *(int64_t *)increment(s, i, 8) : error("could not read 64-bit integer", i); }
+		inline double floating(const string &s, int &i) const	{ return i < (int)s.size() - 7 ? *(double *)increment(s, i, 8)  : error("could not read floating-point value", i); }
 
 		inline string cstring(const string &s, int &i) const
 		{
@@ -166,7 +166,7 @@ namespace ent
 		{
 			int length = int32(s, i);
 
-			return i + length <= s.size()
+			return i + length <= (int)s.size()
 				? string((char *)increment(s, i, length), length-1)
 				: std::to_string(error("could not read string", i));
 		}
@@ -176,7 +176,7 @@ namespace ent
 			int length 		= int32(s, i);
 			uint8_t *end 	= (uint8_t *)s.data() + i + 1 + length;
 
-			if (i + length >= s.size() || next(s, i) > 0) error("could not read binary data", i);
+			if (i + length >= (int)s.size() || next(s, i) > 0) error("could not read binary data", i);
 
 			return vector<uint8_t>(increment(s, i, length), end);
 		}
@@ -186,14 +186,14 @@ namespace ent
 		{
 			if (type < 0 || type == Object)
 			{
-				return i + int32(data, i) <= data.size() || error("invalid object document length", i);
+				return i + int32(data, i) <= (int)data.size() || error("invalid object document length", i);
 			}
 			return false;
 		}
 
 
-		virtual bool object_end(const string &data, int &i) const	{ return true; }
-		virtual bool array_end(const string &data, int &i) const	{ return true; }
+		virtual bool object_end(const string &, int &) const	{ return true; }
+		virtual bool array_end(const string &, int &) const		{ return true; }
 
 		virtual bool item(const string &data, int &i, string &name, int &type) const
 		{
@@ -213,7 +213,7 @@ namespace ent
 		{
 			if (type == Array)
 			{
-				return i + int32(data, i) <= data.size() || error("invalid array document length", i);
+				return i + int32(data, i) <= (int)data.size() || error("invalid array document length", i);
 			}
 			return false;
 		}
@@ -286,12 +286,12 @@ namespace ent
 			return {};
 		}
 
-		virtual bool get(const string &data, int &i, int type, bool def) const								{ return type == Boolean	? next(data, i) > 0	: skip(data, i, type); }
-		virtual int32_t get(const string &data, int &i, int type, int32_t def) const						{ return type == Int32		? int32(data, i)	: skip(data, i, type); }
-		virtual int64_t get(const string &data, int &i, int type, int64_t def) const						{ return type == Int64		? int64(data, i)	: type == Int32 ? int32(data, i) : skip(data, i, type); }
-		virtual double get(const string &data, int &i, int type, double def) const							{ return type == Double		? floating(data, i)	: skip(data, i, type); }
-		virtual string get(const string &data, int &i, int type, const string def) const					{ return type == String 	? sstring(data, i)	: string("", skip(data, i, type)); }
-		virtual vector<uint8_t> get(const string &data, int &i, int type, const vector<uint8_t> def) const	{ return type == Binary		? binary(data, i)	: vector<uint8_t>(skip(data, i, type)); }
+		virtual bool get(const string &data, int &i, int type, bool) const								{ return type == Boolean	? next(data, i) > 0	: skip(data, i, type); }
+		virtual int32_t get(const string &data, int &i, int type, int32_t) const						{ return type == Int32		? int32(data, i)	: skip(data, i, type); }
+		virtual int64_t get(const string &data, int &i, int type, int64_t) const						{ return type == Int64		? int64(data, i)	: type == Int32 ? int32(data, i) : skip(data, i, type); }
+		virtual double get(const string &data, int &i, int type, double) const							{ return type == Double		? floating(data, i)	: skip(data, i, type); }
+		virtual string get(const string &data, int &i, int type, const string) const					{ return type == String 	? sstring(data, i)	: string("", skip(data, i, type)); }
+		virtual vector<uint8_t> get(const string &data, int &i, int type, const vector<uint8_t>) const	{ return type == Binary		? binary(data, i)	: vector<uint8_t>(skip(data, i, type)); }
 
 		int error(const string message, int i) const
 		{

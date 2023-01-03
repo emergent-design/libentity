@@ -12,7 +12,7 @@ namespace ent
 
 
 		// Array items have 0 length name
-		virtual inline os &write_name(os &dst, const string &name, int depth) const
+		virtual inline os &write_name(os &dst, const string &name, int) const
 		{
 			if (!name.empty()) dst << '"' << name << "\":";
 			return dst;
@@ -34,9 +34,9 @@ namespace ent
 
 		virtual void separator(os &dst, bool last) const												{ if (!last) dst << ","; }
 		virtual void object_start(os &dst, const string &name, stack<int> &stack) const					{ write_name(dst, name, stack.size()) << '{'; }
-		virtual void object_end(os &dst, stack<int> &stack) const										{ dst << '}'; }
+		virtual void object_end(os &dst, stack<int> &) const											{ dst << '}'; }
 		virtual void array_start(os &dst, const string &name, stack<int> &stack) const					{ write_name(dst, name, stack.size()) << '['; }
-		virtual void array_end(os &dst, stack<int> &stack) const										{ dst << ']'; }
+		virtual void array_end(os &dst, stack<int> &) const												{ dst << ']'; }
 		virtual void item(os &dst, const string &name, int depth) const									{ write_name(dst, name, depth) << "null"; }
 		virtual void item(os &dst, const string &name, bool value, int depth) const						{ write_name(dst, name, depth) << (value ? "true" : "false"); }
 		virtual void item(os &dst, const string &name, int32_t value, int depth) const					{ write_name(dst, name, depth); write_number(dst, value); }
@@ -117,12 +117,12 @@ namespace ent
 		}
 
 
-		virtual bool object_start(const string &data, int &i, int type) const
+		virtual bool object_start(const string &data, int &i, int) const
 		{
 			skip_whitespace(data, i);
 
 			// An object should always start with an opening brace
-			return i<data.length() && data[i] == '{';
+			return i < (int)data.length() && data[i] == '{';
 		}
 
 
@@ -132,7 +132,7 @@ namespace ent
 		}
 
 
-		virtual bool item(const string &data, int &i, string &name, int &type) const
+		virtual bool item(const string &data, int &i, string &name, int &) const
 		{
 			const int length = data.length();
 
@@ -171,12 +171,12 @@ namespace ent
 		}
 
 
-		virtual bool array_start(const string &data, int &i, int type) const
+		virtual bool array_start(const string &data, int &i, int) const
 		{
 			skip_whitespace(data, i);
 
 			// An object should always start with an opening square brace
-			return i<data.length() && data[i] == '[';
+			return i < (int)data.length() && data[i] == '[';
 		}
 
 
@@ -186,11 +186,11 @@ namespace ent
 		}
 
 
-		virtual bool array_item(const string &data, int &i, int &type) const
+		virtual bool array_item(const string &data, int &i, int &) const
 		{
 			skip_whitespace(data, ++i);
 
-			return i < data.length() && data[i] != ']';
+			return i < (int)data.length() && data[i] != ']';
 		}
 
 
@@ -207,7 +207,7 @@ namespace ent
 		}
 
 
-		virtual bool get(const string &data, int &i, int type, bool def) const
+		virtual bool get(const string &data, int &i, int type, bool) const
 		{
 			if (!check_simple(data[i], data, i, type)) return false;
 
@@ -215,7 +215,7 @@ namespace ent
 		}
 
 
-		virtual int32_t get(const string &data, int &i, int type, int32_t def) const
+		virtual int32_t get(const string &data, int &i, int type, int32_t) const
 		{
 			if (!check_simple(data[i], data, i, type)) return false;
 
@@ -225,7 +225,7 @@ namespace ent
 		}
 
 
-		virtual int64_t get(const string &data, int &i, int type, int64_t def) const
+		virtual int64_t get(const string &data, int &i, int type, int64_t) const
 		{
 			if (!check_simple(data[i], data, i, type)) return false;
 
@@ -235,7 +235,7 @@ namespace ent
 		}
 
 
-		virtual double get(const string &data, int &i, int type, double def) const
+		virtual double get(const string &data, int &i, int type, double) const
 		{
 			if (!check_simple(data[i], data, i, type)) return false;
 
@@ -245,7 +245,7 @@ namespace ent
 		}
 
 
-		virtual string get(const string &data, int &i, int type, const string def) const
+		virtual string get(const string &data, int &i, int type, const string) const
 		{
 			if (data[i] == '"')
 			{
@@ -284,7 +284,7 @@ namespace ent
 		}
 
 
-		virtual vector<uint8_t> get(const string &data, int &i, int type, const vector<uint8_t> def) const
+		virtual vector<uint8_t> get(const string &data, int &i, int type, const vector<uint8_t>) const
 		{
 			if (data[i] == '"')
 			{
@@ -304,7 +304,7 @@ namespace ent
 			bool quotes	= false;
 			bool ignore	= false;
 
-			for (i++; i<data.length() && count; count && i++)
+			for (i++; i<(int)data.length() && count; count && i++)
 			{
 				c = data[i];
 
@@ -322,11 +322,13 @@ namespace ent
 
 		void skip_whitespace(const string &data, int &i) const
 		{
-			for (; i < data.length(); i++)
+			const int length = data.length();
+
+			for (; i < length; i++)
 			{
 				if (!whitespace[(uint8_t)data[i]])
 				{
-					if (data[i] == '/' && ++i < data.length())
+					if (data[i] == '/' && ++i < length)
 					{
 						skip_comment(data, i);
 					}
@@ -341,10 +343,12 @@ namespace ent
 
 		void skip_comment(const string &data, int &i) const
 		{
+			const int length = data.length();
+
 			// Skip to the end of the line
 			if (data[i] == '/')
 			{
-				for (i++; i<data.length(); i++)
+				for (i++; i<length; i++)
 				{
 					if (data[i] == '\n' || data[i] == '\r')
 					{
@@ -354,7 +358,7 @@ namespace ent
 			}
 			else if (data[i] == '*')
 			{
-				for (i++; i<data.length() - 1; i++)
+				for (i++; i<length - 1; i++)
 				{
 					if (data[i] == '*' && data[i+1] == '/')
 					{
@@ -370,7 +374,7 @@ namespace ent
 		}
 
 
-		virtual int skip(const string &data, int &i, int type) const
+		virtual int skip(const string &data, int &i, int) const
 		{
 			const char c = data[i];
 
@@ -387,7 +391,7 @@ namespace ent
 		{
 			const int start = ++i;
 
-			for (; i<data.length() && data[i] != '"'; i++);
+			for (; i<(int)data.length() && data[i] != '"'; i++);
 
 			return data.substr(start, i-start);
 		}
@@ -398,7 +402,7 @@ namespace ent
 			const int start	= ++i;
 			bool ignore = false;	// Flag to ensure escaped quotes within the string are ignored
 
-			for (; i<data.length(); i++)
+			for (; i<(int)data.length(); i++)
 			{
 				if (data[i] == '"' && !ignore) break;
 				ignore = data[i] == '\\';
@@ -412,7 +416,7 @@ namespace ent
 		{
 			const int start = i;
 
-			for (i++; i<data.length(); i++)
+			for (i++; i<(int)data.length(); i++)
 			{
 				const char c = data[i];
 
