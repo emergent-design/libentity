@@ -1,4 +1,4 @@
-#include "catch.hpp"
+#include "doctest.h"
 #include <entity/utilities.hpp>
 #include <map>
 
@@ -6,7 +6,7 @@ using namespace std;
 using namespace ent;
 
 
-TEST_CASE("base64 test vectors", "[utilities]")
+TEST_CASE("base64 test vectors") //, "[utilities]")
 {
 	map<string, vector<uint8_t>> test_vectors = {
 		{ "",			vector<uint8_t> {}},
@@ -18,19 +18,19 @@ TEST_CASE("base64 test vectors", "[utilities]")
 		{ "Zm9vYmFy",	vector<uint8_t> { 0x66, 0x6f, 0x6f, 0x62, 0x61, 0x72 }}
 	};
 
-	SECTION("encoder")
+	SUBCASE("encoder")
 	{
 		for (auto &i : test_vectors)
 		{
-			REQUIRE(base64::encode(i.second) == i.first);
+			CHECK(base64::encode(i.second) == i.first);
 		}
 	}
 
-	SECTION("decoder")
+	SUBCASE("decoder")
 	{
 		for (auto &i : test_vectors)
 		{
-			REQUIRE(base64::decode(i.first) == i.second);
+			CHECK(base64::decode(i.first) == i.second);
 		}
 	}
 }

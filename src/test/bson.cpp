@@ -1,4 +1,4 @@
-#include "catch.hpp"
+#include "doctest.h"
 #include <entity/entity.hpp>
 #include <entity/bson.hpp>
 #include <iostream>
@@ -13,7 +13,7 @@ const string convert(const vector<uint8_t> &data)
 }
 
 
-TEST_CASE("simple types can be converted to/from BSON", "[bson]")
+TEST_CASE("simple types can be converted to/from BSON") //, "[bson]")
 {
 	map<string, tree> test_vectors = {
 				// |      Length       |Type|  Name   |
@@ -27,40 +27,40 @@ TEST_CASE("simple types can be converted to/from BSON", "[bson]")
 	};
 
 
-	SECTION("simple types can be serialised")
+	SUBCASE("simple types can be serialised")
 	{
 		for (auto &i : test_vectors)
 		{
-			REQUIRE( encode<bson>(i.second) == i.first );
+			CHECK( encode<bson>(i.second) == i.first );
 		}
 	}
 
 
-	SECTION("simple types can be deserialised")
+	SUBCASE("simple types can be deserialised")
 	{
 		for (auto &i : test_vectors)
 		{
-			REQUIRE( (decode<bson>(i.first)["a"] == i.second["a"]) );
+			CHECK( (decode<bson>(i.first)["a"] == i.second["a"]) );
 		}
 	}
 }
 
 
-TEST_CASE("arrays can be converted to/from BSON", "[bson]")
+TEST_CASE("arrays can be converted to/from BSON") //, "[bson]")
 {
 							//   |      Length       |Type|  Name   |      Length       |Type|  Name   |       Value       |Foot|Foot|
 	string array_tree = convert({ 0x14,0x00,0x00,0x00,0x04,0x61,0x00,0x0c,0x00,0x00,0x00,0x10,0x30,0x00,0x2a,0x00,0x00,0x00,0x00,0x00 });
 
 
-	SECTION("arrays can be serialised")
+	SUBCASE("arrays can be serialised")
 	{
-		REQUIRE(encode<bson>({{ "a", vector<tree> { 42 } }}) == array_tree);
+		CHECK(encode<bson>({{ "a", vector<tree> { 42 } }}) == array_tree);
 	}
 
 
-	SECTION("arrays can be deserialised")
+	SUBCASE("arrays can be deserialised")
 	{
-		REQUIRE(decode<bson>(array_tree)["a"].as_array()[0].as_long() == 42);
+		CHECK(decode<bson>(array_tree)["a"].as_array()[0].as_long() == 42);
 	}
 }
 
@@ -68,40 +68,40 @@ TEST_CASE("arrays can be converted to/from BSON", "[bson]")
 // {							//   |      Length       |Type|  Name   |      Value        |Foot|
 // 	string array_top = convert({  0x0c,0x00,0x00,0x00,0x10,0x30,0x00,0x2a,0x00,0x00,0x00,0x00 });
 
-// 	SECTION("top-level arrays can be serialised")
+// 	SUBCASE("top-level arrays can be serialised")
 // 	{
-// 		REQUIRE(encode<bson>(vector<tree> { 42 }) == array_top);
+// 		CHECK(encode<bson>(vector<tree> { 42 }) == array_top);
 // 	}
 
 
-// 	SECTION("top-level arrays can be deserialised")
+// 	SUBCASE("top-level arrays can be deserialised")
 // 	{
-// 		REQUIRE(decode<bson>(array_top).get_type() == tree::Type::Array);
-// 		// REQUIRE(decode<bson>(array_top).as_array()[0].as_long() == 42);
+// 		CHECK(decode<bson>(array_top).get_type() == tree::Type::Array);
+// 		// CHECK(decode<bson>(array_top).as_array()[0].as_long() == 42);
 // 	}
 // }
 
 
-TEST_CASE("object trees can be converted to/from BSON", "[bson]")
+TEST_CASE("object trees can be converted to/from BSON") //, "[bson]")
 {
 							//    |      Length       |Type|  Name   |      Length       |Type|  Name   |       Value       |Foot|Foot|
 	string object_tree = convert({ 0x14,0x00,0x00,0x00,0x03,0x61,0x00,0x0c,0x00,0x00,0x00,0x10,0x62,0x00,0x2a,0x00,0x00,0x00,0x00,0x00 });
 
 
-	SECTION("object trees can be serialised")
+	SUBCASE("object trees can be serialised")
 	{
-		REQUIRE(encode<bson>({{ "a", {{ "b", 42 }} }}) == object_tree);
+		CHECK(encode<bson>({{ "a", {{ "b", 42 }} }}) == object_tree);
 	}
 
 
-	SECTION("object trees can be deserialised")
+	SUBCASE("object trees can be deserialised")
 	{
-		REQUIRE(decode<bson>(object_tree)["a"]["b"].as_long() == 42);
+		CHECK(decode<bson>(object_tree)["a"]["b"].as_long() == 42);
 	}
 }
 
 
-TEST_CASE("parser will throw exception if the BSON is invalid", "[bson]")
+TEST_CASE("parser will throw exception if the BSON is invalid") //, "[bson]")
 {
 	vector<string> invalid_vectors = {
 		convert({ 0x00,0x00 }),																									// Document too short
@@ -120,6 +120,6 @@ TEST_CASE("parser will throw exception if the BSON is invalid", "[bson]")
 
 	for (auto &i : invalid_vectors)
 	{
-		REQUIRE_THROWS(decode<bson>(i));
+		CHECK_THROWS(decode<bson>(i));
 	}
 }
