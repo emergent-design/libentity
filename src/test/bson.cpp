@@ -123,3 +123,4 @@ TEST_CASE("parser will throw exception if the BSON is invalid") //, "[bson]")
 		CHECK_THROWS(decode<bson>(i));
 	}
 }
+

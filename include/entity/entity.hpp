@@ -1,6 +1,6 @@
 #pragma once
 
-#include <entity/vref.hpp>
+#include <entity/vref/vref.hpp>
 
 
 namespace ent
@@ -10,11 +10,16 @@ namespace ent
 	// If two arguments are passed then the supplied name is used as the mapping key
 	#ifndef ent_ref
 		#define ent_get_ref(_1, _2, name, ...) name
-		#define ent_man_ref(name, item)	std::make_pair(name, std::make_unique<ent::vref<typename std::remove_reference<decltype(item)>::type>>(item))
+		#define ent_man_ref(name, item)	std::make_pair(name, std::make_unique<ent::vref< \
+			typename std::conditional<Constness, const std::remove_reference_t<decltype(item)>, std::remove_reference_t<decltype(item)>>::type \
+		>>(item))
+
 		#define ent_auto_ref(item)		ent_man_ref(#item, item)
 		#define ent_ref(...)			ent_get_ref(__VA_ARGS__, ent_man_ref, ent_auto_ref, 0)(__VA_ARGS__)
-		#define ent_map(...)			ent::mapping ent_describe() { return { __VA_ARGS__ }; }
-		#define ent_merge(base, ...)	ent::mapping ent_describe() { auto a = base::ent_describe(); a.insert({ __VA_ARGS__ });	return a; }
+		#define ent_map(...)			ent::mapping ent_describe() 		{ static constexpr bool Constness = false;	return { __VA_ARGS__ }; } \
+										ent::mapping ent_describe() const	{ static constexpr bool Constness = true;	return { __VA_ARGS__ }; }
+		#define ent_merge(base, ...)	ent::mapping ent_describe()			{ static constexpr bool Constness = false;	auto a = base::ent_describe(); a.insert({ __VA_ARGS__ }); return a; } \
+										ent::mapping ent_describe() const	{ static constexpr bool Constness = true;	auto a = base::ent_describe(); a.insert({ __VA_ARGS__ }); return a; }
 
 		// #if __cplusplus >= 202002L
 		// 	#define ent_parens ()	// Note space before (), so object-like macro
@@ -37,15 +42,15 @@ namespace ent
 
 
 	// Encode an entity
-	template <class Codec, class T> std::string encode(T &item)
+	template <class Codec, class T> std::string encode(const T &item)
 	{
-		static_assert(!std::is_const<T>::value, "Cannot encode a const entity");
+		// static_assert(!std::is_const<T>::value, "Cannot encode a const entity");
 		static_assert(std::is_base_of<codec, Codec>::value,	"Invalid codec specified");
 
 		stack<int> stack;
 		os result(Codec::oflags);
 
-		vref<T>::encode(item, Codec(), result, "", stack);
+		vref<const T>::encode(item, Codec(), result, "", stack);
 
 		return result.str();
 	}
@@ -114,7 +119,7 @@ namespace ent
 
 
 	// Convert entities to/from a tree
-	template <class T> static tree to_tree(T &item)						{ return vref<T>::to_tree(item); }
+	template <class T> static tree to_tree(const T &item)				{ return vref<const T>::to_tree(item); }
 	template <class T> static T &from_tree(const tree &data, T &item)	{ vref<T>::from_tree(item, data);	return item; }
 	template <class T> static T from_tree(const tree &data)				{ T result; 						return from_tree(data, result); }
 }

@@ -1,5 +1,5 @@
 #include "doctest.h"
-#include <entity/utilities.hpp>
+#include <entity/utilities/base64.hpp>
 #include <map>
 
 using namespace std;

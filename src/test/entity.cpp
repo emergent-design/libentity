@@ -72,34 +72,49 @@ class ClassEntity
 };
 
 
-TEST_CASE("an entity can be serialised") //, "[entity]")
+TEST_CASE("an entity can be serialised")
 {
 	SimpleEntity e;
-	string data = R"json({"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"})json";
+	std::string_view data = R"json({"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"})json";
 
 	CHECK(encode<json>(e) == data);
 }
 
 
-TEST_CASE("a derived entity can use a merge helper") //, "[entity]")
+TEST_CASE("a const entity can be serialised")
+{
+	std::string_view data = R"json({"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"})json";
+
+	CHECK(encode<json>(SimpleEntity()) == data);
+}
+
+
+TEST_CASE("a derived entity can use a merge helper")
 {
 	DerivedEntity e;
-	string data = R"json({"bignumber":20349758,"extra":"field","flag":true,"floating":3.142,"integer":42,"name":"simple"})json";
+	std::string_view data = R"json({"bignumber":20349758,"extra":"field","flag":true,"floating":3.142,"integer":42,"name":"simple"})json";
 
 	CHECK(encode<json>(e) == data);
 }
 
+TEST_CASE("a const derived entity can use a merge helper")
+{
+	std::string_view data = R"json({"bignumber":20349758,"extra":"field","flag":true,"floating":3.142,"integer":42,"name":"simple"})json";
 
-TEST_CASE("a vector of entities can be serialised") //, "[entity]")
+	CHECK(encode<json>(DerivedEntity()) == data);
+}
+
+
+TEST_CASE("a vector of entities can be serialised")
 {
 	vector<SimpleEntity> e = { SimpleEntity() };
-	string data = R"json([{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"}])json";
+	std::string_view data = R"json([{"bignumber":20349758,"flag":true,"floating":3.142,"integer":42,"name":"simple"}])json";
 
 	CHECK(encode<json>(e) == data);
 }
 
 
-TEST_CASE("an entity can be deserialised") //, "[entity]")
+TEST_CASE("an entity can be deserialised")
 {
 	auto e = decode<json, ComplexEntity>(R"json({
 		"name":	"parsed complex",
@@ -140,7 +155,7 @@ TEST_CASE("an entity can be deserialised") //, "[entity]")
 }
 
 
-TEST_CASE("an entity can be converted to a tree") //, "[entity]")
+TEST_CASE("an entity can be converted to a tree")
 {
 	SimpleEntity e;
 	auto t = to_tree(e);
@@ -152,8 +167,16 @@ TEST_CASE("an entity can be converted to a tree") //, "[entity]")
 	CHECK(t["floating"].as_double() == 3.142);
 }
 
+TEST_CASE("a const entity can be converted to a tree")
+{
+	auto t = to_tree<SimpleEntity>({});
 
-TEST_CASE("an entity can be created from a tree") //, "[entity]")
+	CHECK(t["name"].as_string() == "simple");
+	CHECK(t["integer"].as_long() == 42);
+}
+
+
+TEST_CASE("an entity can be created from a tree")
 {
 	auto e = from_tree<ComplexEntity>({
 		{ "name", "tree complex" },
@@ -194,17 +217,27 @@ TEST_CASE("an entity can be created from a tree") //, "[entity]")
 }
 
 
-TEST_CASE("an entity can contain a tree and be serialised") //, "[entity]")
+TEST_CASE("an entity can contain a tree and be serialised")
 {
 	TreeEntity e;
 	e.name = "tree entity";
 	e.parameters = tree().set("name", "parameter").set("flag", true);
 
-	CHECK(encode<json>(e) == "{\"name\":\"tree entity\",\"parameters\":{\"flag\":true,\"name\":\"parameter\"}}");
+	CHECK(encode<json>(e) == R"json({"name":"tree entity","parameters":{"flag":true,"name":"parameter"}})json");
+}
+
+TEST_CASE("an const entity can contain a tree and be serialised")
+{
+	const auto result = encode<json, TreeEntity>({
+		"tree entity",
+		tree().set("name", "parameter").set("flag", true)
+	});
+
+	CHECK(result == R"json({"name":"tree entity","parameters":{"flag":true,"name":"parameter"}})json");
 }
 
 
-TEST_CASE("an entity can contain a tree and be deserialised") //, "[entity]")
+TEST_CASE("an entity can contain a tree and be deserialised")
 {
 	auto e = decode<json, TreeEntity>(R"json({
 		"name":	"tree entity",
@@ -222,13 +255,12 @@ TEST_CASE("an entity can contain a tree and be deserialised") //, "[entity]")
 }
 
 
-TEST_CASE("an entity containing a tree can be converted to a tree") //, "[entity]")
+TEST_CASE("an entity containing a tree can be converted to a tree")
 {
 	TreeEntity e;
-	e.name = "tree entity";
-	e.parameters = tree().set("name", "parameter").set("flag", true);
-
-	auto t = to_tree(e);
+	e.name			= "tree entity";
+	e.parameters	= tree().set("name", "parameter").set("flag", true);
+	auto t			= to_tree(e);
 
 	CHECK(t["name"] == "tree entity");
 	CHECK(t["parameters"]["name"] == "parameter");
@@ -236,7 +268,20 @@ TEST_CASE("an entity containing a tree can be converted to a tree") //, "[entity
 }
 
 
-TEST_CASE("an entity containing a tree can be created from a tree") //, "[entity]")
+TEST_CASE("a const entity containing a tree can be converted to a tree")
+{
+	auto t = to_tree<TreeEntity>({
+		"tree entity",
+		tree().set("name", "parameter").set("flag", true)
+	});
+
+	CHECK(t["name"] == "tree entity");
+	CHECK(t["parameters"]["name"] == "parameter");
+	CHECK(t["parameters"]["flag"].as_bool());
+}
+
+
+TEST_CASE("an entity containing a tree can be created from a tree")
 {
 	auto e = from_tree<TreeEntity>({
 		{ "name", "tree entity" },
@@ -254,7 +299,7 @@ TEST_CASE("an entity containing a tree can be created from a tree") //, "[entity
 }
 
 
-TEST_CASE("an entity can be decoded from JSON containing unused information") //, "[entity]")
+TEST_CASE("an entity can be decoded from JSON containing unused information")
 {
 	auto e = decode<json, ComplexEntity>(R"json({
 		"entities":[{"a":{}}]
@@ -264,7 +309,7 @@ TEST_CASE("an entity can be decoded from JSON containing unused information") //
 }
 
 
-TEST_CASE("a class with private members can be serialised") //, "[entity]")
+TEST_CASE("a class with private members can be serialised")
 {
 	ClassEntity e;
 	string data = R"json({"name":"class"})json";
@@ -273,7 +318,7 @@ TEST_CASE("a class with private members can be serialised") //, "[entity]")
 }
 
 
-TEST_CASE("a class with private members can be deserialised") //, "[entity]")
+TEST_CASE("a class with private members can be deserialised")
 {
 	auto e = decode<json, ClassEntity>(R"json({
 		"name": "parsed class"
@@ -283,7 +328,7 @@ TEST_CASE("a class with private members can be deserialised") //, "[entity]")
 }
 
 
-TEST_CASE("entities should always revert to default values") //, "[entity]")
+TEST_CASE("entities should always revert to default values")
 {
 	auto e = decode<json, std::vector<SimpleEntity>>(R"json([
 		{ "integer": 101 },
@@ -295,7 +340,7 @@ TEST_CASE("entities should always revert to default values") //, "[entity]")
 }
 
 
-TEST_CASE("maps of entities can be decoded from JSON") //, "[entity]")
+TEST_CASE("maps of entities can be decoded from JSON")
 {
 	auto e = decode<json, std::map<string, SimpleEntity>>(R"json({
 		"first": { "integer": 101 },
@@ -336,3 +381,5 @@ TEST_CASE("entities with uint values lower than 64-bit can be handled")
 // 		ent_map_terse(name, flag, integer, floating)
 // 	};
 // }
+
+

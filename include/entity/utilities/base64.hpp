@@ -8,8 +8,8 @@
 
 namespace ent
 {
-	typedef std::ostringstream os;
-	typedef std::istringstream is;
+	// typedef std::ostringstream os;
+	// typedef std::istringstream is;
 
 
 	struct base64

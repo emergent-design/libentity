@@ -1,19 +1,20 @@
 #pragma once
 
 #include <map>
+#include <string>
 #include <cmath>
 #include <stack>
 #include <vector>
 #include <memory>
 #include <functional>
-#include <entity/utilities.hpp>
+#include <entity/utilities/base64.hpp>
 
 
 namespace ent
 {
 	using std::string;
 	using std::vector;
-	using std::stack;
+	// using std::stack;
 	using std::map;
 
 
