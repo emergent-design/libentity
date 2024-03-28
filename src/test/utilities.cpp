@@ -88,4 +88,3 @@ TEST_CASE("trees and entities can be compared")
 	}
 }
 
-

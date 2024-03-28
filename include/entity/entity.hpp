@@ -14,25 +14,40 @@ namespace ent
 			typename std::conditional<Constness, const std::remove_reference_t<decltype(item)>, std::remove_reference_t<decltype(item)>>::type \
 		>>(item))
 
+		#define ent_const(arg)			static constexpr bool Constness = arg
 		#define ent_auto_ref(item)		ent_man_ref(#item, item)
 		#define ent_ref(...)			ent_get_ref(__VA_ARGS__, ent_man_ref, ent_auto_ref, 0)(__VA_ARGS__)
-		#define ent_map(...)			ent::mapping ent_describe() 		{ static constexpr bool Constness = false;	return { __VA_ARGS__ }; } \
-										ent::mapping ent_describe() const	{ static constexpr bool Constness = true;	return { __VA_ARGS__ }; }
-		#define ent_merge(base, ...)	ent::mapping ent_describe()			{ static constexpr bool Constness = false;	auto a = base::ent_describe(); a.insert({ __VA_ARGS__ }); return a; } \
-										ent::mapping ent_describe() const	{ static constexpr bool Constness = true;	auto a = base::ent_describe(); a.insert({ __VA_ARGS__ }); return a; }
+		#define ent_map(...)			ent::mapping ent_describe() 		{ ent_const(false);	return { __VA_ARGS__ }; } \
+		 								ent::mapping ent_describe() const	{ ent_const(true);	return { __VA_ARGS__ }; }
+		#define ent_merge(base, ...)	ent::mapping ent_describe()			{ ent_const(false);	auto a = base::ent_describe(); a.insert({ __VA_ARGS__ }); return a; } \
+										ent::mapping ent_describe() const	{ ent_const(true);	auto a = base::ent_describe(); a.insert({ __VA_ARGS__ }); return a; }
 
-		// #if __cplusplus >= 202002L
-		// 	#define ent_parens ()	// Note space before (), so object-like macro
-		// 	#define ent_expand(arg) ent_expand1(ent_expand1(ent_expand1(ent_expand1(arg))))
-		// 	#define ent_expand1(arg) ent_expand2(ent_expand2(ent_expand2(ent_expand2(arg))))
-		// 	#define ent_expand2(arg) ent_expand3(ent_expand3(ent_expand3(ent_expand3(arg))))
-		// 	#define ent_expand3(arg) arg
+		// The following fails if an entity is declared inside a function due to the template not being permitted.
+		// #define ent_functions			ent::mapping ent_describe()			{ return this->ent_impl<false>(); } \
+		// 								ent::mapping ent_describe() const	{ return const_cast<std::add_pointer_t<std::decay_t<decltype(*this)>>>(this)->template ent_impl<true>(); }
+		// #define ent_map(...)			template <bool Constness> ent::mapping ent_impl() { return { __VA_ARGS__ }; } ent_functions
 
-		// 	#define ent_for_each(macro, ...)	__VA_OPT__(ent_expand(ent_helper(macro, __VA_ARGS__)))
-		// 	#define ent_helper(macro, a1, ...)	macro(a1) __VA_OPT__(ent_again ent_parens (macro, __VA_ARGS__))
-		// 	#define ent_again()					ent_helper
-		// 	#define ent_map_terse(...)			ent::mapping ent_describe() { return { ent_for_each(ent_auto_ref, __VA_ARGS__) }; }
-		// #endif
+		#if __cplusplus >= 202002L
+			#define ent_single(...) __VA_ARGS__								// Wrap an argument containing commas so that it's not treated as multiple arguments to another macro
+			#define ent_comma(item, ...) ent_auto_ref(item)__VA_OPT__(,)	// Add a comma if there are more items in the list
+
+			#define ent_parens ()	// Note space before (), so object-like macro
+			#define ent_expand(arg)  ent_expand1(ent_expand1(ent_expand1(ent_expand1(ent_single(arg)))))
+			#define ent_expand1(arg) ent_expand2(ent_expand2(ent_expand2(ent_expand2(ent_single(arg)))))
+			#define ent_expand2(arg) arg
+
+			// The above already supports 28 entries - only enable this if a lot more are required
+			// #define ent_expand2(arg) ent_expand3(ent_expand3(ent_expand3(ent_expand3(ent_single(arg)))))
+			// #define ent_expand3(arg) arg
+
+			#define ent_helper(macro, a1, ...)	macro(a1, __VA_ARGS__) __VA_OPT__(ent_again ent_parens (macro, __VA_ARGS__))
+			#define ent_for_each(macro, ...)	__VA_OPT__(ent_expand(ent_helper(macro, __VA_ARGS__)) )
+			#define ent_again()					ent_helper
+			#define ent_map_terse(...)			ent::mapping ent_describe()       { ent_const(false); return { ent_for_each(ent_comma, __VA_ARGS__) }; } \
+												ent::mapping ent_describe() const { ent_const(true);  return { ent_for_each(ent_comma, __VA_ARGS__) }; }
+
+			#define edesc ent_map_terse
+		#endif
 
 		// Concise call to ent_ref and ent_map, disable if they conflict
 		#define eref ent_ref

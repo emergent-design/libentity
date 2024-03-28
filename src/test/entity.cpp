@@ -369,17 +369,29 @@ TEST_CASE("entities with uint values lower than 64-bit can be handled")
 }
 
 
-// TEST_CASE("a terser mapping syntax can be used")
-// {
-// 	struct TerseEntity
-// 	{
-// 		string name			= "simple";
-// 		bool flag			= true;
-// 		int integer			= 42;
-// 		double floating		= 3.142;
+#if __cplusplus >= 202002L
 
-// 		ent_map_terse(name, flag, integer, floating)
-// 	};
-// }
+TEST_CASE("a terser mapping syntax can be used")
+{
+	struct TerseEntity
+	{
+		string name			= "simple";
+		bool flag			= true;
+		int integer			= 42;
+		double floating		= 3.142;
 
+		edesc(name, flag, integer, floating)
+	};
+
+	CHECK(ent::encode<ent::json>(TerseEntity()) == R"json({"flag":true,"floating":3.142,"integer":42,"name":"simple"})json");
+
+	const auto t = ent::decode<ent::json, TerseEntity>(R"json({"flag":false,"floating":1.2,"integer":8,"name":"other"})json");
+
+	CHECK(t.flag == false);
+	CHECK(t.floating == 1.2);
+	CHECK(t.integer == 8);
+	CHECK(t.name == "other");
+}
+
+#endif
 
