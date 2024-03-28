@@ -44,7 +44,7 @@ namespace ent
 
 		private:
 
-			static void recurse(const string level, const tree &original, const tree &updated, std::vector<diff> &changes)
+			static void recurse(const string &level, const tree &original, const tree &updated, std::vector<diff> &changes)
 			{
 				for (auto &[name, before] : original.children)
 				{
