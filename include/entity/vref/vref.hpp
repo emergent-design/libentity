@@ -1,6 +1,7 @@
 #pragma once
 
 #include <entity/vref/simple.hpp>
+#include <entity/vref/path.hpp>
 #include <entity/vref/enum.hpp>
 #include <entity/vref/vector.hpp>
 #include <entity/vref/set.hpp>

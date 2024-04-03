@@ -47,6 +47,9 @@ namespace ent
 												ent::mapping ent_describe() const { ent_const(true);  return { ent_for_each(ent_comma, __VA_ARGS__) }; }
 
 			#define edesc ent_map_terse
+
+
+			template <typename T> concept Encodable = requires(T t) { { t.ent_describe() } -> std::convertible_to<ent::mapping>; };
 		#endif
 
 		// Concise call to ent_ref and ent_map, disable if they conflict

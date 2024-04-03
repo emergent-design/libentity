@@ -91,6 +91,25 @@ TEST_CASE("vref can map a reference to different types") //, "[vref]")
 		CHECK(dst.str() == "\"a\":\"something const\"");
 	}
 
+#if __has_include(<filesystem>)
+	SUBCASE("can map to paths")
+	{
+		std::filesystem::path path = "/tmp/something.txt";
+
+		make_vref(path).encode(c, dst, "a", stack);
+		CHECK(dst.str() == "\"a\":\"/tmp/something.txt\"");
+
+		make_vref(path).decode(c, "\"/a/path/to/somewhere\"", 0, 0);
+		CHECK(path == "/a/path/to/somewhere");
+	}
+
+	SUBCASE("can map to const paths")
+	{
+		make_vref(std::filesystem::path { "/tmp" } / "file.txt").encode(c, dst, "a", stack);
+
+		CHECK(dst.str() == "\"a\":\"/tmp/file.txt\"");
+	}
+#endif
 
 	SUBCASE("can map to boolean types")
 	{
