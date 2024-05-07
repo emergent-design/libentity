@@ -2,7 +2,6 @@
 
 #include <entity/codec.hpp>
 
-
 namespace ent
 {
 	struct json : codec

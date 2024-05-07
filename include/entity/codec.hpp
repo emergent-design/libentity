@@ -3,7 +3,7 @@
 #include <stack>
 #include <sstream>
 #include <entity/tree.hpp>
-#include <entity/utilities.hpp>
+// #include <entity/utilities.hpp>
 
 
 namespace ent
@@ -11,6 +11,9 @@ namespace ent
 	using std::string;
 	using std::vector;
 	using std::stack;
+
+	typedef std::ostringstream os;
+	typedef std::istringstream is;
 
 
 	struct codec
