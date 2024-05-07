@@ -1,3 +1,13 @@
+libentity0 (1.2.0) unstable; urgency=medium
+
+  * Added const encoding support for entities
+  * Implemented a tree comparison utility function
+  * Added a terse macro for describing an entity (c++20 only)
+  * Added support for encoding a std::filesystem::path
+  * Tidied up the unit tests
+
+ -- Dan Parnham <dan@emergent-design.co.uk>  Tue, 07 May 2024 11:52:18 +0100
+
 libentity0 (1.1.14) unstable; urgency=medium
 
   * Fixed some comparison and unused parameter warnings

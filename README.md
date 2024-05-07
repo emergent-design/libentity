@@ -1,7 +1,7 @@
 libentity
 =========
 
-Entity is a C++14 library that provides object serialisation/deserialisation
+Entity is a C++17/20 library that provides object serialisation/deserialisation
 yet requires very little boilerplate code.
 
 It supports the serialisation of not only structs and classes but also `tree`
