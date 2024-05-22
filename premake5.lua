@@ -4,7 +4,8 @@ solution "entity"
 	configurations	"default"
 	platforms		"native"
 	toolset			"clang"
-	buildoptions	{ "-Wall", "-Wextra", "-Wpedantic", "-std=c++20" }
+	buildoptions	{ "-Wall", "-Wextra", "-Wpedantic", "-std=c++17" }
+	-- buildoptions	{ "-Wall", "-Wextra", "-Wpedantic", "-std=c++20" }
 	includedirs		{ "include" }
 	libdirs 		{ "lib" }
 	excludes		{ "**.bak", "**~" }
