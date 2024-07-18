@@ -90,9 +90,9 @@ TEST_SUITE("tree")
 
 		CHECK(t["string"].as_string()				== "string value");
 		CHECK(t["integer"].as_long()				== 42);
-		CHECK(t["floating"].as_double()			== 3.14);
+		CHECK(t["floating"].as_double()				== 3.14);
 		CHECK(t["array"].as_array()[1].as_long()	== 2);
-		CHECK(t["tree"]["name"].as_string()		== "child");
+		CHECK(t["tree"]["name"].as_string()			== "child");
 		CHECK(t["boolean"].as_bool());
 	}
 
@@ -112,9 +112,26 @@ TEST_SUITE("tree")
 
 		CHECK(t["string"].as_string()				== "string value");
 		CHECK(t["integer"].as_long()				== 42);
-		CHECK(t["floating"].as_double()			== 3.14);
+		CHECK(t["floating"].as_double()				== 3.14);
 		CHECK(t["array"].as_array()[1].as_long()	== 2);
-		CHECK(t["tree"]["name"].as_string()		== "child");
+		CHECK(t["tree"]["name"].as_string()			== "child");
 		CHECK(t["boolean"].as_bool());
+	}
+
+
+	TEST_CASE("a property can be removed")
+	{
+		auto t = tree()
+			.set("integer", 42)
+			.set("floating", 3.14);
+
+		CHECK(t.contains("integer"));
+
+		t.erase("integer");
+
+		CHECK(!t.contains("integer"));
+		CHECK(t == tree()
+			.set("floating", 3.14)
+		);
 	}
 }

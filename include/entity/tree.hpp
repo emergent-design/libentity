@@ -65,6 +65,13 @@ namespace ent
 			}
 
 
+			tree &erase(const string &name)
+			{
+				this->children.erase(name);
+				return *this;
+			}
+
+
 			tree &operator[](const string &name)
 			{
 				return this->children[name];
