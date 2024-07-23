@@ -121,7 +121,7 @@ namespace ent
 
 		static tree to_tree(T &item)
 		{
-			return item ? vref<typename T::element_type>::to_tree(*item) : tree {};
+			return item ? vref<typename T::element_type>::to_tree(*item) : tree(nullptr);
 		}
 
 
