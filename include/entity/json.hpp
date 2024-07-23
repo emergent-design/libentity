@@ -4,6 +4,9 @@
 
 namespace ent
 {
+	// Note: if limiting to c++17 then should start using string_view for some of the parsing
+	// to avoid allocations with substr().
+	// Should also update to use "override"
 	struct json : codec
 	{
 		using codec::item;
@@ -293,6 +296,12 @@ namespace ent
 
 			skip(data, i, type);
 			return {};
+		}
+
+
+		virtual bool is_null(const string &data, int i, int) const
+		{
+			return data.size() - i >= 4 && data.substr(i, 4) == "null";
 		}
 
 

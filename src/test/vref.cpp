@@ -29,6 +29,15 @@ struct Test
 	Sub sub;
 
 	emap(eref(a), eref(b), eref(c), eref(d), eref(sub))
+
+	bool operator==(const Test &other) const
+	{
+		return this->a == other.a
+			&& this->b == other.b
+			&& this->c == other.c
+			&& this->d == other.d
+			&& this->sub.a == other.sub.a;
+	}
 };
 
 
@@ -478,5 +487,148 @@ TEST_CASE("vref can map a reference to different types") //, "[vref]")
 		CHECK(test.d == "some");
 		CHECK(test.sub.a == 0xff);
 	}
+
+
+	SUBCASE("can check for circular references when smart pointers are involved")
+	{
+		struct Root
+		{
+			std::shared_ptr<Root> child;
+
+			emap(eref(child))
+		};
+
+		// With a null pointer in child it should not throw
+		auto root = std::make_shared<Root>();
+		CHECK_NOTHROW(make_vref(root).encode(c, dst, "a", stack));
+
+		// If child refers to itself then it should fail
+		root->child = root;
+		CHECK_THROWS(make_vref(root).encode(c, dst, "a", stack));
+
+		// If child is a different object then it should not throw
+		root->child = std::make_shared<Root>();
+		CHECK_NOTHROW(make_vref(root).encode(c, dst, "a", stack));
+
+		// If the child of the child points back to the root then it should fail
+		root->child->child = root;
+		CHECK_THROWS(make_vref(root).encode(c, dst, "a", stack));
+	}
 }
+
+
+
+
+#include <typeindex>
+#include <any>
+
+struct TypeCheck
+{
+	std::any in;		// Value to encode
+	std::any out;		// Value expected when decoding
+	std::string encode;	// Expected encoding of "in"
+	std::string decode;	// Encoding to produce "out"
+};
+
+const std::map<std::type_index, TypeCheck> PointerChecks = {
+	{ std::type_index(typeid(bool)), {
+		true, false,
+		R"json("a":true)json", "false"
+	}},
+	{ std::type_index(typeid(int)), {
+		42, 13,
+		R"json("a":42)json", "13"
+	}},
+	{ std::type_index(typeid(double)), {
+		3.14, 1.2,
+		R"json("a":3.14)json", "1.2"
+	}},
+	{ std::type_index(typeid(Test)), {
+		Test(), Test { .a = 4, .b = -1, .c = 8, .d = "other", .sub={ .a = 1 } },
+		R"json("a":{"a":8,"b":42,"c":0,"d":"some","sub":{"a":0}})json",
+		R"json({"a":4,"b":-1,"c":8,"d":"other","sub":{"a":1}})json"
+	}},
+	{ std::type_index(typeid(std::vector<Test>)), {
+		std::vector<Test>(), std::vector<Test>(1),
+		R"json("a":[])json",
+		R"json([{"a":8,"b":42,"c":0,"d":"some","sub":{"a":0}}])json"
+	}}
+};
+
+
+TEST_CASE_TEMPLATE("vref can map to shared pointers of encodable types", T, bool, int, double, Test, std::vector<Test>)
+{
+	json c;
+	os dst;
+	stack<int> stack;
+
+	SUBCASE("can map to a null shared pointer")
+	{
+		std::shared_ptr<T> test;
+
+		make_vref(test).encode(c, dst, "a", stack);
+
+		CHECK(dst.str() == R"json("a":null)json");
+
+		make_vref(test).decode(c, R"json(null)json", 0, 0);
+
+		CHECK(test == nullptr);
+	}
+
+	SUBCASE("can map to a valid shared pointer")
+	{
+		// auto test = std::make_shared<T>();
+		const auto check = PointerChecks.at(std::type_index(typeid(T)));
+
+		auto test = std::make_shared<T>(std::any_cast<T>(check.in));
+
+		make_vref(test).encode(c, dst, "a", stack);
+
+		CHECK(dst.str() == check.encode);
+
+		make_vref(test).decode(c, check.decode, 0, 0);
+
+		CHECK(*test == std::any_cast<T>(check.out));
+	}
+}
+
+// const pointers ???
+
+
+TEST_CASE_TEMPLATE("vref can map to unique pointers of encodable types", T, bool, int, double, Test, std::vector<Test>)
+{
+	json c;
+	os dst;
+	stack<int> stack;
+
+	SUBCASE("can map to a null shared pointer")
+	{
+		std::unique_ptr<T> test;
+
+		make_vref(test).encode(c, dst, "a", stack);
+
+		CHECK(dst.str() == R"json("a":null)json");
+
+		make_vref(test).decode(c, R"json(null)json", 0, 0);
+
+		CHECK(test == nullptr);
+	}
+
+	SUBCASE("can map to a valid shared pointer")
+	{
+		// auto test = std::make_shared<T>();
+		const auto check = PointerChecks.at(std::type_index(typeid(T)));
+
+		auto test = std::make_unique<T>(std::any_cast<T>(check.in));
+
+		make_vref(test).encode(c, dst, "a", stack);
+
+		CHECK(dst.str() == check.encode);
+
+		make_vref(test).decode(c, check.decode, 0, 0);
+
+		CHECK(*test == std::any_cast<T>(check.out));
+	}
+}
+
 

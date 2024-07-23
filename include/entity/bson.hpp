@@ -292,6 +292,8 @@ namespace ent
 		virtual double get(const string &data, int &i, int type, double) const							{ return type == Double		? floating(data, i)	: skip(data, i, type); }
 		virtual string get(const string &data, int &i, int type, const string) const					{ return type == String 	? sstring(data, i)	: string("", skip(data, i, type)); }
 		virtual vector<uint8_t> get(const string &data, int &i, int type, const vector<uint8_t>) const	{ return type == Binary		? binary(data, i)	: vector<uint8_t>(skip(data, i, type)); }
+		virtual bool is_null(const string &, int, int type) const 										{ return type == Null; }
+
 
 		int error(const string message, int i) const
 		{

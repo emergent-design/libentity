@@ -44,7 +44,8 @@ namespace ent
 			return position;
 		}
 
-
+		bool is_circular(void *) const override				{ return false; }
+		static bool is_circular(T &, void *)				{ return false; }
 		tree to_tree() const override						{ return *this->reference; }
 		void from_tree(const tree &data) override			{ from_tree(*this->reference, data); }
 		static tree to_tree(T &item)						{ return item; }

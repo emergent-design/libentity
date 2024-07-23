@@ -56,6 +56,9 @@ namespace ent
 		virtual string get(const string &data, int &i, int type, const string def) const = 0;
 		virtual vector<uint8_t> get(const string &data, int &i, int type, const vector<uint8_t> def) const = 0;
 
+		// peak whether or not the next value is null
+		virtual bool is_null(const string &data, int i, int type) const = 0;
+
 		// To avoid ambiguity and retain positive values cast unsigned integers to 64-bit longs
 		uint32_t get(const string &data, int &i, int type, uint32_t def) const { return this->get(data, i, type, (int64_t)def); }
 

@@ -25,6 +25,9 @@ namespace ent
 		// traversal. Since this uses any_ref to provide access to the underlying value great care
 		// must be taken to handle the type properly.
 		virtual void modify(std::function<void(any_ref)> modifier, const bool recurse = true) = 0;
+
+
+		virtual bool is_circular(void *) const = 0;
 	};
 
 	// Structure for storing the entity description

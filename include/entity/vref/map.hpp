@@ -75,6 +75,19 @@ namespace ent
 		}
 
 
+		bool is_circular(void *ancestor) const override
+		{
+			return is_circular(*this->reference, ancestor);
+		}
+
+		static bool is_circular(T &item, void *ancestor)
+		{
+			return std::any_of(item.begin(), item.end(), [=](auto &v) {
+				return vref<const typename T::mapped_type>::is_circular(v.second, ancestor);
+			});
+		}
+
+
 		tree to_tree() const override				{ return to_tree(*this->reference); }
 		void from_tree(const tree &data) override	{ from_tree(*this->reference, data); }
 

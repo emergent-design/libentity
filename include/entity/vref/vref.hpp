@@ -9,3 +9,4 @@
 #include <entity/vref/tree.hpp>
 #include <entity/vref/array.hpp>
 #include <entity/vref/entity.hpp>
+#include <entity/vref/pointer.hpp>

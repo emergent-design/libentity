@@ -42,6 +42,9 @@ namespace ent
 			return position;
 		};
 
+
+		bool is_circular(void *) const override				{ return false; }
+		static bool is_circular(T &, void *)				{ return false; }
 		tree to_tree() const override 						{ return this->reference->string(); }
 		void from_tree(const tree &data) override			{ return from_tree(*this->reference, data); } //data.as(*this->reference); }
 		static tree to_tree(T &item)						{ return item; }
