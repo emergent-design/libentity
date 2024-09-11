@@ -460,7 +460,8 @@ namespace ent
 
 			try
 			{
-				if (item.find('.') == string::npos)
+				// if (item.find('.') == string::npos)
+				if (item.find_first_of(".eE") == string::npos)
 				{
 					return std::stoll(item, nullptr, 0);
 				}

@@ -163,16 +163,18 @@ TEST_SUITE("json")
 			"upper": 3.141E-10,
 			"long": 12345123456789,
 			"big": 123456789123456789123456789.0,
-			"tiny": 1.0e-300
+			"tiny": 1.0e-300,
+			"pointless": 1e-5
 		})json");
 
-		CHECK(t["integer"].as_long()		== 42);
-		CHECK(t["double"].as_double()		== 3.14);
-		CHECK(t["scientific"].as_double()	== 3.141e-10);
-		CHECK(t["upper"].as_double()		== 3.141e-10);
-		CHECK(t["long"].as_long()			== 12345123456789);
-		CHECK(t["big"].as_double()		== 123456789123456789123456789.0);
-		CHECK(t["tiny"].as_double()		== 1.0e-300);
+		CHECK(t["integer"].as_long()				== 42);
+		CHECK(t["double"].as_double()				== 3.14);
+		CHECK(t["scientific"].as_double()		== 3.141e-10);
+		CHECK(t["upper"].as_double()				== 3.141e-10);
+		CHECK(t["long"].as_long()						== 12345123456789);
+		CHECK(t["big"].as_double()					== 123456789123456789123456789.0);
+		CHECK(t["tiny"].as_double()					== 1.0e-300);
+		CHECK(t["pointless"].as_double()		== 1e-5);	// Check for scientific notation without a decimal point
 	}
 
 
