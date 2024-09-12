@@ -1,3 +1,10 @@
+libentity0 (1.2.1) unstable; urgency=medium
+
+  * Bux fix to scientific notation parsing in JSON
+  * Provision support for smart pointers (with circular reference checking)
+
+ -- Dan Parnham <dan@emergent-design.co.uk>  Thu, 12 Sep 2024 09:43:57 +0100
+
 libentity0 (1.2.0) unstable; urgency=medium
 
   * Added const encoding support for entities
