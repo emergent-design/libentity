@@ -4,7 +4,7 @@
 #include <vector>
 #include <sstream>
 #include <stdexcept>
-
+#include <cstdint>
 
 namespace ent
 {
