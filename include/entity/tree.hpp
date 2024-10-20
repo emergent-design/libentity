@@ -36,6 +36,7 @@ namespace ent
 			tree(const bool value)				: type(Type::Boolean),	leaf(new container<bool>(value)) {}
 			tree(const char *value)				: type(Type::String),	leaf(new container<string>(string(value))) {}
 			tree(const string &value)			: type(Type::String),	leaf(new container<string>(value)) {}
+			tree(const std::string_view value)	: type(Type::String),	leaf(new container<string>(string(value))) {}
 			tree(const vector<uint8_t> &value)	: type(Type::Binary),	leaf(new container<vector<uint8_t>>(value)) {}
 			tree(const vector<tree> &value) 	: type(Type::Array),	leaf(new container<vector<tree>>(value)) {}
 

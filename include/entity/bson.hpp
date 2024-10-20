@@ -151,24 +151,39 @@ namespace ent
 		inline int64_t int64(const string &s, int &i) const		{ return i < (int)s.size() - 7 ? *(int64_t *)increment(s, i, 8) : error("could not read 64-bit integer", i); }
 		inline double floating(const string &s, int &i) const	{ return i < (int)s.size() - 7 ? *(double *)increment(s, i, 8)  : error("could not read floating-point value", i); }
 
-		inline string cstring(const string &s, int &i) const
+		inline std::string_view cstring(const string &s, int &i) const
 		{
-			int size	= s.size();
-			int j		= i;
-			char *start	= (char *)s.data() + i;
+			const int size	= s.size();
+			int j			= i;
+			char *start		= (char *)s.data() + i;
 
 			for (char *p = start; i < size && *p; p++, i++);
 
-			return i < size ? string(start, i++ - j) : std::to_string(error("could not read cstring", j));
+			// return i < size ? string(start, i++ - j) : std::to_string(error("could not read cstring", j));
+			if (i < size)
+			{
+				return { start, size_t(i++ - j) };
+			}
+
+			error("could not read cstring", j);
+			return {};
 		}
 
 		inline string sstring(const string &s, int &i) const
 		{
-			int length = int32(s, i);
+			const size_t length = int32(s, i);
 
-			return i + length <= (int)s.size()
-				? string((char *)increment(s, i, length), length-1)
-				: std::to_string(error("could not read string", i));
+			if (i + length <= s.size())
+			{
+				return { (char *)increment(s, i, length), length - 1 };
+			}
+
+			error("could not read string", i);
+			return {};
+
+			// return i + length <= (int)s.size()
+			// 	? string((char *)increment(s, i, length), length-1)
+			// 	: std::to_string(error("could not read string", i));
 		}
 
 		inline vector<uint8_t> binary(const string &s, int &i) const
@@ -225,7 +240,8 @@ namespace ent
 
 			if (type)
 			{
-				auto name = cstring(data, i);
+				// auto name =
+				cstring(data, i);
 				return true;
 			}
 			return false;
