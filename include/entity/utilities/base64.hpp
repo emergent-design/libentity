@@ -55,7 +55,7 @@ namespace ent
 		}
 
 
-		static std::vector<uint8_t> decode(const std::string &value)
+		static std::vector<uint8_t> decode(std::string_view value)
 		{
 			const static char pad = '=';
 

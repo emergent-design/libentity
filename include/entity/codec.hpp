@@ -13,7 +13,7 @@ namespace ent
 	using std::stack;
 
 	typedef std::ostringstream os;
-	typedef std::istringstream is;
+	// typedef std::istringstream is;
 
 
 	struct codec

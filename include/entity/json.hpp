@@ -1,6 +1,7 @@
 #pragma once
 
 #include <entity/codec.hpp>
+#include <charconv>
 
 namespace ent
 {
@@ -34,18 +35,18 @@ namespace ent
 			else											dst << value;
 		}
 
-		virtual void separator(os &dst, bool last) const												{ if (!last) dst << ","; }
-		virtual void object_start(os &dst, const string &name, stack<int> &stack) const					{ write_name(dst, name, stack.size()) << '{'; }
-		virtual void object_end(os &dst, stack<int> &) const											{ dst << '}'; }
-		virtual void array_start(os &dst, const string &name, stack<int> &stack) const					{ write_name(dst, name, stack.size()) << '['; }
-		virtual void array_end(os &dst, stack<int> &) const												{ dst << ']'; }
-		virtual void item(os &dst, const string &name, int depth) const									{ write_name(dst, name, depth) << "null"; }
-		virtual void item(os &dst, const string &name, bool value, int depth) const						{ write_name(dst, name, depth) << (value ? "true" : "false"); }
-		virtual void item(os &dst, const string &name, int32_t value, int depth) const					{ write_name(dst, name, depth); write_number(dst, value); }
-		virtual void item(os &dst, const string &name, int64_t value, int depth) const					{ write_name(dst, name, depth); write_number(dst, value); }
-		virtual void item(os &dst, const string &name, double value, int depth) const					{ write_name(dst, name, depth); write_number(dst, value); }
-		virtual void item(os &dst, const string &name, const vector<uint8_t> &value, int depth) const	{ write_name(dst, name, depth) << '"' << base64::encode(value) << '"'; }
-		virtual void item(os &dst, const string &name, const string &value, int depth) const
+		void separator(os &dst, bool last) const override												{ if (!last) dst << ","; }
+		void object_start(os &dst, const string &name, stack<int> &stack) const override				{ write_name(dst, name, stack.size()) << '{'; }
+		void object_end(os &dst, stack<int> &) const override											{ dst << '}'; }
+		void array_start(os &dst, const string &name, stack<int> &stack) const override					{ write_name(dst, name, stack.size()) << '['; }
+		void array_end(os &dst, stack<int> &) const override											{ dst << ']'; }
+		void item(os &dst, const string &name, int depth) const override								{ write_name(dst, name, depth) << "null"; }
+		void item(os &dst, const string &name, bool value, int depth) const override					{ write_name(dst, name, depth) << (value ? "true" : "false"); }
+		void item(os &dst, const string &name, int32_t value, int depth) const override					{ write_name(dst, name, depth); write_number(dst, value); }
+		void item(os &dst, const string &name, int64_t value, int depth) const override					{ write_name(dst, name, depth); write_number(dst, value); }
+		void item(os &dst, const string &name, double value, int depth) const override					{ write_name(dst, name, depth); write_number(dst, value); }
+		void item(os &dst, const string &name, const vector<uint8_t> &value, int depth) const override	{ write_name(dst, name, depth) << '"' << base64::encode(value) << '"'; }
+		void item(os &dst, const string &name, const string &value, int depth) const override
 		{
 			write_name(dst, name, depth) << '"';
 
@@ -71,10 +72,10 @@ namespace ent
 		const bool whitespace[256] = { 0,0,0,0,0,0,0,0,0,1, 1,0,0,1,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0, 0,0,1,0,0,0,0,0,0,0, 0,0,0,0,1 };
 
 
-		virtual bool validate(const string &data) const
+		bool validate(const string &data) const override
 		{
 			char c;
-			int length				= data.length();
+			const int length		= data.length();
 			bool quotes				= false;
 			bool ignore				= false;
 			std::stack<std::pair<char,int>> levels;
@@ -119,7 +120,7 @@ namespace ent
 		}
 
 
-		virtual bool object_start(const string &data, int &i, int) const
+		bool object_start(const string &data, int &i, int) const override
 		{
 			skip_whitespace(data, i);
 
@@ -128,13 +129,13 @@ namespace ent
 		}
 
 
-		virtual bool object_end(const string &data, int &i) const
+		bool object_end(const string &data, int &i) const override
 		{
 			return data[i] == '}';
 		}
 
 
-		virtual bool item(const string &data, int &i, string &name, int &) const
+		bool item(const string &data, int &i, string &name, int &) const override
 		{
 			const int length = data.length();
 
@@ -173,7 +174,7 @@ namespace ent
 		}
 
 
-		virtual bool array_start(const string &data, int &i, int) const
+		bool array_start(const string &data, int &i, int) const override
 		{
 			skip_whitespace(data, i);
 
@@ -182,13 +183,13 @@ namespace ent
 		}
 
 
-		virtual bool array_end(const string &data, int &i) const
+		bool array_end(const string &data, int &i) const override
 		{
 			return data[i] == ']';
 		}
 
 
-		virtual bool array_item(const string &data, int &i, int &) const
+		bool array_item(const string &data, int &i, int &) const override
 		{
 			skip_whitespace(data, ++i);
 
@@ -209,7 +210,7 @@ namespace ent
 		}
 
 
-		virtual bool get(const string &data, int &i, int type, bool) const
+		bool get(const string &data, int &i, int type, bool) const override
 		{
 			if (!check_simple(data[i], data, i, type)) return false;
 
@@ -217,51 +218,154 @@ namespace ent
 		}
 
 
-		virtual int32_t get(const string &data, int &i, int type, int32_t) const
-		{
-			if (!check_simple(data[i], data, i, type)) return false;
+		// int32_t get(const string &data, int &i, int type, int32_t) const override
+		// {
+		// 	if (!check_simple(data[i], data, i, type)) return false;
 
-			try 		{ return stoi(parse_item(data, i), nullptr, 0); }
-			catch (...)	{ error("value is not a valid number", data, i); }
-			return 0;
+		// 	try 		{ return stoi(parse_item(data, i), nullptr, 0); }
+		// 	catch (...)	{ error("value is not a valid number", data, i); }
+		// 	return 0;
+		// }
+
+
+		// int64_t get(const string &data, int &i, int type, int64_t) const override
+		// {
+		// 	if (!check_simple(data[i], data, i, type)) return false;
+
+		// 	try 		{ return stoll(parse_item(data, i), nullptr, 0); }
+		// 	catch (...)	{ error("value is not a valid number", data, i); }
+		// 	return 0;
+		// }
+
+
+		// double get(const string &data, int &i, int type, double) const override
+		// {
+		// 	if (!check_simple(data[i], data, i, type)) return false;
+
+		// 	try 			{ return stod(parse_item(data, i)); }
+		// 	catch (...)		{ error("value is not a valid number", data, i); }
+		// 	return 0.0;
+		// }
+
+		template <typename T> static inline constexpr T to_number(std::string_view s, const string &data, int &i)
+		{
+			T value {};
+
+			// #if __cpp_lib_to_chars >= 202306L
+			// 	if (std::from_chars(s.data(), s.data() + s.size(), value, 0))
+			// #else
+
+			if constexpr (std::is_integral_v<T>)
+			{
+				if (s.substr(0, 2) == "0x") // || s.substr(0, 2) == "0X"
+				{
+					if (std::from_chars(s.data() + 2, s.data() + s.size(), value, 16).ec == std::errc{})
+					{
+						return value;
+					}
+				}
+				else if (s.substr(0, 3) == "-0x")
+				{
+					if (std::from_chars(s.data() + 3, s.data() + s.size(), value, 16).ec == std::errc{})
+					{
+						return -value;
+					}
+				}
+				else if (std::from_chars(s.data(), s.data() + s.size(), value).ec == std::errc{})
+				{
+					return value;
+				}
+			}
+			else if (std::from_chars(s.data(), s.data() + s.size(), value).ec == std::errc{})
+			{
+				return value;
+			}
+
+			error("value is not a valid number", data, i - s.size());
+
+			return {};
 		}
 
 
-		virtual int64_t get(const string &data, int &i, int type, int64_t) const
+		int32_t get(const string &data, int &i, int type, int32_t) const override
 		{
 			if (!check_simple(data[i], data, i, type)) return false;
 
-			try 		{ return stoll(parse_item(data, i), nullptr, 0); }
-			catch (...)	{ error("value is not a valid number", data, i); }
-			return 0;
+			return to_number<int32_t>(parse_item(data, i), data, i);
 		}
 
 
-		virtual double get(const string &data, int &i, int type, double) const
+		int64_t get(const string &data, int &i, int type, int64_t) const override
 		{
 			if (!check_simple(data[i], data, i, type)) return false;
 
-			try 			{ return stod(parse_item(data, i)); }
-			catch (...)		{ error("value is not a valid number", data, i); }
-			return 0.0;
+			return to_number<int64_t>(parse_item(data, i), data, i);
 		}
 
 
-		virtual string get(const string &data, int &i, int type, const string) const
+		double get(const string &data, int &i, int type, double) const override
+		{
+			if (!check_simple(data[i], data, i, type)) return false;
+
+			return to_number<double>(parse_item(data, i), data, i);
+		}
+
+
+		// virtual string get(const string &data, int &i, int type, const string) const
+		// {
+		// 	if (data[i] == '"')
+		// 	{
+		// 		string result;
+		// 		auto s			= parse_string(data, i);
+		// 		bool special	= false;
+		// 		const char *c	= data.data() + s.first;
+		// 		const char *end	= c + s.second;
+
+		// 		for (result.reserve(s.second); c < end; c++)
+		// 		{
+		// 			if (special)
+		// 			{
+		// 				switch (*c)
+		// 				{
+		// 					case '"':	result.append("\"");	break;
+		// 					case '\\':	result.append("\\");	break;
+		// 					case 't':	result.append("\t");	break;
+		// 					case 'n':	result.append("\n");	break;
+		// 					case 'r':	result.append("\r");	break;
+		// 					case 'b':	result.append("\b");	break;
+		// 					case 'f':	result.append("\f");	break;
+		// 					case 'u':	result.append("\\u");	break;	// Unicode characters are just passed straight through
+		// 				}
+		// 				special = false;
+		// 			}
+		// 			else if (*c == '\\')	special = true;
+		// 			else 					result += *c;
+		// 		}
+
+		// 		return result;
+		// 	}
+
+		// 	skip(data, i, type);
+		// 	return {};
+		// }
+
+		string get(const string &data, int &i, int type, const string) const override
 		{
 			if (data[i] == '"')
 			{
 				string result;
-				auto s			= parse_string(data, i);
+				auto chars		= parse_string(data, i);
 				bool special	= false;
-				const char *c	= data.data() + s.first;
-				const char *end	= c + s.second;
+				// const char *c	= data.data() + s.first;
+				// const char *end	= c + s.second;
+				result.reserve(chars.size());
 
-				for (result.reserve(s.second); c < end; c++)
+				// for (result.reserve(s.second); c < end; c++)
+				for (auto &c : chars)
 				{
 					if (special)
 					{
-						switch (*c)
+						switch (c)
 						{
 							case '"':	result.append("\"");	break;
 							case '\\':	result.append("\\");	break;
@@ -274,8 +378,8 @@ namespace ent
 						}
 						special = false;
 					}
-					else if (*c == '\\')	special = true;
-					else 					result += *c;
+					else if (c == '\\')	special = true;
+					else 				result += c;
 				}
 
 				return result;
@@ -286,12 +390,23 @@ namespace ent
 		}
 
 
-		virtual vector<uint8_t> get(const string &data, int &i, int type, const vector<uint8_t>) const
+		// virtual vector<uint8_t> get(const string &data, int &i, int type, const vector<uint8_t>) const
+		// {
+		// 	if (data[i] == '"')
+		// 	{
+		// 		auto s = parse_string(data, i);
+		// 		return base64::decode(data.substr(s.first, s.second));
+		// 	}
+
+		// 	skip(data, i, type);
+		// 	return {};
+		// }
+
+		vector<uint8_t> get(const string &data, int &i, int type, const vector<uint8_t>) const override
 		{
 			if (data[i] == '"')
 			{
-				auto s = parse_string(data, i);
-				return base64::decode(data.substr(s.first, s.second));
+				return base64::decode(parse_string(data, i));
 			}
 
 			skip(data, i, type);
@@ -299,9 +414,9 @@ namespace ent
 		}
 
 
-		virtual bool is_null(const string &data, int i, int) const
+		bool is_null(const string &data, int i, int) const override
 		{
-			return data.size() - i >= 4 && data.substr(i, 4) == "null";
+			return data.size() - i >= 4 && std::string_view(&data[i], 4) == "null";
 		}
 
 
@@ -382,7 +497,7 @@ namespace ent
 		}
 
 
-		virtual int skip(const string &data, int &i, int) const
+		int skip(const string &data, int &i, int) const override
 		{
 			const char c = data[i];
 
@@ -395,17 +510,40 @@ namespace ent
 		}
 
 
-		string parse_key(const string &data, int &i) const
+		// string parse_key(const string &data, int &i) const
+		// {
+		// 	const int start = ++i;
+
+		// 	for (; i<(int)data.length() && data[i] != '"'; i++);
+
+		// 	return data.substr(start, i-start);
+		// }
+
+		std::string_view parse_key(const string &data, int &i) const
 		{
 			const int start = ++i;
 
 			for (; i<(int)data.length() && data[i] != '"'; i++);
 
-			return data.substr(start, i-start);
+			return { &data[start], size_t(i - start) };
 		}
 
 
-		std::pair<int, int> parse_string(const string &data, int &i) const
+		// std::pair<int, int> parse_string(const string &data, int &i) const
+		// {
+		// 	const int start	= ++i;
+		// 	bool ignore = false;	// Flag to ensure escaped quotes within the string are ignored
+
+		// 	for (; i<(int)data.length(); i++)
+		// 	{
+		// 		if (data[i] == '"' && !ignore) break;
+		// 		ignore = data[i] == '\\';
+		// 	}
+
+		// 	return { start, i-start };
+		// }
+
+		std::string_view parse_string(const string &data, int &i) const
 		{
 			const int start	= ++i;
 			bool ignore = false;	// Flag to ensure escaped quotes within the string are ignored
@@ -416,11 +554,31 @@ namespace ent
 				ignore = data[i] == '\\';
 			}
 
-			return { start, i-start };
+			return { &data[start], size_t(i - start) };
 		}
 
 
-		string parse_item(const string &data, int &i) const
+		// string parse_item(const string &data, int &i) const
+		// {
+		// 	const int start = i;
+
+		// 	for (i++; i<(int)data.length(); i++)
+		// 	{
+		// 		const char c = data[i];
+
+		// 		if (whitespace[(uint8_t)c] || c == '}' || c == ']' || c == '/')
+		// 		{
+		// 			break;
+		// 		}
+		// 	}
+
+		// 	// Jump back a character since the parse_array and parse methods expect
+		// 	// to swallow whitespace or opening character next so allow it to find
+		// 	// an end of array/object.
+		// 	return data.substr(start, i-- - start);
+		// }
+
+		std::string_view parse_item(const string &data, int &i) const
 		{
 			const int start = i;
 
@@ -437,12 +595,12 @@ namespace ent
 			// Jump back a character since the parse_array and parse methods expect
 			// to swallow whitespace or opening character next so allow it to find
 			// an end of array/object.
-			return data.substr(start, i-- - start);
+			return { &data[start], size_t(i-- - start) };
 		}
 
 
 		// Decode item to dynamic type
-		virtual tree item(const string &data, int &i, int type) const
+		tree item(const string &data, int &i, int type) const override
 		{
 			if (data[i] == '{') return this->object(data, i, type);
 			if (data[i] == '[') return this->array(data, i, type);
@@ -463,11 +621,12 @@ namespace ent
 				// if (item.find('.') == string::npos)
 				if (item.find_first_of(".eE") == string::npos)
 				{
-					return std::stoll(item, nullptr, 0);
+					return to_number<int64_t>(item, data, i);
+					// return std::stoll(item, nullptr, 0);
 				}
 				else
 				{
-					return std::stod(item);
+					return to_number<double>(item, data, i);
 				}
 			}
 			catch (...)
@@ -479,7 +638,7 @@ namespace ent
 		}
 
 
-		void error(const string &message, const string &json, int i) const
+		static void error(const string &message, const string &json, int i)
 		{
 			int tabs	= 0;
 			auto prev 	= json.rfind('\n', i);
@@ -501,17 +660,17 @@ namespace ent
 	struct prettyjson : json
 	{
 		// Array items have 0 length name
-		virtual inline os &write_name(os &dst, const string &name, int depth) const
+		inline os &write_name(os &dst, const string &name, int depth) const override
 		{
 			dst << std::string(2 * depth, ' ');
 			if (!name.empty()) dst << '"' << name << "\": ";
 			return dst;
 		}
 
-		virtual void separator(os &dst, bool last) const								{ dst << (last ? "\n" : ",\n"); }
-		virtual void object_start(os &dst, const string &name, stack<int> &stack) const	{ write_name(dst, name, stack.size()) << "{\n";			stack.push(0); }
-		virtual void object_end(os &dst, stack<int> &stack) const						{ dst << string(2 * (stack.size() - 1), ' ') << '}';	stack.pop(); }
-		virtual void array_start(os &dst, const string &name, stack<int> &stack) const	{ write_name(dst, name, stack.size()) << "[\n";			stack.push(0); }
-		virtual void array_end(os &dst, stack<int> &stack) const						{ dst << string(2 * (stack.size() - 1), ' ') << ']';	stack.pop(); }
+		void separator(os &dst, bool last) const override									{ dst << (last ? "\n" : ",\n"); }
+		void object_start(os &dst, const string &name, stack<int> &stack) const override	{ write_name(dst, name, stack.size()) << "{\n";			stack.push(0); }
+		void object_end(os &dst, stack<int> &stack) const override							{ dst << string(2 * (stack.size() - 1), ' ') << '}';	stack.pop(); }
+		void array_start(os &dst, const string &name, stack<int> &stack) const override		{ write_name(dst, name, stack.size()) << "[\n";			stack.push(0); }
+		void array_end(os &dst, stack<int> &stack) const override							{ dst << string(2 * (stack.size() - 1), ' ') << ']';	stack.pop(); }
 	};
 }
