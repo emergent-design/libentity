@@ -360,4 +360,15 @@ TEST_SUITE("json")
 	{
 
 	}
+
+	TEST_CASE("empty map value converts to json correctly")
+	{
+		std::map<std::string, std::string> testMap;
+		testMap[""] = "nothing";
+
+		const auto mapJson = encode<json>(testMap);
+		const std::string expectedJson = R"json({"":"nothing"})json";
+
+		CHECK(mapJson == expectedJson);
+	}
 }
