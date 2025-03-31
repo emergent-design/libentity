@@ -1,5 +1,6 @@
 #pragma once
 #include <entity/vref/base.hpp>
+#include <algorithm>
 #include <vector>
 
 
