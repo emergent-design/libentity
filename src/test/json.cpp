@@ -238,6 +238,14 @@ TEST_SUITE("json")
 	}
 
 
+	TEST_CASE("empty keys are permitted")
+	{
+		tree t = {{ "", "empty key" }};
+
+		CHECK(encode<json>(t) == R"json({"":"empty key"})json");
+	}
+
+
 	//---------------- JSON5 extended syntax
 
 	TEST_CASE("parser supports single line comments")
@@ -359,16 +367,5 @@ TEST_SUITE("json")
 	TEST_CASE("parser ignores all forms of whitespace")
 	{
 
-	}
-
-	TEST_CASE("empty map value converts to json correctly")
-	{
-		std::map<std::string, std::string> testMap;
-		testMap[""] = "nothing";
-
-		const auto mapJson = encode<json>(testMap);
-		const std::string expectedJson = R"json({"":"nothing"})json";
-
-		CHECK(mapJson == expectedJson);
 	}
 }
