@@ -238,6 +238,14 @@ TEST_SUITE("json")
 	}
 
 
+	TEST_CASE("empty keys are permitted")
+	{
+		tree t = {{ "", "empty key" }};
+
+		CHECK(encode<json>(t) == R"json({"":"empty key"})json");
+	}
+
+
 	//---------------- JSON5 extended syntax
 
 	TEST_CASE("parser supports single line comments")
