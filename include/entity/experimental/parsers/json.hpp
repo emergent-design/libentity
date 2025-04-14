@@ -1,23 +1,27 @@
 #pragma once
 
-#include <entity/experimental/treeview.hpp>
+// #include <entity/experimental/treeview.hpp>
+#include <entity/experimental/view.hpp>
 #include <charconv>
+#include <optional>
 // #include <ranges>
 #include <bitset>
 
-
-// #include <iostream>
+// debug
+#include <iostream>
 
 
 namespace ent::experimental
 {
+
 	using std::string_view;
 
 	// parser - avoid exceptions!!
 	// separate parser and generator into sub structures?
 	struct json
 	{
-		using Type = treeview::Type;
+		using Type = view_type;
+		using View = view<json, std::string_view>;
 
 
 		// Whitespace characters (tab, new line, carriage return, space, comma)
@@ -47,7 +51,7 @@ namespace ent::experimental
 		};
 
 
-		static treeview decode(const string_view data)
+		static View decode(const string_view data)
 		{
 			// validate?
 
@@ -105,6 +109,45 @@ namespace ent::experimental
 			// error("value is not a valid number", data, i - s.size());
 
 			return {};
+		}
+
+		template <typename T> static inline constexpr bool number(const std::string_view s, T &dst)
+		{
+			// #if __cpp_lib_to_chars >= 202306L
+			// 	if (std::from_chars(s.data(), s.data() + s.size(), value, 0))
+			// #else
+
+			if constexpr (std::is_integral_v<T>)
+			{
+				if (s.substr(0, 2) == "0x") // || s.substr(0, 2) == "0X"
+				{
+					if (std::from_chars(s.data() + 2, s.data() + s.size(), dst, 16).ec == std::errc{})
+					{
+						return true;
+					}
+				}
+				else if (s.substr(0, 3) == "-0x")
+				{
+					if (std::from_chars(s.data() + 3, s.data() + s.size(), dst, 16).ec == std::errc{})
+					{
+						dst = -dst;
+						return true;
+					}
+				}
+				else if (std::from_chars(s.data(), s.data() + s.size(), dst).ec == std::errc{})
+				{
+					return true;
+				}
+			}
+			else if (std::from_chars(s.data(), s.data() + s.size(), dst).ec == std::errc{})
+			{
+				return true;
+			}
+
+			// error - value is not a valid number??
+			// error("value is not a valid number", data, i - s.size());
+
+			return false;
 		}
 
 
@@ -172,39 +215,93 @@ namespace ent::experimental
 		}
 
 
-		static ent::tree translate(const treeview &item)
+		// static ent::tree translate(const View &item)
+		// {
+		// 	if (item.type == Type::String)
+		// 	{
+		// 		// // if (item.leaf.contains('\\'))
+		// 		// if (item.leaf.find('\\') != std::string_view::npos)
+		// 		// {
+		// 		// 	// Handle special characters in the string
+		// 		// 	return escape(item.leaf);
+		// 		// }
+		// 		// // Otherwise just return it
+		// 		// return item.leaf;
+
+		// 		return escape(item.leaf);
+		// 	}
+
+		// 	if (item.type == Type::Simple)
+		// 	{
+		// 		if (item.leaf == "true")	return true;
+		// 		if (item.leaf == "false")	return false;
+		// 		if (item.leaf == "null")	return nullptr;
+
+		// 		if (item.leaf.find('.') == std::string_view::npos)
+		// 		{
+		// 			return number<int64_t>(item.leaf);
+		// 		}
+		// 		else
+		// 		{
+		// 			return number<double>(item.leaf);
+		// 		}
+		// 	}
+
+		// 	return {};
+		// }
+
+		template <typename T> static bool translate(const View &src, T &dst)
 		{
-			if (item.type == Type::String)
+			if constexpr (std::is_same_v<std::string, T>)
 			{
-				// // if (item.leaf.contains('\\'))
-				// if (item.leaf.find('\\') != std::string_view::npos)
-				// {
-				// 	// Handle special characters in the string
-				// 	return escape(item.leaf);
-				// }
-				// // Otherwise just return it
-				// return item.leaf;
+				if (src.type == Type::String)
+				{
+					dst = escape(src.leaf);
+					return true;
+				}
 
-				return escape(item.leaf);
+				return false;
+			}
+			else if constexpr (std::is_same_v<bool, T>)
+			{
+				if (src.type == Type::Boolean)
+				{
+					dst = src.leaf == "true";
+					return true;
+				}
+
+				return false;
+			}
+			else if constexpr (std::is_pointer_v<T>)
+			{
+				if (src.type == Type::Null)
+				{
+					dst = nullptr;
+					return true;
+				}
+
+				return false;
+			}
+			else if constexpr (std::is_integral_v<T>) // && !std::is_same_v<bool, T>)
+			{
+				if (src.type == Type::Integer)
+				{
+					return number<T>(src.leaf, dst);
+				}
+
+				return false;
+			}
+			else if constexpr (std::is_floating_point_v<T>)
+			{
+				if (src.type == Type::Floating)
+				{
+					return number<T>(src.leaf, dst);
+				}
+
+				return false;
 			}
 
-			if (item.type == Type::Simple)
-			{
-				if (item.leaf == "true")	return true;
-				if (item.leaf == "false")	return false;
-				if (item.leaf == "null")	return nullptr;
-
-				if (item.leaf.find('.') == std::string_view::npos)
-				{
-					return number<int64_t>(item.leaf);
-				}
-				else
-				{
-					return number<double>(item.leaf);
-				}
-			}
-
-			return {};
+			return false;
 		}
 
 
@@ -277,7 +374,7 @@ namespace ent::experimental
 		}
 
 
-		static std::pair<string_view, std::optional<treeview>> string(const string_view data)
+		static std::pair<string_view, std::optional<View>> string(const string_view data)
 		{
 			for (size_t i=1; i<data.length(); i++)
 			{
@@ -285,7 +382,7 @@ namespace ent::experimental
 				{
 					return {
 						data.substr(i + 1),
-						treeview { .type = treeview::Type::String, .leaf = data.substr(1, i - 1) }
+						View { .type = view_type::String, .leaf = data.substr(1, i - 1) }
 					};
 				}
 				if (data[i] == '\\')
@@ -299,8 +396,25 @@ namespace ent::experimental
 		}
 
 
+		static Type which(const string_view leaf)
+		{
+			if (leaf == "true" || leaf == "false")
+			{
+				return Type::Boolean;
+			}
+			if (leaf == "null")
+			{
+				return Type::Null;
+			}
+			if (leaf.find('.') == std::string_view::npos)
+			{
+				return Type::Integer;
+			}
+			return Type::Floating;
+		}
+
 		// Extract a simple value (null, boolean, numeric)
-		static std::pair<string_view, std::optional<treeview>> simple(const string_view data)
+		static std::pair<string_view, std::optional<View>> simple(const string_view data)
 		{
 			for (size_t i=0; i<data.length(); i++)
 			{
@@ -308,7 +422,7 @@ namespace ent::experimental
 				{
 					return {
 						data.substr(i),
-						treeview { .type = Type::Simple, .leaf = data.substr(0, i) }
+						View { .type = which(data.substr(0, i)), .leaf = data.substr(0, i) }
 					};
 				}
 			}
@@ -317,7 +431,7 @@ namespace ent::experimental
 		}
 
 
-		static std::pair<string_view, std::optional<treeview>> item(const string_view data)
+		static std::pair<string_view, std::optional<View>> item(const string_view data)
 		{
 			if (data.starts_with('{')) return object(data);
 			if (data.starts_with('[')) return array(data);
@@ -332,12 +446,12 @@ namespace ent::experimental
 		}
 
 
-		static std::pair<string_view, treeview> object(const string_view data)
+		static std::pair<string_view, View> object(const string_view data)
 		{
 			// treeview result {};
 			// treeview result { .children = std::make_shared<std::map<std::string_view, treeview>>() };
 			// treeview result { .type = Type::Array, .items = std::make_shared<std::vector<treeview>>() };
-			auto result = treeview::object();
+			auto result = View::object();
 
 			auto current = skip_whitespace(data.substr(1));	// first character should be {
 
@@ -403,10 +517,10 @@ namespace ent::experimental
 		}
 
 
-		static std::pair<string_view, treeview> array(const string_view data)
+		static std::pair<string_view, View> array(const string_view data)
 		{
 			// treeview result { .type = Type::Array, .items = std::make_shared<std::vector<treeview>>() };
-			auto result = treeview::array();
+			auto result = View::array();
 
 			auto current = skip_whitespace(data.substr(1));	// first character should be [
 
