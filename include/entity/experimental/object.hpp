@@ -103,6 +103,10 @@ namespace ent::experimental
 	};
 
 
+	NOTE: Perhaps a view should be a concept with static functions for traversal - in this way it avoids any unnecessary allocation
+	for object and tree views, and only requires the light-weight string_view-based view for decoded json/bson blobs?
+
+
 	// template <typename T> std::pair<std::string_view, MemberView> to_child_view(std::string_view name, const T &reference)
 	// {
 	// 	return std::make_pair(
