@@ -103,8 +103,8 @@ namespace ent::experimental
 	};
 
 
-	NOTE: Perhaps a view should be a concept with static functions for traversal - in this way it avoids any unnecessary allocation
-	for object and tree views, and only requires the light-weight string_view-based view for decoded json/bson blobs?
+	// NOTE: Perhaps a view should be a concept with static functions for traversal - in this way it avoids any unnecessary allocation
+	// for object and tree views, and only requires the light-weight string_view-based view for decoded json/bson blobs?
 
 
 	// template <typename T> std::pair<std::string_view, MemberView> to_child_view(std::string_view name, const T &reference)
@@ -129,6 +129,82 @@ namespace ent::experimental
 			&& member_ref<T>::from_view(view.children->at(name), dst);
 			// && member_ref<const std::remove_reference_t<T>>::from_view(view.children->at(name), dst);
 			// && View::decoder::translate(view.children->at(name), dst);
+	}
+
+	// template <typename T> concept Simple = std::is_arithmetic_v<T> || std::is_same_v<string, std::remove_const_t<T>>;
+
+
+	// For simple types
+	template <Simple T, Simple U> bool member_assign(T &dst, const U &src)
+	{
+		// std::cout << dst << " <- " << src << '\n';
+		if constexpr (std::is_same_v<T, U>)
+		{
+			dst = src;
+			return true;
+		}
+		if constexpr (std::is_arithmetic_v<T> && std::is_arithmetic_v<U>)
+		{
+			dst = (T)src;
+			return true;
+		}
+
+		return false;
+	}
+
+
+	template <typename T> concept Iterable = std::forward_iterator<typename T::iterator>;
+
+	template <typename T> concept Consumer = requires(T &a) { a.populate("a", 0); };
+	template <typename T, typename C> concept View = Consumer<C> and requires(const T &a, C &b) { T::traverse(a, b); };
+
+	template <Consumer C, View<C> V> bool member_assign(C &dst, const V &src)
+	{
+		V::traverse(src, dst);
+		return true;
+	}
+
+
+
+	template <typename T> concept Vector = std::is_same_v<std::vector<typename T::value_type>, std::remove_const_t<T>>;
+
+
+	template <Vector T, Iterable U> bool member_assign(T &dst, const U &src)
+	{
+		for (auto &s : src)
+		{
+			member_assign(dst.emplace_back(), s);
+		}
+
+		return true;
+	}
+
+	// template <typename T> concept Array = std::is_same_v<std::array<typename T::value_type, T::size()>, std::remove_const_t<T>>;
+	template <typename T> concept Array = std::is_same_v<std::array<typename T::value_type, T().size()>, std::remove_const_t<T>>;
+
+
+	template <Array T, Iterable U> bool member_assign(T &dst, const U &src)
+	{
+		size_t i=0;
+
+		for (auto &s : src)
+		{
+			member_assign(dst[i++], s);
+
+			if (i >= dst.size())
+			{
+				return true;
+			}
+		}
+
+		return true;
+	}
+
+
+	// Catches all of the invalid paths
+	template <typename T, typename U> bool member_assign(T &dst, const U &src)
+	{
+		return false;
 	}
 
 
@@ -164,6 +240,7 @@ namespace ent::experimental
 			// };
 		}
 
+
 		template <typename View> bool from_view(const View &view)
 		{
 			if (view.type != view_type::Object || !view.children)
@@ -181,7 +258,74 @@ namespace ent::experimental
 			return true;
 		}
 
+
+		template <typename Consumer> static void traverse(const SimpleEntity &instance, Consumer &consumer)
+		{
+			consumer.populate("name", instance.name);
+			consumer.populate("flag", instance.flag);
+			consumer.populate("integer", instance.integer);
+			consumer.populate("bignumber", instance.bignumber);
+			consumer.populate("floating", instance.floating);
+		}
+
+		template <typename T> bool populate(std::string_view name, const T &value)
+		{
+			// std::cout << name << '\n';
+			if (name == "name")			return member_assign(this->name, value);
+			if (name == "flag")			return member_assign(this->flag, value);
+			if (name == "integer")		return member_assign(this->integer, value);
+			if (name == "bignumber")	return member_assign(this->bignumber, value);
+			if (name == "floating")		return member_assign(this->floating, value);
+
+			return false;
+		}
+
 	};
+
+	// struct CollectionEntity
+	// {
+	// 	std::vector<string> strings;
+	// 	std::vector<double> doubles;
+	// 	std::vector<uint8_t> binary;
+	// 	std::set<int> ints;
+	// 	map<string, string> dictionary;
+
+	// 	emap(eref(strings), eref(doubles), eref(binary), eref(ints), eref(dictionary))
+	// };
+
+
+	struct ComplexEntity
+	{
+		std::string name;
+		std::vector<SimpleEntity> entities;
+		std::array<SimpleEntity, 4> extras;
+		std::vector<int> numbers;
+		// CollectionEntity collection;
+		SimpleEntity simple;
+
+
+		template <Consumer T> static void traverse(const ComplexEntity &instance, T &consumer)
+		{
+			consumer.populate("name", instance.name);
+			consumer.populate("entities", instance.entities);
+			consumer.populate("extras", instance.extras);
+			consumer.populate("numbers", instance.numbers);
+			consumer.populate("simple", instance.simple);
+		}
+
+		template <typename T> bool populate(std::string_view name, const T &value)
+		{
+			if (name == "name")			return member_assign(this->name, value);
+			if (name == "entities")		return member_assign(this->entities, value);
+			if (name == "extras")		return member_assign(this->extras, value);
+			if (name == "numbers")		return member_assign(this->numbers, value);
+			if (name == "simple")		return member_assign(this->simple, value);
+
+			return false;
+		}
+	};
+
+
 
 		// #define ent_man_ref(name, item)	std::make_pair(name, std::make_unique<ent::vref< \
 	// 		typename std::conditional<Constness, const std::remove_reference_t<decltype(item)>, std::remove_reference_t<decltype(item)>>::type \
