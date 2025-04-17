@@ -22,23 +22,23 @@ namespace ent::experimental
 	// >::type;
 
 
-	// Member accessor base class
-	struct member
-	{
-		// get();
-		// set();
-	};
+	// // Member accessor base class
+	// struct member
+	// {
+	// 	// get();
+	// 	// set();
+	// };
 
-	using Member = std::shared_ptr<member>;
+	// using Member = std::shared_ptr<member>;
 
 
-	struct member_decoder
-	{
-		template <typename T> static bool translate(const view<member_decoder, Member> &src, T &dst)
-		{
-			return false;
-		}
-	};
+	// struct member_decoder
+	// {
+	// 	template <typename T> static bool translate(const view<member_decoder, Member> &src, T &dst)
+	// 	{
+	// 		return false;
+	// 	}
+	// };
 
 	// typename std::enable_if<
 	// 	   std::is_arithmetic_v<T>
@@ -47,60 +47,60 @@ namespace ent::experimental
 	// >::type;
 
 
-	using MemberView = view<member_decoder, Member>;
+	// using MemberView = view<member_decoder, Member>;
 
 	template <typename T> concept Simple = std::is_arithmetic_v<T> || std::is_same_v<string, std::remove_const_t<T>>;
 
-	template <Simple T> struct member_ref : member
-	{
-		member_ref(const T &reference) : reference(&reference) {}
+	// template <Simple T> struct member_ref : member
+	// {
+	// 	member_ref(const T &reference) : reference(&reference) {}
 
 
-		static constexpr view_type get_type()
-		{
-			if constexpr (std::is_same_v<bool, T>)
-			{
-				return view_type::Boolean;
-			}
-			if constexpr (std::is_same_v<string, std::remove_const_t<T>>)
-			{
-				return view_type::String;
-			}
-			if constexpr (std::is_integral_v<T>)
-			{
-				return view_type::Integer;
-			}
-			if constexpr (std::is_floating_point_v<T>)
-			{
-				return view_type::Floating;
-			}
+	// 	static constexpr view_type get_type()
+	// 	{
+	// 		if constexpr (std::is_same_v<bool, T>)
+	// 		{
+	// 			return view_type::Boolean;
+	// 		}
+	// 		if constexpr (std::is_same_v<string, std::remove_const_t<T>>)
+	// 		{
+	// 			return view_type::String;
+	// 		}
+	// 		if constexpr (std::is_integral_v<T>)
+	// 		{
+	// 			return view_type::Integer;
+	// 		}
+	// 		if constexpr (std::is_floating_point_v<T>)
+	// 		{
+	// 			return view_type::Floating;
+	// 		}
 
-			return view_type::Unknown;
-		}
+	// 		return view_type::Unknown;
+	// 	}
 
-		static MemberView to_view(const T &reference)
-		{
-			return {
-				.type = get_type(),
-				.leaf = std::make_shared<member_ref>(reference)
-			};
-		}
+	// 	static MemberView to_view(const T &reference)
+	// 	{
+	// 		return {
+	// 			.type = get_type(),
+	// 			.leaf = std::make_shared<member_ref>(reference)
+	// 		};
+	// 	}
 
-		template <typename View> static bool from_view(const View &view, T &reference)
-		{
-			return View::decoder::translate(view, reference);
-			// if constexpr (std::is_same_v<string, std::remove_const_t<T>>)
-			// {
-			// 	if (view.type == view_type::String)
-			// 	{
-			// 		reference = View::decoder::string(view.leaf)
-			// 	}
-			// }
-		}
+	// 	template <typename View> static bool from_view(const View &view, T &reference)
+	// 	{
+	// 		return View::decoder::translate(view, reference);
+	// 		// if constexpr (std::is_same_v<string, std::remove_const_t<T>>)
+	// 		// {
+	// 		// 	if (view.type == view_type::String)
+	// 		// 	{
+	// 		// 		reference = View::decoder::string(view.leaf)
+	// 		// 	}
+	// 		// }
+	// 	}
 
 
-		const T *reference;
-	};
+	// 	const T *reference;
+	// };
 
 
 	// NOTE: Perhaps a view should be a concept with static functions for traversal - in this way it avoids any unnecessary allocation
@@ -114,22 +114,22 @@ namespace ent::experimental
 	// 		member_ref<const std::remove_reference_t<T>>::to_view(reference)
 	// 	);
 	// }
-	template <typename T> inline auto to_child_view(std::string_view name, const T &reference)
-	{
-		return std::make_pair(
-			name,
-			member_ref<const std::remove_reference_t<T>>::to_view(reference)
-		);
-	}
+	// template <typename T> inline auto to_child_view(std::string_view name, const T &reference)
+	// {
+	// 	return std::make_pair(
+	// 		name,
+	// 		member_ref<const std::remove_reference_t<T>>::to_view(reference)
+	// 	);
+	// }
 
-	template <typename View, typename T> inline bool from_child_view(const View &view, std::string_view name, T &dst)
-	{
-		// std::cout << int(view.children->at(name).type) << '\n';
-		return view.children->contains(name)
-			&& member_ref<T>::from_view(view.children->at(name), dst);
-			// && member_ref<const std::remove_reference_t<T>>::from_view(view.children->at(name), dst);
-			// && View::decoder::translate(view.children->at(name), dst);
-	}
+	// template <typename View, typename T> inline bool from_child_view(const View &view, std::string_view name, T &dst)
+	// {
+	// 	// std::cout << int(view.children->at(name).type) << '\n';
+	// 	return view.children->contains(name)
+	// 		&& member_ref<T>::from_view(view.children->at(name), dst);
+	// 		// && member_ref<const std::remove_reference_t<T>>::from_view(view.children->at(name), dst);
+	// 		// && View::decoder::translate(view.children->at(name), dst);
+	// }
 
 	// template <typename T> concept Simple = std::is_arithmetic_v<T> || std::is_same_v<string, std::remove_const_t<T>>;
 
@@ -152,15 +152,26 @@ namespace ent::experimental
 		return false;
 	}
 
+	// A leaf node in something like the view<string_view>
+	template <typename T> concept Leaf = requires(T &a) { T::template get<int64_t>(a); };
+
+	template <Simple T, Leaf U> bool member_assign(T &dst, const U &src)
+	{
+		dst = U::template get<T>(src);
+
+		return true;
+	}
+
 
 	template <typename T> concept Iterable = std::forward_iterator<typename T::iterator>;
 
 	template <typename T> concept Consumer = requires(T &a) { a.populate("a", 0); };
-	template <typename T, typename C> concept View = Consumer<C> and requires(const T &a, C &b) { T::traverse(a, b); };
+	template <typename T, typename C> concept View = Consumer<C> and requires(const T &a, C &b) { a.traverse(b); };
 
 	template <Consumer C, View<C> V> bool member_assign(C &dst, const V &src)
 	{
-		V::traverse(src, dst);
+		src.traverse(dst);
+		// V::traverse(src, dst);
 		return true;
 	}
 
@@ -171,6 +182,8 @@ namespace ent::experimental
 
 	template <Vector T, Iterable U> bool member_assign(T &dst, const U &src)
 	{
+		dst.clear();
+
 		for (auto &s : src)
 		{
 			member_assign(dst.emplace_back(), s);
@@ -208,6 +221,20 @@ namespace ent::experimental
 	}
 
 
+	template <Consumer C, View<C> V> C view_to(const V &src)
+	{
+		C c{};
+		src.traverse(c);
+		return c;
+	}
+
+	template <Consumer C, View<C> V> C &view_to(const V &src, C &dst)
+	{
+		src.traverse(dst);
+		return dst;
+	}
+
+
 
 	struct SimpleEntity
 	{
@@ -218,54 +245,54 @@ namespace ent::experimental
 		double floating		= 3.142;
 
 
-		const MemberView to_view() const
+		// const MemberView to_view() const
+		// {
+		// 	return MemberView::object({
+		// 		to_child_view("name", name),
+		// 		to_child_view("flag", flag),
+		// 		to_child_view("integer", integer),
+		// 		to_child_view("bignumber", bignumber),
+		// 		to_child_view("floating", floating)
+		// 	});
+		// 	// return {
+		// 	// 	.type 		= view_type::Object,
+		// 	// 	.children	= std::make_shared<std::map<std::string_view, MemberView>>({ //std::initializer_list<std::map<std::string_view, MemberView>::value_type>{
+		// 	// 		to_child_view("name", name)
+		// 	// 		// member_ref<const std::remove_reference_t<decltype(name)>>::to_view("name", name)
+		// 	// 		// { "name", member_ref<const std::remove_reference_t<decltype(name)>>::to_view(name) }
+
+		// 	// 		// std::make_pair<std::string_view, MemberView>("name", std::make_unique<member_ref<const std::remove_reference_t<decltype(name)>>>(name))
+		// 	// 		// { "name", std::make_unique<member_ref<const std::remove_reference_t<decltype(name)>>>(name)
+		// 	// 	})
+		// 	// };
+		// }
+
+
+		// template <typename View> bool from_view(const View &view)
+		// {
+		// 	if (view.type != view_type::Object || !view.children)
+		// 	{
+		// 		return false;
+		// 	}
+
+
+		// 	from_child_view(view, "name", name);
+		// 	from_child_view(view, "flag", flag);
+		// 	from_child_view(view, "integer", integer);
+		// 	from_child_view(view, "bignumber", bignumber);
+		// 	from_child_view(view, "floating", floating);
+
+		// 	return true;
+		// }
+
+
+		template <typename Consumer> void traverse(Consumer &consumer) const
 		{
-			return MemberView::object({
-				to_child_view("name", name),
-				to_child_view("flag", flag),
-				to_child_view("integer", integer),
-				to_child_view("bignumber", bignumber),
-				to_child_view("floating", floating)
-			});
-			// return {
-			// 	.type 		= view_type::Object,
-			// 	.children	= std::make_shared<std::map<std::string_view, MemberView>>({ //std::initializer_list<std::map<std::string_view, MemberView>::value_type>{
-			// 		to_child_view("name", name)
-			// 		// member_ref<const std::remove_reference_t<decltype(name)>>::to_view("name", name)
-			// 		// { "name", member_ref<const std::remove_reference_t<decltype(name)>>::to_view(name) }
-
-			// 		// std::make_pair<std::string_view, MemberView>("name", std::make_unique<member_ref<const std::remove_reference_t<decltype(name)>>>(name))
-			// 		// { "name", std::make_unique<member_ref<const std::remove_reference_t<decltype(name)>>>(name)
-			// 	})
-			// };
-		}
-
-
-		template <typename View> bool from_view(const View &view)
-		{
-			if (view.type != view_type::Object || !view.children)
-			{
-				return false;
-			}
-
-
-			from_child_view(view, "name", name);
-			from_child_view(view, "flag", flag);
-			from_child_view(view, "integer", integer);
-			from_child_view(view, "bignumber", bignumber);
-			from_child_view(view, "floating", floating);
-
-			return true;
-		}
-
-
-		template <typename Consumer> static void traverse(const SimpleEntity &instance, Consumer &consumer)
-		{
-			consumer.populate("name", instance.name);
-			consumer.populate("flag", instance.flag);
-			consumer.populate("integer", instance.integer);
-			consumer.populate("bignumber", instance.bignumber);
-			consumer.populate("floating", instance.floating);
+			consumer.populate("name", this->name);
+			consumer.populate("flag", this->flag);
+			consumer.populate("integer", this->integer);
+			consumer.populate("bignumber", this->bignumber);
+			consumer.populate("floating", this->floating);
 		}
 
 		template <typename T> bool populate(std::string_view name, const T &value)
@@ -304,17 +331,27 @@ namespace ent::experimental
 		SimpleEntity simple;
 
 
-		template <Consumer T> static void traverse(const ComplexEntity &instance, T &consumer)
+		template <Consumer T> void traverse(T &consumer) const
 		{
-			consumer.populate("name", instance.name);
-			consumer.populate("entities", instance.entities);
-			consumer.populate("extras", instance.extras);
-			consumer.populate("numbers", instance.numbers);
-			consumer.populate("simple", instance.simple);
+			consumer.populate("name", this->name);
+			consumer.populate("entities", this->entities);
+			consumer.populate("extras", this->extras);
+			consumer.populate("numbers", this->numbers);
+			consumer.populate("simple", this->simple);
 		}
 
 		template <typename T> bool populate(std::string_view name, const T &value)
 		{
+			// if constexpr (Simple<T>)
+			// {
+			// 	std::cout << name << " -- " << value << '\n';
+			// }
+			// std::cout << name << '\n';
+			// if (name == "numbers")
+			// {
+			// 	std::cout << "numbers: " << typeid(value).name() << '\n';
+			// }
+
 			if (name == "name")			return member_assign(this->name, value);
 			if (name == "entities")		return member_assign(this->entities, value);
 			if (name == "extras")		return member_assign(this->extras, value);

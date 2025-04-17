@@ -305,6 +305,34 @@ namespace ent::experimental
 		}
 
 
+		// std::optional?
+		template <typename T> static T translate(const View &src)
+		{
+			if constexpr (std::is_same_v<std::string, T>)
+			{
+				return src.type == Type::String ? escape(src.leaf) : "";
+			}
+			else if constexpr (std::is_same_v<bool, T>)
+			{
+				return src.type == Type::Boolean ? src.leaf == "true" : false;
+			}
+			else if constexpr (std::is_pointer_v<T>)
+			{
+				return nullptr;
+			}
+			else if constexpr (std::is_integral_v<T>) // && !std::is_same_v<bool, T>)
+			{
+				return src.type == Type::Integer ? number<T>(src.leaf) : 0;
+			}
+			else if constexpr (std::is_floating_point_v<T>)
+			{
+				return src.type == Type::Floating ? number<T>(src.leaf) : 0;
+			}
+
+			return {};
+		}
+
+
 		static string_view skip_whitespace(const string_view data)
 		{
 			for (size_t i=0; i<data.length(); i++)

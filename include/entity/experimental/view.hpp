@@ -1,6 +1,7 @@
 #pragma once
 
 #include <entity/tree.hpp>
+#include <entity/experimental/object.hpp>
 #include <optional>
 #include <string>
 #include <vector>
@@ -81,7 +82,53 @@ namespace ent::experimental
 				.children = std::make_shared<std::map<std::string_view, view>>(items)
 			};
 		}
+
+
+		template <typename U> static U get(const view &v)
+		{
+			return Decoder::template translate<U>(v);
+		}
+
+		template <typename Consumer> void traverse(Consumer &consumer) const
+		{
+			if (this->type == view_type::Object && this->children)
+			{
+				for (auto &[k, v] : *this->children)
+				{
+					// std::cout << k << ": " << (int)v.type << '\n';
+					switch (v.type)
+					{
+						case view_type::Null:		consumer.populate(k, nullptr);				break;
+						case view_type::Binary: 	consumer.populate(k, nullptr);				break;	// Not sure about binary at this point
+						case view_type::Integer:	consumer.populate(k, get<int64_t>(v));		break;
+						case view_type::Floating:	consumer.populate(k, get<double>(v));		break;
+						case view_type::Boolean:	consumer.populate(k, get<bool>(v));			break;
+						case view_type::String:		consumer.populate(k, get<std::string>(v));	break;
+						case view_type::Object:		consumer.populate(k, v);					break;
+						case view_type::Array:
+							if (v.items)
+							{
+								consumer.populate(k, *v.items);
+							}
+							break;
+					}
+					// consumer.populate(k, )
+				}
+			}
+			// else if (this->type == view_type::Array && this->items)
+			// {
+			// 	consumer.populate()
+			// }
+
+			// consumer.populate("name", this->name);
+			// consumer.populate("flag", this->flag);
+			// consumer.populate("integer", this->integer);
+			// consumer.populate("bignumber", this->bignumber);
+			// consumer.populate("floating", this->floating);
+		}
 	};
+
+
 
 
 	template <typename T, typename View> ent::tree get_value(const View &view)
