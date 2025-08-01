@@ -13,14 +13,14 @@ jobs:
     steps:
       - uses: earthly/actions/setup-earthly@v1
         with:
-          version: v0.6.17
+          version: v0.8.15
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Run build
         run: earthly +package
 
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: build/**.deb
