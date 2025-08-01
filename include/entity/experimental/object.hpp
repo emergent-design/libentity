@@ -215,20 +215,20 @@ namespace ent::experimental
 
 
 	// Catches all of the invalid paths
-	template <typename T, typename U> bool member_assign(T &dst, const U &src)
+	template <typename T, typename U> bool member_assign(T &, const U &)
 	{
 		return false;
 	}
 
 
-	template <Consumer C, View<C> V> C view_to(const V &src)
+	template <Consumer C, View<C> V> C from_view(const V &src)
 	{
 		C c{};
 		src.traverse(c);
 		return c;
 	}
 
-	template <Consumer C, View<C> V> C &view_to(const V &src, C &dst)
+	template <Consumer C, View<C> V> C &from_view(const V &src, C &dst)
 	{
 		src.traverse(dst);
 		return dst;
@@ -286,7 +286,7 @@ namespace ent::experimental
 		// }
 
 
-		template <typename Consumer> void traverse(Consumer &consumer) const
+		template <Consumer C> void traverse(C &consumer) const
 		{
 			consumer.populate("name", this->name);
 			consumer.populate("flag", this->flag);
@@ -331,7 +331,7 @@ namespace ent::experimental
 		SimpleEntity simple;
 
 
-		template <Consumer T> void traverse(T &consumer) const
+		template <Consumer C> void traverse(C &consumer) const
 		{
 			consumer.populate("name", this->name);
 			consumer.populate("entities", this->entities);
