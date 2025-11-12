@@ -19,6 +19,11 @@ namespace ent
 			const static char lookup[]	= "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 			const static char pad		= '=';
 
+			if (value.empty())
+			{
+				return{};
+			}
+
 			int i;
 			long block;
 			int size	= value.size();
@@ -59,7 +64,15 @@ namespace ent
 		{
 			const static char pad = '=';
 
-			if (value.length() % 4) throw std::runtime_error("Invalid string for decoding as base64");
+			if (value.empty())
+			{
+				return {};
+			}
+
+			if (value.length() % 4)
+			{
+				throw std::runtime_error("Invalid string for decoding as base64");
+			}
 
 			int i, j;
 			long block	= 0;
