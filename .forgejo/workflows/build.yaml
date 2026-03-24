@@ -1,0 +1,30 @@
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+    package:
+      name: package - all dists
+      runs-on: amd64
+
+      steps:
+
+        - uses: actions/checkout@v4
+          with:
+            persist-credentials: false
+
+        - name: "Launch earthly"
+          run: earthly +package
+
+        - uses: ${{ secrets.deploy }}
+          with:
+            type: simple
+            path: public
+            component: main
+            key: ${{ secrets.deploy_key }}
+
+        # - uses: actions/upload-artifact@v3
+        #   with:
+        #     name: package
+        #     path: build/*.deb
