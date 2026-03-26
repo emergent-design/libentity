@@ -5,7 +5,7 @@ on:
 
 jobs:
     package:
-      name: package - all dists
+      name: build and run unit tests
       runs-on: amd64
 
       steps:

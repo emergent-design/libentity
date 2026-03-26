@@ -18,7 +18,7 @@ jobs:
         - name: "Launch earthly"
           run: earthly +package
 
-        - uses: ${{ secrets.deploy }}
+        - uses: ${{ vars.deploy }}
           with:
             type: simple
             path: public

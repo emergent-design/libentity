@@ -15,7 +15,7 @@ check:
 	ARG PREMAKE=5.0.0-alpha16
 
 	FROM +code
-	RUN curl -L -o premake.deb https://github.com/emergent-design/premake-pkg/releases/download/v$PREMAKE/premake_$PREMAKE-0ubuntu1_amd64.deb \
+	RUN curl -sL -o premake.deb https://github.com/emergent-design/premake-pkg/releases/download/v$PREMAKE/premake_$PREMAKE-0ubuntu1_amd64.deb \
 		&& dpkg -i premake.deb
 	RUN premake5 gmake && make -j$(nproc)
 
