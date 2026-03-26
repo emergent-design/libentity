@@ -1,29 +1,27 @@
-VERSION 0.6
+VERSION 0.8
 
-FROM ubuntu:18.04
+FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND noninteractive
 ENV DEBCONF_NONINTERACTIVE_SEEN true
 WORKDIR /code
 
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl build-essential clang fakeroot chrpath dh-exec
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl build-essential cmake clang fakeroot chrpath dh-exec
 
 
 code:
-	COPY --dir include packages src premake5.lua .
+	COPY --dir include packages src CMakeLists.txt .
 
 check:
-	ARG PREMAKE=5.0.0-alpha16
-
 	FROM +code
-	RUN curl -sL -o premake.deb https://github.com/emergent-design/premake-pkg/releases/download/v$PREMAKE/premake_$PREMAKE-0ubuntu1_amd64.deb \
-		&& dpkg -i premake.deb
-	RUN premake5 gmake && make -j$(nproc)
+	RUN cmake -B build \
+		&& make -j8 -C build \
+		&& make -C build test ARGS=--output-on-failure
 
 package:
 	FROM +code
 	RUN cd packages && dpkg-buildpackage -b -uc -us
-	SAVE ARTIFACT libentity-dev_*.deb libentity-dev.deb
 	SAVE ARTIFACT libentity-dev_*.deb AS LOCAL build/
+	# SAVE ARTIFACT libentity-dev_*.deb libentity-dev.deb
 
 entity-all:
 	BUILD +package
