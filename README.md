@@ -41,7 +41,7 @@ struct Simple
 {
     string name	= "default";
     bool flag	= false;
-    int integer = 0;    
+    int integer = 0;
 
     emap(eref(name), eref(flag), eref("int", integer))
 };
@@ -59,19 +59,19 @@ const string JSON_TEXT = u8R"json(
 int main(int argc, char *argv[])
 {
     Simple simple;
-    
+
     // Serialise the simple object to JSON (will contain the default
     // values assigned above)
     cout << ent::encode<ent::json>(simple) << endl;
-    
+
     // Deserialise the simple object from a JSON string
     simple = ent::decode<ent::json, Simple>(JSON_TEXT);
-    
+
     // These values will now match those defined in JSON_TEXT
     cout << "Name    = " << simple.name << endl;
     cout << "Flag    = " << simple.flag << endl;
     cout << "Integer = " << simple.integer << endl;
-    
+
     return 0;
 }
 ```
@@ -79,10 +79,10 @@ int main(int argc, char *argv[])
 If the above example was saved to "simple.cpp" then you would compile it as follows
 
 ```bash
-clang++ -std=c++14 simple.cpp
+clang++ -std=c++17 simple.cpp
 ```
 
-Any class or struct that requires serialisation must implement the `ent::mapping ent_describe()` function which allows the library to do its magic without the need for a pre-compilation step. 
+Any class or struct that requires serialisation must implement the `ent::mapping ent_describe()` function which allows the library to do its magic without the need for a pre-compilation step.
 The macro `eref` simply expands to a mapping entry and if no name is provided it will automagically use the parameter name (so avoid using `this->`). By allowing the name to be specified, as in the "int" example above, it can map a value from a third-party system where the names may differ.
 The macro `emap` helps construct the `ent_describe` function.
 
